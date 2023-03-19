@@ -13,10 +13,9 @@ jobs:
         with:
           java-version: 11
       - name: Publish to Maven Central
-        uses: "marc-kgp/github-maven-action@v1.0"
-        with:
-          pom: "build/publications/mavenJava/pom-default.xml"
         env:
-          GITHUB_TOKEN: ${{ secrets._GITHUB_TOKEN }}
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          OSSRH_JIRA_USERNAME: ${{ secrets.OSSRH_JIRA_USERNAME }}
+          OSSRH_JIRA_PASSWORD: ${{ secrets.OSSRH_JIRA_PASSWORD }}
+        run: ./gradlew publish
