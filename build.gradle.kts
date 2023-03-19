@@ -1,4 +1,6 @@
-
+/**
+ * An OpenAI API client for Java
+ */
 plugins {
     `java-library`
     `maven-publish`
@@ -58,11 +60,7 @@ publishing {
             pom {
                 name.set("Joe Penai")
                 description.set("A Java client for OpenAI's API")
-//                url.set("http://www.example.com/library")
-//                properties.set(mapOf(
-//                    "myProp" to "value",
-//                    "prop.with.dots" to "anotherValue"
-//                ))
+                url.set("https://github.com/SimiaCryptus/JoePenai")
                 licenses {
                     license {
                         name.set("The Apache License, Version 2.0")
@@ -77,19 +75,22 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://example.com/my-library.git")
-                    developerConnection.set("scm:git:ssh://example.com/my-library.git")
-                    url.set("http://example.com/my-library/")
+                    connection.set("scm:git:git://git@github.com/SimiaCryptus/JoePenai.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/SimiaCryptus/JoePenai.git")
+                    url.set("https://github.com/SimiaCryptus/JoePenai")
                 }
             }
         }
     }
     repositories {
         maven {
-            // change URLs to point to your repos, e.g. http://my.org/repo
-            val releasesRepoUrl = uri(layout.buildDirectory.dir("repos/releases"))
-            val snapshotsRepoUrl = uri(layout.buildDirectory.dir("repos/snapshots"))
+            val releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            val snapshotsRepoUrl = "https://oss.sonatype.org/mask/repositories/snapshots"
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            credentials {
+                username = properties("ossrhUsername")
+                password = properties("ossrhPassword")
+            }
         }
     }
 }
