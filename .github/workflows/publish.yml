@@ -13,6 +13,8 @@ jobs:
         with:
           java-version: 11
           distribution: 'temurin'
+      - name: Grant execute permissions for gradlew
+        run: chmod +x ./gradlew
       - name: Publish to Maven Central
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
