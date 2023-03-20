@@ -98,11 +98,7 @@ publishing {
 }
 
 signing {
-    sign(publishing.publications["mavenJava"])
-}
-
-tasks.javadoc {
-    if (JavaVersion.current().isJava9Compatible) {
-        (options as StandardJavadocDocletOptions).addBooleanOption("html5", true)
-    }
+    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
+    val archives = project.configurations["archives"]
+    sign(archives)
 }
