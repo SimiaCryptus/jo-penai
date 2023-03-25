@@ -103,10 +103,10 @@ publishing {
 }
 
 signing {
-    setRequired({
-        (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
-    })
+//    setRequired({
+//        (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
+//    })
     useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
-    useGpgCmd()
+//    useGpgCmd()
     sign(configurations.archives.get())
 }
