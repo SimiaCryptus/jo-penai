@@ -1,9 +1,5 @@
 package com.github.simiacryptus.openai
 
-import com.github.simiacryptus.aicoder.config.AppSettingsState
-import com.github.simiacryptus.aicoder.openai.ui.InteractiveEditRequest
-import com.github.simiacryptus.aicoder.util.UITools
-import com.intellij.util.ui.FormBuilder
 
 class EditRequest {
     var model: String = ""
@@ -19,25 +15,8 @@ class EditRequest {
 
     @Suppress("unused")
     constructor()
-    constructor(settingsState: AppSettingsState) {
-        setInstruction("")
-        setModel(settingsState.model_edit)
-        setTemperature(settingsState.temperature)
-    }
 
-    constructor(instruction: String) {
-        setInstruction(instruction)
-        setModel(AppSettingsState.instance.model_edit)
-        setTemperature(AppSettingsState.instance.temperature)
-    }
-
-    constructor(instruction: String, input: String?) {
-        setInput(input)
-        setInstruction(instruction)
-        setModel(AppSettingsState.instance.model_edit)
-        setTemperature(AppSettingsState.instance.temperature)
-    }
-
+    @Suppress("unused")
     constructor(model: String, input: String?, instruction: String, temperature: Double?) {
         setModel(model)
         setInput(input)
@@ -96,26 +75,4 @@ class EditRequest {
                 '}'
     }
 
-    fun showModelEditDialog(): EditRequest {
-        val formBuilder = FormBuilder.createFormBuilder()
-        val withModel = EditRequest(this)
-        val ui = InteractiveEditRequest()
-        UITools.addKotlinFields<Any>(ui, formBuilder)
-        UITools.writeKotlinUI(ui, withModel)
-        val mainPanel = formBuilder.panel
-        return if (UITools.showOptionDialog(mainPanel, arrayOf<Any>("OK"), title = "Completion Request") == 0) {
-            UITools.readKotlinUI(ui, withModel)
-            withModel
-        } else {
-            withModel
-        }
-    }
-
-    fun uiIntercept(): EditRequest {
-        return if (AppSettingsState.instance.devActions) {
-            showModelEditDialog()
-        } else {
-            this
-        }
-    }
 }

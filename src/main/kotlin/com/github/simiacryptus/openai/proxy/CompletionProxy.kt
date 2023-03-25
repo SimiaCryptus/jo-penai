@@ -2,7 +2,7 @@ package com.github.simiacryptus.openai.proxy
 
 import com.github.simiacryptus.openai.CompletionRequest
 import com.github.simiacryptus.openai.OpenAIClient
-import com.jetbrains.rd.util.LogLevel
+import org.slf4j.event.Level
 
 class CompletionProxy<T:Any>(
     clazz: Class<T>,
@@ -19,7 +19,7 @@ class CompletionProxy<T:Any>(
     val api: OpenAIClient
 
     init {
-        api = OpenAIClient(base, apiKey, LogLevel.Debug)
+        api = OpenAIClient(base, apiKey, Level.DEBUG)
     }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {

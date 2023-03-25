@@ -1,15 +1,8 @@
 package com.github.simiacryptus.openai
 
-import com.github.simiacryptus.aicoder.config.AppSettingsState
-
 class ChatRequest @Suppress("unused") constructor() {
     fun uiIntercept(): ChatRequest {
         return this
-    }
-
-    constructor(settingsState: AppSettingsState) : this() {
-        model = (settingsState.model_chat)
-        temperature = (settingsState.temperature)
     }
 
     constructor(request: ChatRequest) : this() {

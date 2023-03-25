@@ -6,13 +6,9 @@ import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.github.simiacryptus.aicoder.openai.ui.OpenAI_API
-import com.github.simiacryptus.aicoder.util.UITools
 import com.github.simiacryptus.util.StringTools
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.intellij.openapi.diagnostic.Logger
-import com.jetbrains.rd.util.LogLevel
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -21,8 +17,10 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.util.EntityUtils
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.awt.image.BufferedImage
 import java.io.IOException
 import java.net.URL
@@ -36,7 +34,7 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
     private val apiBase: String,
     var key: String,
-    private val logLevel: LogLevel
+    private val logLevel: Level
 ) : HttpClientManager() {
 
     open val metrics : Map<String, Any>
@@ -115,15 +113,15 @@ open class OpenAIClient(
     @Throws(IOException::class)
     protected fun authorize(request: HttpRequestBase) {
         var apiKey: CharSequence = key
-        if (apiKey.isEmpty()) {
-            synchronized(OpenAI_API.javaClass) {
-                apiKey = key
-                if (apiKey.isEmpty()) {
-                    apiKey = UITools.queryAPIKey()!!
-                    key = apiKey.toString()
-                }
-            }
-        }
+//        if (apiKey.isEmpty()) {
+//            synchronized(OpenAIClient.javaClass) {
+//                apiKey = key
+//                if (apiKey.isEmpty()) {
+//                    apiKey = UITools.queryAPIKey()!!
+//                    key = apiKey.toString()
+//                }
+//            }
+//        }
         request.addHeader("Authorization", "Bearer $apiKey")
     }
 
@@ -257,14 +255,14 @@ open class OpenAIClient(
     open fun incrementTokens(totalTokens: Int) {}
 
     companion object {
-        val log = Logger.getInstance(OpenAIClient::class.java)
+        val log = LoggerFactory.getLogger(OpenAIClient::class.java)
 
-        fun log(level: LogLevel, msg: String) {
+        fun log(level: Level, msg: String) {
             val message = msg.trim { it <= ' ' }.replace("\n", "\n\t")
             when (level) {
-                LogLevel.Error -> log.error(message)
-                LogLevel.Warn -> log.warn(message)
-                LogLevel.Info -> log.info(message)
+                Level.ERROR -> log.error(message)
+                Level.WARN -> log.warn(message)
+                Level.INFO -> log.info(message)
                 else -> log.debug(message)
             }
         }
@@ -400,7 +398,7 @@ open class OpenAIClient(
             val moderationResult =
                 jsonObject.getAsJsonArray("results")[0].asJsonObject
             log(
-                LogLevel.Debug,
+                Level.DEBUG,
                 String.format(
                     "Moderation Request\nText:\n%s\n\nResult:\n%s",
                     text.replace("\n", "\n\t"),
@@ -445,7 +443,7 @@ open class OpenAIClient(
 
     private fun logStart(
         editRequest: EditRequest,
-        level: LogLevel
+        level: Level
     ) {
         if (editRequest.input == null) {
             log(
