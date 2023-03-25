@@ -4,9 +4,9 @@ import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
-import com.intellij.openapi.diagnostic.Logger
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.time.Duration
 import java.util.*
@@ -18,7 +18,7 @@ import kotlin.math.pow
 open class HttpClientManager {
 
     companion object {
-        val log = Logger.getInstance(OpenAIClient::class.java)
+        val log = LoggerFactory.getLogger(HttpClientManager::class.java)
         val threadFactory: ThreadFactory = ThreadFactoryBuilder().setNameFormat("API Thread %d").build()
         val scheduledPool: ListeningScheduledExecutorService =
             MoreExecutors.listeningDecorator(ScheduledThreadPoolExecutor(4, threadFactory))

@@ -3,7 +3,6 @@ package com.github.simiacryptus.openai.proxy
 import com.github.simiacryptus.openai.ChatMessage
 import com.github.simiacryptus.openai.ChatRequest
 import com.github.simiacryptus.openai.OpenAIClient
-import jdk.jfr.internal.LogLevel
 import org.slf4j.event.Level
 import java.util.concurrent.atomic.AtomicInteger
 

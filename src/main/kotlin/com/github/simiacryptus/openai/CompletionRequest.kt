@@ -1,28 +1,8 @@
 package com.github.simiacryptus.openai
 
-import com.github.simiacryptus.aicoder.config.AppSettingsState
-import com.github.simiacryptus.aicoder.openai.ui.CompletionRequestWithModel
-import com.github.simiacryptus.aicoder.openai.ui.InteractiveCompletionRequest
-import com.github.simiacryptus.aicoder.util.UITools
-import com.intellij.util.ui.FormBuilder
 import java.util.*
 
 open class CompletionRequest {
-    constructor(config: AppSettingsState) : this("", config.temperature, config.maxTokens, null)
-
-    fun uiIntercept(): CompletionRequestWithModel {
-        val withModel = if (this !is CompletionRequestWithModel) {
-            val settingsState = AppSettingsState.instance
-            if (!settingsState.devActions) {
-                CompletionRequestWithModel(this, settingsState.model_completion)
-            } else {
-                showModelEditDialog()
-            }
-        } else {
-            this
-        }
-        return withModel
-    }
 
     var prompt: String = ""
     var suffix: String? = null
@@ -88,19 +68,4 @@ open class CompletionRequest {
         return this
     }
 
-    fun showModelEditDialog(): CompletionRequestWithModel {
-        val formBuilder = FormBuilder.createFormBuilder()
-        val instance = AppSettingsState.instance
-        val withModel = CompletionRequestWithModel(this, instance.model_completion)
-        val ui = InteractiveCompletionRequest(withModel)
-        UITools.addKotlinFields<Any>(ui, formBuilder)
-        UITools.writeKotlinUI(ui, withModel)
-        val mainPanel = formBuilder.panel
-        return if (UITools.showOptionDialog(mainPanel, arrayOf<Any>("OK"), title = "Completion Request") == 0) {
-            UITools.readKotlinUI(ui, withModel)
-            withModel
-        } else {
-            withModel
-        }
-    }
 }
