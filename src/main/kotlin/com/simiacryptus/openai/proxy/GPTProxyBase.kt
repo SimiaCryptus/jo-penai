@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai.proxy
+package com.simiacryptus.openai.proxy
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser

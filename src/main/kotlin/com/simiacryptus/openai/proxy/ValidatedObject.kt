@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai.proxy
+package com.simiacryptus.openai.proxy
 
 import kotlin.reflect.full.memberProperties
 

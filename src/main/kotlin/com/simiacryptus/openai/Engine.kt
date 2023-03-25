@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 class Engine {
     @Suppress("unused")

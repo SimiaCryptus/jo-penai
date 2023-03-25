@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
