@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai.core
+package com.github.simiacryptus.openai
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 

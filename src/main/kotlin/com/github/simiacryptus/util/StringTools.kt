@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai
+package com.github.simiacryptus.util
 
 import java.nio.charset.Charset
 import java.util.*
@@ -7,13 +7,13 @@ import java.util.function.Supplier
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream
+import kotlin.math.abs
 
 object StringTools {
 
     fun indentJoin(fields: List<Any>, indent: String = "\t"): String {
-        val joinToString = fields
-            .map { it.toString().replace("\n", "\n$indent") }
-            .joinToString("\n$indent")
+        val joinToString = fields.joinToString("\n$indent")
+            { it.toString().replace("\n", "\n$indent") }
         return "{\n$indent$joinToString\n}"
     }
 
@@ -132,7 +132,7 @@ object StringTools {
                     }.toArray()
                 )
             }
-            .filter { x: CharSequence -> x.length > 0 }
+            .filter { x: CharSequence -> x.isNotEmpty() }
             .min(Comparator.comparing { obj: CharSequence -> obj.length }).orElse("")
     }
 
@@ -190,8 +190,7 @@ object StringTools {
         for (column in 0 until columns) {
             transposedTable.append("|")
             for (cell in cells) {
-                var cellValue: String
-                cellValue = if (outputHeader) {
+                var cellValue: String = if (outputHeader) {
                     if (column < 1) {
                         cell[column].toString().trim { it <= ' ' }
                     } else if (column == 1) {
@@ -215,11 +214,10 @@ object StringTools {
         val rows = Arrays.stream(table.split("\n".toRegex()).map { it.trim() }.dropLastWhile { it.isEmpty() }
             .toTypedArray()).map { x: String ->
             Arrays.stream(x.split("\\|".toRegex()).dropLastWhile { it.isEmpty() }
-                .toTypedArray()).filter { cell: String -> cell.length > 0 }
+                .toTypedArray()).filter { cell: String -> cell.isNotEmpty() }
                 .collect(Collectors.toList<CharSequence>()).toTypedArray()
         }.collect(
-            Collectors.toCollection(
-                Supplier { ArrayList() })
+            Collectors.toCollection { ArrayList() }
         )
         if (removeHeader) {
             rows.removeAt(1)
@@ -264,7 +262,7 @@ object StringTools {
         replaceString: String,
         vararg replacements: Pair<String, String>
     ): String {
-        val joinedPattern = replacements.map { Pattern.quote(it.first) }.joinToString("|").toRegex()
+        val joinedPattern = replacements.joinToString("|") { Pattern.quote(it.first) }.toRegex()
         return joinedPattern.replace(replaceString) { result ->
             val charSequence: CharSequence =
                 replacements.find { it.first.compareTo(result.value, true) == 0 }?.second ?: result.value
@@ -292,9 +290,9 @@ object StringTools {
             for (i in split.indices.reversed()) {
                 val s = split[i]
                 // If the length of the string builder is closer to the ideal length than the length of the string builder plus the current string, break
-                if (Math.abs(sb.length - idealLength) < Math.abs(sb.length + s.length - idealLength)) break
+                if (abs(sb.length - idealLength) < abs(sb.length + s.length - idealLength)) break
                 // If the string builder is not empty or the text ends with the delimiter, add the delimiter to the string builder
-                if (sb.length > 0 || text.endsWith(d.toString())) sb.insert(0, d)
+                if (sb.isNotEmpty() || text.endsWith(d.toString())) sb.insert(0, d)
                 // Add the current string to the string builder
                 sb.insert(0, s)
                 // If the length of the string builder is greater than the ideal length, break
@@ -304,13 +302,13 @@ object StringTools {
                 }
             }
             // If the split strings are empty, return an empty stream
-            if (split.size == 0) return@flatMap Stream.empty<String>()
+            if (split.isEmpty()) return@flatMap Stream.empty<String>()
             // Return a stream of the string builder
             Stream.of(sb.toString())
         }.collect(Collectors.toList())
         // Return the string with the closest length to the ideal length
         return candidates.stream().min(Comparator.comparing { s: CharSequence ->
-            Math.abs(
+            abs(
                 s.length - idealLength
             )
         }).orElse("")

@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai.core
+package com.github.simiacryptus.openai
 
 import java.util.*
 
@@ -17,7 +17,7 @@ class CompletionResponse {
     var choices: Array<CompletionChoice> = arrayOf()
 
     @Suppress("unused")
-    var error: com.github.simiacryptus.openai.core.ApiError? = null
+    var error: ApiError? = null
 
     @Suppress("unused")
     var usage: Usage? = null
@@ -29,7 +29,7 @@ class CompletionResponse {
         created: Int,
         model: String?,
         choices: Array<CompletionChoice>,
-        error: com.github.simiacryptus.openai.core.ApiError?
+        error: ApiError?
     ) {
         this.id = id
         this.`object` = `object`
