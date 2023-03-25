@@ -1,23 +1,22 @@
 import java.net.URI
 
-/**
- * An OpenAI API client for Java
- */
+fun properties(key: String) = project.findProperty(key).toString()
+group = properties("libraryGroup")
+version = properties("libraryVersion")
+
 plugins {
     `java`
     `java-library`
     `maven-publish`
-    signing
-    kotlin("jvm") version "1.7.21"
+    id("org.jetbrains.kotlin.jvm") version "1.7.21"
+    id("signing")
+//    signing
+//    kotlin("jvm") version "1.7.21"
 }
 
 repositories {
     mavenCentral()
 }
-
-fun properties(key: String) = project.findProperty(key).toString()
-group = properties("libraryGroup")
-version = properties("libraryVersion")
 
 java {
     withJavadocJar()
@@ -94,6 +93,11 @@ publishing {
                 username = System.getenv("OSSRH_USERNAME") ?: System.getProperty("ossrhUsername") ?: properties("ossrhUsername")
                 password = System.getenv("OSSRH_PASSWORD") ?: System.getProperty("ossrhPassword") ?: properties("ossrhPassword")
             }
+        }
+    }
+    afterEvaluate {
+        signing {
+            sign(publications["mavenJava"])
         }
     }
 }
