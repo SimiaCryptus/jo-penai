@@ -10,8 +10,6 @@ plugins {
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.7.21"
     id("signing")
-//    signing
-//    kotlin("jvm") version "1.7.21"
 }
 
 repositories {
@@ -50,7 +48,6 @@ publishing {
         create<MavenPublication>("mavenJava") {
             artifactId = "joe-penai"
             from(components["java"])
-//            from(components["kotlin"])
             versionMapping {
                 usage("java-api") {
                     fromResolutionOf("runtimeClasspath")
@@ -103,10 +100,6 @@ publishing {
 }
 
 signing {
-//    setRequired({
-//        (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
-//    })
     useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
-//    useGpgCmd()
     sign(configurations.archives.get())
 }
