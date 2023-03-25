@@ -1,16 +1,16 @@
-package com.github.simiacryptus.openai.core
+package com.github.simiacryptus.openai
 
 class ChatMessage {
     enum class Role {
         assistant, user, system
     }
 
-    var role: com.github.simiacryptus.openai.core.ChatMessage.Role? = null
+    var role: Role? = null
     var content: String? = null
 
     @Suppress("unused")
     constructor()
-    constructor(role: com.github.simiacryptus.openai.core.ChatMessage.Role?, content: String?) {
+    constructor(role: Role?, content: String?) {
         this.role = role
         this.content = content
     }

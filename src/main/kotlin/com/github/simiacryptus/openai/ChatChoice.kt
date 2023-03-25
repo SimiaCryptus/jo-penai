@@ -1,7 +1,7 @@
-package com.github.simiacryptus.openai.core
+package com.github.simiacryptus.openai
 
 class ChatChoice @Suppress("unused") constructor() {
-    var message: com.github.simiacryptus.openai.core.ChatMessage? = null
+    var message: ChatMessage? = null
 
     @Suppress("unused")
     var index = 0

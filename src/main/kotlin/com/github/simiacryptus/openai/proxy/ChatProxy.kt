@@ -1,59 +1,84 @@
 package com.github.simiacryptus.openai.proxy
 
-import com.github.simiacryptus.openai.core.CoreAPI
+import com.github.simiacryptus.openai.ChatMessage
+import com.github.simiacryptus.openai.ChatRequest
+import com.github.simiacryptus.openai.OpenAIClient
+import jdk.jfr.internal.LogLevel
 import org.slf4j.event.Level
-import java.time.Duration
+import java.util.concurrent.atomic.AtomicInteger
 
-class ChatProxy(
+@Suppress("MemberVisibilityCanBePrivate")
+class ChatProxy<T : Any>(
+    clazz: Class<T>,
     apiKey: String,
-    private val model: String = "gpt-3.5-turbo",
-    private val maxTokens: Int = 3500,
-    private val temperature: Double = 0.7,
-    private val verbose: Boolean = false,
+    var model: String = "gpt-3.5-turbo",
+    var maxTokens: Int = 3500,
+    temperature: Double = 0.7,
+    var verbose: Boolean = false,
     private val moderated: Boolean = true,
     base: String = "https://api.openai.com/v1",
     apiLog: String? = null,
-    logLevel: Level
-) : GPTProxyBase(apiLog, 3) {
-    val api: CoreAPI
+    logLevel: Level,
+    val deserializerRetries: Int = 5
+) : GPTProxyBase<T>(clazz, apiLog, deserializerRetries, temperature) {
+    override val metrics : Map<String, Any>
+        get() = hashMapOf(
+            "totalInputLength" to totalInputLength.get(),
+            "totalOutputLength" to totalOutputLength.get(),
+            "totalNonJsonPrefixLength" to totalNonJsonPrefixLength.get(),
+            "totalNonJsonSuffixLength" to totalNonJsonSuffixLength.get(),
+            "totalYamlLength" to totalYamlLength.get(),
+            "totalExamplesLength" to totalExamplesLength.get(),
+        ) + super.metrics + api.metrics
+    protected val totalNonJsonPrefixLength = AtomicInteger(0)
+    protected val totalNonJsonSuffixLength = AtomicInteger(0)
+    protected val totalInputLength = AtomicInteger(0)
+    protected val totalYamlLength = AtomicInteger(0)
+    protected val totalExamplesLength = AtomicInteger(0)
+    protected val totalOutputLength = AtomicInteger(0)
+
+    val api: OpenAIClient
 
     init {
-        api = CoreAPI(base, apiKey, logLevel)
+        api = OpenAIClient(base, apiKey, logLevel)
     }
 
-    override fun complete(prompt: ProxyRequest, vararg examples: ProxyRecord): String {
+    override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if (verbose) println(prompt)
-        val request = com.github.simiacryptus.openai.core.ChatRequest()
+        val request = ChatRequest()
+        totalYamlLength.addAndGet(prompt.apiYaml.length)
+        val exampleMessages = examples.flatMap {
+            listOf(
+                ChatMessage(
+                    ChatMessage.Role.user,
+                    argsToString(it.argList)
+                ),
+                ChatMessage(
+                    ChatMessage.Role.assistant,
+                    it.response
+                )
+            )
+        }
+        totalExamplesLength.addAndGet(toJson(exampleMessages).length)
         request.messages = (
                 listOf(
-                    com.github.simiacryptus.openai.core.ChatMessage(
-                        com.github.simiacryptus.openai.core.ChatMessage.Role.system, """
-                |You are a JSON-RPC Service serving the following method:
-                |${prompt.methodName}
-                |Requests contain the following arguments:
-                |${prompt.argList.keys.joinToString("\n  ")}
-                |Responses are of type:
-                |${prompt.responseType}
-                |Responses are expected to be a single JSON object
+                    ChatMessage(
+                        ChatMessage.Role.system, """
+                |You are a JSON-RPC Service
+                |Responses are in JSON format
+                |Do not include explaining text outside the JSON
                 |All input arguments are optional
+                |Outputs are based on inputs, with any missing information filled randomly
+                |You will respond to the following method
+                |
+                |${prompt.apiYaml}
                 |""".trimMargin().trim()
                     )
                 ) +
-                        examples.flatMap {
-                            listOf(
-                                com.github.simiacryptus.openai.core.ChatMessage(
-                                    com.github.simiacryptus.openai.core.ChatMessage.Role.user,
-                                    argsToString(it.argList)
-                                ),
-                                com.github.simiacryptus.openai.core.ChatMessage(
-                                    com.github.simiacryptus.openai.core.ChatMessage.Role.assistant,
-                                    it.response
-                                )
-                            )
-                        } +
+                        exampleMessages +
                         listOf(
-                            com.github.simiacryptus.openai.core.ChatMessage(
-                                com.github.simiacryptus.openai.core.ChatMessage.Role.user,
+                            ChatMessage(
+                                ChatMessage.Role.user,
                                 argsToString(prompt.argList)
                             )
                         )
@@ -61,38 +86,44 @@ class ChatProxy(
         request.model = model
         request.max_tokens = maxTokens
         request.temperature = temperature
-        val completion = api.withTimeout(Duration.ofMinutes(3)) {
-            if (moderated) api.moderate(toJson(request))
-            api.chat(request).response.get().toString()
-        }
+        val json = toJson(request)
+        if (moderated) api.moderate(json)
+        totalInputLength.addAndGet(json.length)
+
+        val completion = api.chat(request).response.get().toString()
         if (verbose) println(completion)
+        totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)
         val trimSuffix = trimSuffix(trimPrefix.first)
+        totalNonJsonPrefixLength.addAndGet(trimPrefix.second.length)
+        totalNonJsonSuffixLength.addAndGet(trimSuffix.second.length)
         return trimSuffix.first
     }
 
-    private fun trimPrefix(completion: String): Pair<String, String> {
-        val start = completion.indexOf('{')
-        if (start < 0) {
-            return completion to ""
-        } else {
-            val substring = completion.substring(start)
-            return substring to completion.substring(0, start)
+    companion object {
+        private fun trimPrefix(completion: String): Pair<String, String> {
+            val start = completion.indexOf('{').coerceAtMost(completion.indexOf('['))
+            return if (start < 0) {
+                completion to ""
+            } else {
+                val substring = completion.substring(start)
+                substring to completion.substring(0, start)
+            }
         }
-    }
 
-    private fun trimSuffix(completion: String): Pair<String, String> {
-        val end = completion.lastIndexOf('}')
-        if (end < 0) {
-            return completion to ""
-        } else {
-            val substring = completion.substring(0, end + 1)
-            return substring to completion.substring(end + 1)
+        private fun trimSuffix(completion: String): Pair<String, String> {
+            val end = completion.lastIndexOf('}').coerceAtLeast(completion.lastIndexOf(']'))
+            return if (end < 0) {
+                completion to ""
+            } else {
+                val substring = completion.substring(0, end + 1)
+                substring to completion.substring(end + 1)
+            }
         }
-    }
 
-    private fun argsToString(argList: Map<String, String>) =
-        "{" + argList.entries.joinToString(",\n", transform = { (argName, argValue) ->
-            """"$argName": $argValue"""
-        }) + "}"
+        private fun argsToString(argList: Map<String, String>) =
+            "{" + argList.entries.joinToString(",\n", transform = { (argName, argValue) ->
+                """"$argName": $argValue"""
+            }) + "}"
+    }
 }
