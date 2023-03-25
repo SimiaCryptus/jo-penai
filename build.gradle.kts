@@ -4,6 +4,7 @@ import java.net.URI
  * An OpenAI API client for Java
  */
 plugins {
+    `java`
     `java-library`
     `maven-publish`
     signing
@@ -12,6 +13,19 @@ plugins {
 
 repositories {
     mavenCentral()
+}
+
+fun properties(key: String) = project.findProperty(key).toString()
+group = properties("libraryGroup")
+version = properties("libraryVersion")
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+kotlin {
+    jvmToolchain(11)
 }
 
 dependencies {
@@ -31,25 +45,13 @@ dependencies {
     testImplementation(kotlin("script-runtime"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
 }
-fun properties(key: String) = project.findProperty(key).toString()
-group = properties("libraryGroup")
-version = properties("libraryVersion")
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
-kotlin {
-    jvmToolchain(11)
-}
 
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             artifactId = "joe-penai"
-            //from(components["java"])
-            from(components["kotlin"])
+            from(components["java"])
+//            from(components["kotlin"])
             versionMapping {
                 usage("java-api") {
                     fromResolutionOf("runtimeClasspath")
@@ -97,7 +99,10 @@ publishing {
 }
 
 signing {
+    setRequired({
+        (project.extra["isReleaseVersion"] as Boolean) && gradle.taskGraph.hasTask("publish")
+    })
     useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
-    val archives = project.configurations["archives"]
-    sign(archives)
+    useGpgCmd()
+    sign(configurations.archives.get())
 }
