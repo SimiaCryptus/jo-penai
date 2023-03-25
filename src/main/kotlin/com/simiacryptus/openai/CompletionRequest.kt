@@ -1,8 +1,8 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 import java.util.*
 
-open class CompletionRequest {
+open class CompletionRequest() {
 
     var prompt: String = ""
     var suffix: String? = null
@@ -20,18 +20,7 @@ open class CompletionRequest {
     @Suppress("unused")
     var echo = false
 
-    @Suppress("unused")
-    constructor()
-    constructor(prompt: String, temperature: Double, max_tokens: Int, logprobs: Int?, vararg stop: CharSequence) {
-        this.prompt = prompt
-        this.temperature = temperature
-        this.max_tokens = max_tokens
-        this.stop = stop.map { it }.toTypedArray()
-        this.logprobs = logprobs
-        echo = false
-    }
-
-    constructor(other: CompletionRequest) {
+    constructor(other: CompletionRequest) : this() {
         prompt = other.prompt
         temperature = other.temperature
         max_tokens = other.max_tokens

@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonProcessingException
@@ -6,9 +6,10 @@ import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.github.simiacryptus.util.StringTools
+import com.simiacryptus.util.StringTools
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.simiacryptus.openai.*
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -18,7 +19,6 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.apache.http.util.EntityUtils
-import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.awt.image.BufferedImage

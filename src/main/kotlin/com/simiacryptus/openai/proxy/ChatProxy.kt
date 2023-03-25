@@ -1,8 +1,8 @@
-package com.github.simiacryptus.openai.proxy
+package com.simiacryptus.openai.proxy
 
-import com.github.simiacryptus.openai.ChatMessage
-import com.github.simiacryptus.openai.ChatRequest
-import com.github.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.openai.ChatMessage
+import com.simiacryptus.openai.ChatRequest
+import com.simiacryptus.openai.OpenAIClient
 import org.slf4j.event.Level
 import java.util.concurrent.atomic.AtomicInteger
 

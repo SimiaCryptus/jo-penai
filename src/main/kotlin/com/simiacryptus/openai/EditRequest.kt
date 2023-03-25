@@ -1,4 +1,4 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 
 class EditRequest {
@@ -15,14 +15,6 @@ class EditRequest {
 
     @Suppress("unused")
     constructor()
-
-    @Suppress("unused")
-    constructor(model: String, input: String?, instruction: String, temperature: Double?) {
-        setModel(model)
-        setInput(input)
-        setInstruction(instruction)
-        setTemperature(temperature)
-    }
 
     constructor(obj: EditRequest) {
         model = obj.model

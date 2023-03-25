@@ -1,9 +1,8 @@
-package com.github.simiacryptus.util
+package com.simiacryptus.util
 
 import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.function.Supplier
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream

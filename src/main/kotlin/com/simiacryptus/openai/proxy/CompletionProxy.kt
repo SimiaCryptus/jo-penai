@@ -1,7 +1,7 @@
-package com.github.simiacryptus.openai.proxy
+package com.simiacryptus.openai.proxy
 
-import com.github.simiacryptus.openai.CompletionRequest
-import com.github.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.openai.CompletionRequest
+import com.simiacryptus.openai.OpenAIClient
 import org.slf4j.event.Level
 
 class CompletionProxy<T:Any>(

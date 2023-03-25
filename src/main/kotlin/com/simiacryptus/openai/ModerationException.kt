@@ -1,3 +1,3 @@
-package com.github.simiacryptus.openai
+package com.simiacryptus.openai
 
 class ModerationException(message: String?) : Exception(message)
