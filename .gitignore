@@ -2,3 +2,5 @@ build
 configuration-cache/
 buildOutputCleanup/
 .gradle/
+*.log*
+.*

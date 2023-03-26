@@ -111,18 +111,8 @@ open class OpenAIClient(
     fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
 
     @Throws(IOException::class)
-    protected fun authorize(request: HttpRequestBase) {
-        var apiKey: CharSequence = key
-//        if (apiKey.isEmpty()) {
-//            synchronized(OpenAIClient.javaClass) {
-//                apiKey = key
-//                if (apiKey.isEmpty()) {
-//                    apiKey = UITools.queryAPIKey()!!
-//                    key = apiKey.toString()
-//                }
-//            }
-//        }
-        request.addHeader("Authorization", "Bearer $apiKey")
+    open protected fun authorize(request: HttpRequestBase) {
+        request.addHeader("Authorization", "Bearer $key")
     }
 
     /**

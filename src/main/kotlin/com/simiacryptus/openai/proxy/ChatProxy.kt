@@ -17,7 +17,7 @@ class ChatProxy<T : Any>(
     private val moderated: Boolean = true,
     base: String = "https://api.openai.com/v1",
     apiLog: String? = null,
-    logLevel: Level,
+    logLevel: Level = Level.INFO,
     val deserializerRetries: Int = 5
 ) : GPTProxyBase<T>(clazz, apiLog, deserializerRetries, temperature) {
     override val metrics : Map<String, Any>

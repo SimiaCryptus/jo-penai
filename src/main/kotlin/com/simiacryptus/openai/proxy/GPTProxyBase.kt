@@ -113,7 +113,7 @@ abstract class GPTProxyBase<T : Any>(
             Proxy.newProxyInstance(
                 clazz.classLoader,
                 arrayOf(clazz)
-            ) { proxy: Any, method: Method, args: Array<Any> ->
+            ) { _: Any, method: Method, args: Array<Any> ->
                 if (method.name == "toString") return@newProxyInstance clazz.simpleName
                 val argList = args.zip(method.parameters)
                     .filter<Pair<Any?, Parameter>> { (arg: Any?, _) -> arg != null }
