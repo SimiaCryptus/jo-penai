@@ -19,6 +19,7 @@
             * [Example 6: Adding Validation Rules](#example-6--adding-validation-rules)
         * [Best Practices](#best-practices)
         * [Internal Details](#internal-details)
+        * [Troubleshooting](#troubleshooting)
 
 <!-- TOC -->
 
@@ -27,13 +28,17 @@ API, allowing access to text completions, edits, chats, dictations, and renderin
 
 ## Basic Features
 
-| Feature         | Description                             |
-|-----------------|-----------------------------------------|
-| Text Completion | Generate text completions from a prompt |
-| Text Editing    | Generate text edits from a prompt       |
-| Text Chat       | Generate text responses to a prompt     |
-| Text Dictation  | Generate text dictations from audio     |
-| Text Rendering  | Generate images from a prompt           |
+All main features of the OpenAI API are supported, including:
+
+| Feature         | Description                                                                                    |
+|-----------------|------------------------------------------------------------------------------------------------|
+| Text Completion | Generate text completions from a prompt, predicting what comes next in a given context         |
+| Text Editing    | Generate text edits from a prompt, making modifications to improve or change the original text |
+| Text Chat       | Generate text responses to a prompt, simulating a conversation with the AI                     |
+| Text Dictation  | Generate text dictations from audio, converting spoken language into written text              |
+| Text Rendering  | Generate images from a prompt, creating visual representations based on text descriptions      |
+
+These are demonstrated in [ReadmeBasicTest.kt](src/test/kotlin/com/simiacryptus/openai/ReadmeBasicTest.kt)
 
 ## GPT-Proxy API
 
@@ -156,7 +161,7 @@ When using a strongly typed response, I have found this to be less of an issue.
 Define an interface using Kotlin data classes for input and output types:
 
 ```kotlin
-    data class RecipeInput(
+data class RecipeInput(
     val title: String = "",
     val ingredients: List<String> = listOf(),
     val servings: Int = 0
@@ -381,22 +386,61 @@ wide range of applications.
 
 When using the GPT-Proxy API, there are a few best practices to keep in mind:
 
-1. Use Kotlin data classes to define your input and output types.
-   All fields should have default values, and all fields should be mutable.
-   Do not use accessor methods (e.g. `get` and `set`).
-2. Ensure your build system is retaining parameter metadata.
-   For example, your gradle build should include `compileKotlin { kotlinOptions { javaParameters = true }}`
-3. Do not use collection return types.
-   Although the protocol supports them, the GPT model tends to want to return a wrapper object.
-   For example, use `MyWidgets` and an extra data class instead of `List<MyWidget>` as a return type.
-4. Keep your interface simple and consistent.
-   Give each call enough information to be useful, but not so much that it becomes confused.
-5. Use descriptive names and annotations to make your API easier to understand both for developers and for GPT models.
-6. Test your API iteratively, and adjust your interface as needed.
-   Pay attention to malformed responses and examine why they are occurring.
-7. Use the `@Description` annotation to provide a description of the data structure.
-8. Use the `addExample` call to provide example requests and responses.
-9. Monitor your API performance via the metrics method.
+1. Defining Input and Output Types
+   1. Use Kotlin data classes for input and output types.
+   2. Ensure all fields have default values and are mutable.
+   3. Avoid accessor methods (e.g., get and set).
+2. Retaining Parameter Metadata
+   1. Configure your build system to retain parameter metadata.
+   2. For Gradle, include compileKotlin { kotlinOptions { javaParameters = true }}.
+3. Handling Collection Return Types
+   1. Avoid collection return types.
+   2. Use a wrapper object (e.g., MyWidgets) with an extra data class instead of List<MyWidget> as the return type.
+4. Interface Design
+   1. Keep interfaces simple and consistent.
+   2. Provide enough information without causing confusion.
+5. API Documentation
+   1. Use descriptive names and annotations for better understanding.
+   2. Utilize the @Description annotation to describe data structures.
+6. Iterative Testing and Adjustments
+   1. Test the API iteratively and refine the interface based on feedback.
+   2. Analyze malformed responses and identify their causes.
+7. Adding Examples
+   1. Use the addExample call to provide example requests and responses.
+8. Performance Monitoring
+   1. Monitor API performance using the metrics method.
+
+
+### Configuration
+
+Configuration
+When creating an instance of the GPT-Proxy API, there are several configuration options you can use to fine-tune the
+behavior and performance of the proxy. Here are some of the most commonly used options:
+
+1. **API Key**: The API key for your OpenAI account. This is required to authenticate your requests to the OpenAI API.
+2. **Model**: The name of the GPT model you want to use (e.g., "gpt-3.5-turbo"). By default, the proxy will use the latest
+   GPT model available.
+3. **Temperature**: Controls the randomness of the generated text. A higher temperature (e.g., 0.8) will produce more
+   creative and diverse responses, while a lower temperature (e.g., 0.2) will produce more focused and consistent
+   responses. The default temperature is 0.4.
+4. **Max tokens**: The maximum number of tokens (words and punctuation) in the generated response. By default, the proxy
+   will use the maximum token limit of the selected GPT model.
+5. **Max retries**: The maximum number of retries when a request fails due to validation errors or other issues. By default,
+   the proxy will retry up to 3 times before giving up.
+6. **Validation**: Enable or disable response validation. When enabled, the proxy will use the validation rules defined in
+   your interface to check the quality of the generated responses. If a response does not pass the validation, the proxy
+   will retry the request with an adjusted temperature. By default, validation is enabled.
+
+Here is an example of how to create a GPT-Proxy instance with custom configuration options:
+
+```kotlin
+val gptProxy = ChatProxy(ShoppingListParser::class.java, "...apikey...")
+gptProxy.model = "gpt-3.5-turbo"
+gptProxy.temperature = 0.6
+gptProxy.maxTokens = 100
+gptProxy.maxRetries = 5
+gptProxy.validation = true
+```
 
 ### Internal Details
 
@@ -414,3 +458,33 @@ When a method is called on the proxy class, the following steps are performed:
 2. The call is made and the response is parsed into a JSON object
 3. If there is a parsing or validation error, the request is retried, possibly with a higher temperature
 4. The JSON object is converted into the desired output type and returned
+
+### Troubleshooting
+
+If you encounter issues while using the GPT-Proxy API, consider the following troubleshooting steps:
+
+1. **Check your API key**: Ensure that you are using a valid API key and have the necessary permissions to access the
+   GPT model.
+
+2. **Check deserializer errors**: A common issue is forgetting default values for fields in Kotlin data classes. If you
+   are using Kotlin data classes, make sure that all fields have default values and are mutable.
+
+3. **Examine the error message**: Carefully read the error message to identify the root cause of the issue. The error
+   message may provide valuable information about what went wrong and how to fix it.
+
+4. **Review your interface**: Make sure your interface is well-defined and follows best practices. Ensure that you are
+   using Kotlin data classes with default values and mutable fields, and that your build system retains parameter
+   metadata.
+
+5. **Inspect your annotations**: Check that you have used the appropriate annotations, such as `@Description`, to
+   provide clear and accurate information about your API.
+
+6. **Make sure parameter metadata is retained**: Make sure your build system retains parameter metadata. For example,
+   your gradle build should include `compileKotlin { kotlinOptions { javaParameters = true }}`
+
+7. **Test your API iteratively**: Continuously test your API and make adjustments as needed. Pay attention to malformed
+   responses and examine why they are occurring.
+
+8. **Monitor API performance**: Use the metrics method to monitor your API's performance and identify any potential
+   bottlenecks or issues.
+

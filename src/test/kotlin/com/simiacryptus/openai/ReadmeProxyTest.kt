@@ -6,12 +6,7 @@ import com.simiacryptus.openai.proxy.ValidatedObject
 import org.junit.jupiter.api.Test
 import java.io.File
 
-/**
- *  FakeNews is a class that implements the News interface.
- *  It provides methods to get a publication, get stories,
- *  cover a story, and generate a report.
- */
-class ReadmeTest {
+class ReadmeProxyTest {
 
     private val keyFile = File("C:\\Users\\andre\\code\\all-projects\\openai.key")
     private val apiKey = keyFile.readText().trim()

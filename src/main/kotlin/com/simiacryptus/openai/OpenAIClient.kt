@@ -32,9 +32,9 @@ import javax.imageio.ImageIO
 
 @Suppress("unused")
 open class OpenAIClient(
-    private val apiBase: String,
     var key: String,
-    private val logLevel: Level
+    private val apiBase: String = "https://api.openai.com/v1",
+    private val logLevel: Level = Level.INFO
 ) : HttpClientManager() {
 
     open val metrics : Map<String, Any>

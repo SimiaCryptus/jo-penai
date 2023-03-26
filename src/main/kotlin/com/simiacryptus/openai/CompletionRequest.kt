@@ -11,7 +11,7 @@ open class CompletionRequest() {
     var temperature = 0.0
 
     @Suppress("unused")
-    var max_tokens = 0
+    var max_tokens = 1000
     var stop: Array<CharSequence>? = null
 
     @Suppress("unused")
