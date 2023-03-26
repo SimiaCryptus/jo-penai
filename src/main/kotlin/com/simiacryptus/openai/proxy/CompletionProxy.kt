@@ -15,11 +15,11 @@ class CompletionProxy<T:Any>(
     base: String = "https://api.openai.com/v1",
     apiLog: String,
     val deserializerRetries: Int
-) : GPTProxyBase<T>(clazz, apiLog, deserializerRetries, temperature) {
+) : GPTProxyBase<T>(clazz, apiLog, temperature, true, deserializerRetries) {
     val api: OpenAIClient
 
     init {
-        api = OpenAIClient(base, apiKey, Level.DEBUG)
+        api = OpenAIClient(apiKey, base, Level.DEBUG)
     }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {

@@ -5,9 +5,7 @@ class EditRequest {
     var model: String = ""
     var input: String? = null
     var instruction: String = ""
-
-    @Suppress("unused")
-    var temperature: Double? = null
+    var temperature: Double? = 0.0
 
     @Suppress("unused")
     var n: Int? = null
@@ -40,7 +38,7 @@ class EditRequest {
         return this
     }
 
-    fun setTemperature(temperature: Double?): EditRequest {
+    fun setTemperature(temperature: Double): EditRequest {
         top_p = null
         this.temperature = temperature
         return this

@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import java.net.URI
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -14,6 +15,32 @@ plugins {
 
 repositories {
     mavenCentral()
+}
+
+tasks {
+
+    compileKotlin {
+        kotlinOptions {
+            javaParameters = true
+        }
+    }
+    compileTestKotlin {
+        kotlinOptions {
+            javaParameters = true
+        }
+    }
+
+    wrapper {
+        gradleVersion = properties("gradleVersion")
+    }
+
+    test {
+        useJUnitPlatform()
+        testLogging {
+            events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
+            exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+    }
 }
 
 java {
@@ -41,6 +68,7 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
     testImplementation(kotlin("script-runtime"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 }
 
 publishing {
@@ -92,14 +120,18 @@ publishing {
             }
         }
     }
-    afterEvaluate {
+    if (System.getenv("GPG_PRIVATE_KEY") != null && System.getenv("GPG_PASSPHRASE") != null) afterEvaluate {
         signing {
             sign(publications["mavenJava"])
         }
     }
 }
 
-signing {
-    useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
-    sign(configurations.archives.get())
+if (System.getenv("GPG_PRIVATE_KEY") != null && System.getenv("GPG_PASSPHRASE") != null) {
+    apply<SigningPlugin>()
+
+    configure<SigningExtension> {
+        useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
+        sign(configurations.archives.get())
+    }
 }

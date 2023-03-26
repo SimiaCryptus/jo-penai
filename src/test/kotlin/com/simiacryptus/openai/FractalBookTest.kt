@@ -36,6 +36,7 @@ class FractalBookTest : GenerationReportBase<FractalBookTest.FractalBook>(Fracta
             var description: String? = "",
             var significance: String? = "",
         )
+
         data class StoryTemplate(
             var characters: List<Character>? = listOf(),
             var settings: List<Setting>? = listOf(),

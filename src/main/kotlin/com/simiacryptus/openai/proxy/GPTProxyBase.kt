@@ -22,8 +22,9 @@ import kotlin.reflect.jvm.javaType
 abstract class GPTProxyBase<T : Any>(
     val clazz: Class<T>,
     apiLogFile: String?,
-    private val deserializerRetries: Int = 5,
-    var temperature: Double = 0.7
+    var temperature: Double = 0.7,
+    var validation: Boolean = true,
+    var maxRetries: Int = 5,
 ) {
 
     open val metrics : Map<String, Any>
@@ -57,7 +58,7 @@ abstract class GPTProxyBase<T : Any>(
             val originalTemp = temperature
             try {
                 requestCounter.incrementAndGet()
-                for (retry in 0 until deserializerRetries) {
+                for (retry in 0 until maxRetries) {
                     attemptCounter.incrementAndGet()
                     if (retry > 0) {
                         // Increase temperature on retry; this encourages the model to return a different result
@@ -75,7 +76,7 @@ abstract class GPTProxyBase<T : Any>(
                     writeToJsonLog(ProxyRecord(method.name, prompt.argList, result))
                     try {
                         val obj = fromJson<Any>(result, type)
-                        if (obj is ValidatedObject && !obj.validate()) {
+                        if (validation && obj is ValidatedObject && !obj.validate()) {
                             log.warn("Invalid response: $result")
                             continue
                         }
@@ -83,7 +84,7 @@ abstract class GPTProxyBase<T : Any>(
                     } catch (e: Exception) {
                         log.warn("Failed to parse response: $result", e)
                         lastException = e
-                        log.info("Retry $retry of $deserializerRetries")
+                        log.info("Retry $retry of $maxRetries")
                     }
                 }
                 throw RuntimeException("Failed to parse response", lastException)
@@ -113,7 +114,7 @@ abstract class GPTProxyBase<T : Any>(
             Proxy.newProxyInstance(
                 clazz.classLoader,
                 arrayOf(clazz)
-            ) { proxy: Any, method: Method, args: Array<Any> ->
+            ) { _: Any, method: Method, args: Array<Any> ->
                 if (method.name == "toString") return@newProxyInstance clazz.simpleName
                 val argList = args.zip(method.parameters)
                     .filter<Pair<Any?, Parameter>> { (arg: Any?, _) -> arg != null }

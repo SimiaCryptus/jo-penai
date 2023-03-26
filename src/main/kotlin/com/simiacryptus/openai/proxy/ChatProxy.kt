@@ -17,9 +17,10 @@ class ChatProxy<T : Any>(
     private val moderated: Boolean = true,
     base: String = "https://api.openai.com/v1",
     apiLog: String? = null,
-    logLevel: Level,
-    val deserializerRetries: Int = 5
-) : GPTProxyBase<T>(clazz, apiLog, deserializerRetries, temperature) {
+    logLevel: Level = Level.INFO,
+    val deserializerRetries: Int = 5,
+    validation: Boolean = true,
+) : GPTProxyBase<T>(clazz, apiLog, temperature, validation, deserializerRetries) {
     override val metrics : Map<String, Any>
         get() = hashMapOf(
             "totalInputLength" to totalInputLength.get(),
@@ -39,7 +40,7 @@ class ChatProxy<T : Any>(
     val api: OpenAIClient
 
     init {
-        api = OpenAIClient(base, apiKey, logLevel)
+        api = OpenAIClient(apiKey, base, logLevel)
     }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
