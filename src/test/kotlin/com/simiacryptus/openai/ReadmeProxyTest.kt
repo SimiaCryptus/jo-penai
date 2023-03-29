@@ -52,7 +52,7 @@ class ReadmeProxyTest {
 
     data class RecipeOutput(
         val title: String = "",
-        val ingredients: List<String> = listOf(),
+        val ingredients: Map<String,String> = mapOf(),
         val instructions: List<String> = listOf(),
         val servings: Int = 0
     )

@@ -32,9 +32,9 @@ import javax.imageio.ImageIO
 
 @Suppress("unused")
 open class OpenAIClient(
-    var key: String,
+    private val key: String,
     private val apiBase: String = "https://api.openai.com/v1",
-    private val logLevel: Level = Level.INFO
+    val logLevel: Level = Level.INFO
 ) : HttpClientManager() {
 
     open val metrics : Map<String, Any>
@@ -45,6 +45,7 @@ open class OpenAIClient(
             "renders" to renderCounter.get(),
             "dictations" to dictationCounter.get(),
             "edits" to editCounter.get(),
+            "tokens" to tokens.get(),
         )
     protected val chatCounter = AtomicInteger(0)
     protected val completionCounter = AtomicInteger(0)
@@ -52,6 +53,7 @@ open class OpenAIClient(
     protected val renderCounter = AtomicInteger(0)
     protected val dictationCounter = AtomicInteger(0)
     protected val editCounter = AtomicInteger(0)
+    protected val tokens = AtomicInteger(0)
 
 
     fun getEngines(): Array<CharSequence?> {
@@ -242,7 +244,9 @@ open class OpenAIClient(
     class RequestOverloadException(message: String = "That model is currently overloaded with other requests.") :
         IOException(message)
 
-    open fun incrementTokens(totalTokens: Int) {}
+    open fun incrementTokens(totalTokens: Int) {
+        tokens.addAndGet(totalTokens)
+    }
 
     companion object {
         val log = LoggerFactory.getLogger(OpenAIClient::class.java)

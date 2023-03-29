@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.simiacryptus.util
 
 import org.apache.commons.io.input.buffer.CircularByteBuffer
@@ -8,8 +10,8 @@ import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.TargetDataLine
 
 class AudioRecorder(
-    private val audioBuffer: Deque<ByteArray>,
-    private val secondsPerPacket: Double,
+    val audioBuffer: Deque<ByteArray>,
+    val secondsPerPacket: Double,
     val continueFn: () -> Boolean
 ) {
     val packetLength = (audioFormat.frameRate * audioFormat.frameSize * secondsPerPacket).toInt()

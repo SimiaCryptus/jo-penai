@@ -169,7 +169,7 @@ data class RecipeInput(
 
 data class RecipeOutput(
     val title: String = "",
-    val ingredients: List<String> = listOf()
+    val ingredients: Map<String,String> = mapOf(),
     val instructions: List<String> = listOf(),
     val servings: Int = 0
 )
@@ -193,20 +193,23 @@ This returns a reliably good no-nonsense response:
 
 ```json
 {
-  "ingredients": [
-    "flour",
-    "sugar",
-    "cocoa powder",
-    "eggs",
-    "milk"
-  ],
+  "ingredients": {
+    "flour": "200g",
+    "sugar": "150g",
+    "cocoa powder": "50g",
+    "eggs": "2",
+    "milk": "250ml"
+  },
   "instructions": [
-    "Preheat the oven to 350°F (175°C).",
-    "In a mixing bowl, combine flour, sugar, and cocoa powder.",
-    "Add eggs and milk. Mix well.",
-    "Pour the batter into a greased cake pan.",
-    "Bake for 25-30 minutes or until a toothpick inserted into the center of the cake comes out clean.",
-    "Let the cake cool before serving."
+    "Preheat the oven to 180°C.",
+    "Grease a 20cm round cake tin and line with baking paper.",
+    "Sift the flour and cocoa powder into a large mixing bowl.",
+    "Add the sugar and mix well.",
+    "In a separate bowl, whisk together the eggs and milk.",
+    "Pour the egg mixture into the dry ingredients and mix until well combined.",
+    "Pour the batter into the prepared cake tin and bake for 30-35 minutes or until a skewer inserted into the centre comes out clean.",
+    "Allow the cake to cool in the tin for 10 minutes before transferring to a wire rack to cool completely.",
+    "Serve and enjoy!"
   ],
   "servings": 8,
   "title": "Chocolate Cake"
