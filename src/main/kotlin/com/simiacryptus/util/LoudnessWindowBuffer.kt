@@ -14,31 +14,31 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 class LoudnessWindowBuffer(
-    private val inputBuffer: Deque<ByteArray>,
-    private val outputBuffer: Deque<ByteArray>,
+    val inputBuffer: Deque<ByteArray>,
+    val outputBuffer: Deque<ByteArray>,
     val continueFn: () -> Boolean
 ) {
 
     // Required number of quiet windows
-    private val quietWindowMax = 3
+    val quietWindowMax = 3
 
     // Threshold for quiet windows
-    private val quietThreshold = 0.25
+    val quietThreshold = 0.25
 
     // Maximum number of seconds to flush the buffer
-    private val flushSeconds = 60.0
+    val flushSeconds = 60.0
 
     // Minimum number of seconds to flush the buffer
-    private val minSeconds = 1.0
+    val minSeconds = 1.0
 
     // List of RMS values currently in the buffer
-    private val rmsHeap = ArrayList<Double>()
+    val rmsHeap = ArrayList<Double>()
 
     // List of consecutive quiet window percentiles
-    private val quietWindow = ArrayList<Double>()
+    val quietWindow = ArrayList<Double>()
 
     // Byte array output stream
-    private val buffer = ByteArrayOutputStream()
+    val buffer = ByteArrayOutputStream()
 
     // Main function of the AudioPump class
     fun run() {

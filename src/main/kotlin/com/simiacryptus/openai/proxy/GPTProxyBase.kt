@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package com.simiacryptus.openai.proxy
 
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -34,7 +36,7 @@ abstract class GPTProxyBase<T : Any>(
         ) + requestCounters.mapValues { it.value.get() }.mapKeys { "requests.${it.key}" }
     protected val requestCounter = AtomicInteger(0)
     protected val attemptCounter = AtomicInteger(0)
-    private val requestCounters = HashMap<String, AtomicInteger>()
+    val requestCounters = HashMap<String, AtomicInteger>()
 
 
     abstract fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String
@@ -96,7 +98,7 @@ abstract class GPTProxyBase<T : Any>(
 
 
     private val apiLog = apiLogFile?.let { openApiLog(it) }
-    private val examples = HashMap<String, MutableList<RequestResponse>>()
+    val examples = HashMap<String, MutableList<RequestResponse>>()
     private fun loadExamples(file: File = File("api.examples.json")): List<ProxyRecord> {
         if (!file.exists()) return listOf()
         val json = file.readText()

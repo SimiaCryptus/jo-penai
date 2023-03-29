@@ -13,11 +13,11 @@ open class GenerationReportBase<T:Any>(
 ) {
     val proxy = ProxyTest.chatProxy(
         kClass.java,
-        "api.${
+        "./reports/api.${
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
         }.log.json"
     )
-    val outputDir = File("../intellij-aicoder-docs")
+    val outputDir = File("./reports")
     fun runReport(prefix: String, fn: (T, (Any?) -> Unit, (Any?) -> Unit) -> Unit) {
         if (!ProxyTest.keyFile.exists()) return
         val markdownOutputFile = File(

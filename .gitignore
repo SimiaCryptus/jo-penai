@@ -4,3 +4,4 @@ buildOutputCleanup/
 .gradle/
 *.log*
 .*
+reports/
