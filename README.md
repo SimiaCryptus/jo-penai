@@ -1,6 +1,5 @@
 # JoePenai - Unofficial Open Source OpenAI API Client for Java/Kotlin
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.simiacryptus/joe-penai/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.simiacryptus/joe-penai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 This library is an _**unofficial**_ open source Java client for the OpenAI API, built with Kotlin and provided under the Apache 2.0 liscense.
@@ -26,6 +25,29 @@ It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be s
     * [Internal Details](#internal-details)
     * [Troubleshooting](#troubleshooting)
 <!-- TOC -->
+
+## To Import
+
+https://mvnrepository.com/artifact/com.simiacryptus/joe-penai
+
+Maven:
+```xml
+<dependency>
+    <groupId>com.simiacryptus</groupId>
+    <artifactId>joe-penai</artifactId>
+    <version>1.0.4</version>
+</dependency>
+```
+
+Gradle:
+```groovy
+implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.4'
+```
+
+```kotlin
+implementation("com.simiacryptus:joe-penai:1.0.4")
+```
+
 
 ## Basic Features
 
