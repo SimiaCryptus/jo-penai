@@ -103,7 +103,7 @@ With this library, you can now use GPT to:
    more comprehensive and versatile solutions that leverage GPT's natural language capabilities.
 
 This is an OpenAI API client for Java, built with Kotlin. It provides a simple interface for interacting with OpenAI's
-API, allowing access to text completions, edits, chats, dictations, and renderings.
+API, allowing access to text completions, edits, chats, transcriptions, and renderings.
 
 ## Basic Features
 
@@ -114,7 +114,7 @@ All main features of the OpenAI API are supported, including:
 | Text Completion | Generate text completions from a prompt, predicting what comes next in a given context         |
 | Text Editing    | Generate text edits from a prompt, making modifications to improve or change the original text |
 | Text Chat       | Generate text responses to a prompt, simulating a conversation with the AI                     |
-| Text Dictation  | Generate text dictations from audio, converting spoken language into written text              |
+| Text Transcription  | Generate text dictations from audio, converting spoken language into written text              |
 | Text Rendering  | Generate images from a prompt, creating visual representations based on text descriptions      |
 
 These are demonstrated in [ReadmeBasicTest.kt](src/test/kotlin/com/simiacryptus/openai/ReadmeBasicTest.kt)

@@ -44,7 +44,7 @@ class ChatProxy<T : Any>(
     }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
-        if (verbose) println(prompt)
+        if (verbose) log.info(prompt.toString())
         val request = ChatRequest()
         totalYamlLength.addAndGet(prompt.apiYaml.length)
         val exampleMessages = examples.flatMap {
@@ -91,7 +91,7 @@ class ChatProxy<T : Any>(
         totalInputLength.addAndGet(json.length)
 
         val completion = api.chat(request).response.get().toString()
-        if (verbose) println(completion)
+        if (verbose) log.info(completion)
         totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)
         val trimSuffix = trimSuffix(trimPrefix.first)
@@ -101,6 +101,7 @@ class ChatProxy<T : Any>(
     }
 
     companion object {
+        val log = org.slf4j.LoggerFactory.getLogger(ChatProxy::class.java)
         private fun trimPrefix(completion: String): Pair<String, String> {
             val start = completion.indexOf('{').coerceAtMost(completion.indexOf('['))
             return if (start < 0) {

@@ -1,14 +1,13 @@
 package com.simiacryptus.openai
 
 import com.simiacryptus.util.AudioRecorder
-import com.simiacryptus.util.LoudnessWindowBuffer
+import com.simiacryptus.util.TranscriptionProcessor
+import com.simiacryptus.util.PercentileLoudnessWindowBuffer
 import org.junit.jupiter.api.Test
 import java.awt.Desktop
 import java.io.File
-import java.util.*
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 class ReadmeBasicTest {
@@ -66,27 +65,7 @@ class ReadmeBasicTest {
     @Test
     fun testDictate() {
         if (!keyFile.exists()) return
-        val client = OpenAIClient(apiKey)
-        class DictationPump(
-            private val audioBuffer: Deque<ByteArray>,
-            val continueFn: () -> Boolean,
-            var prompt: String = ""
-        ) {
-            fun run() {
-                while (this.continueFn() || audioBuffer.isNotEmpty()) {
-                    val recordAudio = audioBuffer.poll()
-                    if (null == recordAudio) {
-                        Thread.sleep(1)
-                    } else {
-                        var text = client.dictate(recordAudio, prompt)
-                        if (prompt.isNotEmpty()) text = " $text"
-                        val newPrompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
-                        prompt = newPrompt
-                        println(text)
-                    }
-                }
-            }
-        }
+        val client: OpenAIClient = OpenAIClient(apiKey)
         val endTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
         val continueFn : () -> Boolean = { System.currentTimeMillis() < endTime }
         val rawBuffer = ConcurrentLinkedDeque<ByteArray>()
@@ -100,21 +79,21 @@ class ReadmeBasicTest {
         val wavBuffer = ConcurrentLinkedDeque<ByteArray>()
         Thread({
             try {
-                LoudnessWindowBuffer(rawBuffer, wavBuffer, continueFn).run()
+                PercentileLoudnessWindowBuffer(rawBuffer, wavBuffer, continueFn).run()
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
-        }, "dictation-audio-processor").start()
-        val dictationPump = DictationPump(wavBuffer, continueFn)
-        val dictationThread = Thread({
+        }, "transcription-audio-processor").start()
+        val transcriptionProcessor = TranscriptionProcessor(client, wavBuffer, continueFn){ println(it) }
+        val transcriptionThread = Thread({
             try {
-                dictationPump.run()
+                transcriptionProcessor.run()
             } catch (e: Throwable) {
                 e.printStackTrace()
             }
-        }, "dictation-api-processor")
-        dictationThread.start()
-        dictationThread.join()
+        }, "transcription-api-processor")
+        transcriptionThread.start()
+        transcriptionThread.join()
     }
 
 }

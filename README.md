@@ -1,42 +1,43 @@
-# JoePenai - Java OpenAI API Client
+# JoePenai - Unofficial Open Source OpenAI API Client for Java/Kotlin
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.simiacryptus/joe-penai/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.simiacryptus/joe-penai)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-<!-- TOC -->
-
-* [JoePenai - Java OpenAI API Client](#joepenai---java-openai-api-client)
-    * [Basic Features](#basic-features)
-    * [GPT-Proxy API](#gpt-proxy-api)
-        * [Key Features](#key-features)
-        * [Getting Started](#getting-started)
-        * [Examples](#examples)
-            * [Example 1: Simple Interface](#example-1--simple-interface)
-            * [Example 2: Adding Metadata and Annotations](#example-2--adding-metadata-and-annotations)
-            * [Example 3: Using Kotlin Data Classes](#example-3--using-kotlin-data-classes)
-            * [Example 4: Text Parsing](#example-4--text-parsing)
-            * [Example 5: Adding Examples](#example-5--adding-examples)
-            * [Example 6: Adding Validation Rules](#example-6--adding-validation-rules)
-        * [Best Practices](#best-practices)
-        * [Internal Details](#internal-details)
-        * [Troubleshooting](#troubleshooting)
+This library is an _**unofficial**_ open source Java client for the OpenAI API, built with Kotlin and provided under the Apache 2.0 liscense.
+It provides a simple interface for interacting with OpenAI's API, allowing access to text completions, edits, chats, transcriptions, and renderings.
+Additionally, it provides some utilties for handling Audio for capturing transcriptions.
+It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be serviced by a GPT model.
 
 <!-- TOC -->
-
-This is an OpenAI API client for Java, built with Kotlin. It provides a simple interface for interacting with OpenAI's
-API, allowing access to text completions, edits, chats, dictations, and renderings.
+* [JoePenai - Unofficial Open Source OpenAI API Client for Java/Kotlin](#joepenai---unofficial-open-source-openai-api-client-for-javakotlin)
+  * [Basic Features](#basic-features)
+  * [GPT-Proxy API](#gpt-proxy-api)
+    * [Key Features](#key-features)
+    * [Getting Started](#getting-started)
+    * [Examples](#examples)
+      * [Example 1: Simple Interface](#example-1-simple-interface)
+      * [Example 2: Adding Metadata and Annotations](#example-2-adding-metadata-and-annotations)
+      * [Example 3: Using Kotlin Data Classes](#example-3-using-kotlin-data-classes)
+      * [Example 4: Text Parsing](#example-4-text-parsing)
+      * [Example 5: Adding Examples](#example-5-adding-examples)
+      * [Example 6: Adding Validation Rules](#example-6-adding-validation-rules)
+    * [Best Practices](#best-practices)
+    * [Configuration](#configuration)
+    * [Internal Details](#internal-details)
+    * [Troubleshooting](#troubleshooting)
+<!-- TOC -->
 
 ## Basic Features
 
 All main features of the OpenAI API are supported, including:
 
-| Feature         | Description                                                                                    |
-|-----------------|------------------------------------------------------------------------------------------------|
-| Text Completion | Generate text completions from a prompt, predicting what comes next in a given context         |
-| Text Editing    | Generate text edits from a prompt, making modifications to improve or change the original text |
-| Text Chat       | Generate text responses to a prompt, simulating a conversation with the AI                     |
-| Text Dictation  | Generate text dictations from audio, converting spoken language into written text              |
-| Text Rendering  | Generate images from a prompt, creating visual representations based on text descriptions      |
+| Feature            | Description                                                                                    |
+|--------------------|------------------------------------------------------------------------------------------------|
+| Text Completion    | Generate text completions from a prompt, predicting what comes next in a given context         |
+| Text Editing       | Generate text edits from a prompt, making modifications to improve or change the original text |
+| Text Chat          | Generate text responses to a prompt, simulating a conversation with the AI                     |
+| Text Transcription | Generate text transcriptions from audio, converting spoken language into written text          |
+| Text Rendering     | Generate images from a prompt, creating visual representations based on text descriptions      |
 
 These are demonstrated in [ReadmeBasicTest.kt](src/test/kotlin/com/simiacryptus/openai/ReadmeBasicTest.kt)
 
@@ -94,7 +95,7 @@ interface TextSummarizer {
 Create the proxy class and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(TextSummarizer::class.java, "...apikey...")
+val gptProxy = ChatProxy(TextSummarizer::class.java, System.getenv("OPENAI_KEY"))
 val summarizer = gptProxy.create()
 val summary = summarizer.summarize("Your long text goes here.")
 println(summary)
@@ -128,7 +129,7 @@ interface BlogPostGenerator {
 Create the proxy class and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(BlogPostGenerator::class.java, "...apikey...")
+val gptProxy = ChatProxy(BlogPostGenerator::class.java, System.getenv("OPENAI_KEY"))
 val generator = gptProxy.create()
 val blogPost = generator.generateBlogPost(
     "The Future of AI",
@@ -182,7 +183,7 @@ interface RecipeGenerator {
 Create the proxy class and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(RecipeGenerator::class.java, "...apikey...")
+val gptProxy = ChatProxy(RecipeGenerator::class.java, System.getenv("OPENAI_KEY"))
 val generator = gptProxy.create()
 val recipeInput = RecipeInput("Chocolate Cake", listOf("flour", "sugar", "cocoa powder", "eggs", "milk"), 8)
 val recipeOutput = generator.generateRecipe(recipeInput)
@@ -235,7 +236,7 @@ interface ShoppingListParser {
 Create the proxy class and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(ShoppingListParser::class.java, "...apikey...")
+val gptProxy = ChatProxy(ShoppingListParser::class.java, System.getenv("OPENAI_KEY"))
 val parser = gptProxy.create()
 val plainTextList = "2 apples\n1 loaf of bread\n3 cans of soup\n4 bananas"
 val parsedList = parser.parseShoppingList(plainTextList)
@@ -279,7 +280,7 @@ interface WeatherForecast {
 Create the proxy class, add examples, and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(WeatherForecast::class.java, "...apikey...")
+val gptProxy = ChatProxy(WeatherForecast::class.java, System.getenv("OPENAI_KEY"))
 gptProxy.addExample(WeatherOutput("New York", listOf("Sunny", "Partly Cloudy", "Rainy"))) {
     it.getWeatherForecast(WeatherInput("New York", 3))
 }
@@ -333,7 +334,7 @@ interface MathSolver {
 Create the proxy class and use it:
 
 ```kotlin
-val gptProxy = ChatProxy(MathSolver::class.java, "...apikey...")
+val gptProxy = ChatProxy(MathSolver::class.java, System.getenv("OPENAI_KEY"))
 val solver = gptProxy.create()
 val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
 val mathOutput = solver.solveMathProblem(mathInput)
@@ -437,7 +438,7 @@ behavior and performance of the proxy. Here are some of the most commonly used o
 Here is an example of how to create a GPT-Proxy instance with custom configuration options:
 
 ```kotlin
-val gptProxy = ChatProxy(ShoppingListParser::class.java, "...apikey...")
+val gptProxy = ChatProxy(ShoppingListParser::class.java, System.getenv("OPENAI_KEY"))
 gptProxy.model = "gpt-3.5-turbo"
 gptProxy.temperature = 0.6
 gptProxy.maxTokens = 100

@@ -34,7 +34,7 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
     private val key: String,
     private val apiBase: String = "https://api.openai.com/v1",
-    val logLevel: Level = Level.INFO
+    private val logLevel: Level = Level.INFO
 ) : HttpClientManager() {
 
     open val metrics : Map<String, Any>
@@ -43,17 +43,17 @@ open class OpenAIClient(
             "completions" to completionCounter.get(),
             "moderations" to moderationCounter.get(),
             "renders" to renderCounter.get(),
-            "dictations" to dictationCounter.get(),
+            "transcriptions" to transcriptionCounter.get(),
             "edits" to editCounter.get(),
             "tokens" to tokens.get(),
         )
-    protected val chatCounter = AtomicInteger(0)
-    protected val completionCounter = AtomicInteger(0)
-    protected val moderationCounter = AtomicInteger(0)
-    protected val renderCounter = AtomicInteger(0)
-    protected val dictationCounter = AtomicInteger(0)
-    protected val editCounter = AtomicInteger(0)
-    protected val tokens = AtomicInteger(0)
+    private val chatCounter = AtomicInteger(0)
+    private val completionCounter = AtomicInteger(0)
+    private val moderationCounter = AtomicInteger(0)
+    private val renderCounter = AtomicInteger(0)
+    private val transcriptionCounter = AtomicInteger(0)
+    private val editCounter = AtomicInteger(0)
+    private val tokens = AtomicInteger(0)
 
 
     fun getEngines(): Array<CharSequence?> {
@@ -135,9 +135,10 @@ open class OpenAIClient(
         EntityUtils.toString(entity)
     }
 
-    fun dictate(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
+
+    fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
         withPerformanceLogging {
-            dictationCounter.incrementAndGet()
+            transcriptionCounter.incrementAndGet()
             val url = "$apiBase/audio/transcriptions"
             val request = HttpPost(url)
             request.addHeader("Accept", "application/json")
@@ -146,6 +147,7 @@ open class OpenAIClient(
             entity.setMode(HttpMultipartMode.RFC6532)
             entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
             entity.addTextBody("model", "whisper-1")
+            entity.addTextBody("response_format", "verbose_json")
             if (prompt.isNotEmpty()) entity.addTextBody("prompt", prompt)
             request.entity = entity.build()
             val response = post(request)
@@ -154,7 +156,36 @@ open class OpenAIClient(
                 val errorObject = jsonObject.getAsJsonObject("error")
                 throw RuntimeException(IOException(errorObject["message"].asString))
             }
-            jsonObject.get("text").asString!!
+            try {
+                val result = mapper.readValue(response, TranscriptionResult::class.java)
+                result.text!!
+            } catch (e: Exception) {
+                jsonObject.get("text").asString!!
+            }
+        }
+    }
+
+    fun transcriptionVerbose(wavAudio: ByteArray, prompt: String = ""): TranscriptionResult = withReliability {
+        withPerformanceLogging {
+            transcriptionCounter.incrementAndGet()
+            val url = "$apiBase/audio/transcriptions"
+            val request = HttpPost(url)
+            request.addHeader("Accept", "application/json")
+            authorize(request)
+            val entity = MultipartEntityBuilder.create()
+            entity.setMode(HttpMultipartMode.RFC6532)
+            entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
+            entity.addTextBody("model", "whisper-1")
+            entity.addTextBody("response_format", "verbose_json")
+            if (prompt.isNotEmpty()) entity.addTextBody("prompt", prompt)
+            request.entity = entity.build()
+            val response = post(request)
+            val jsonObject = Gson().fromJson(response, JsonObject::class.java)
+            if (jsonObject.has("error")) {
+                val errorObject = jsonObject.getAsJsonObject("error")
+                throw RuntimeException(IOException(errorObject["message"].asString))
+            }
+            return@withPerformanceLogging mapper.readValue(response, TranscriptionResult::class.java)
         }
     }
 

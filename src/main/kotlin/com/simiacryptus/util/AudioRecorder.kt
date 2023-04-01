@@ -18,21 +18,27 @@ class AudioRecorder(
 
     fun run() {
         openMic().use { targetDataLine ->
+            log.info("Audio recording started")
             val buffer = ByteArray(packetLength)
             val circularBuffer = CircularByteBuffer(packetLength * 2)
             while (continueFn()) {
-                var bytesRead = 0
-                val endTime = (System.currentTimeMillis() + secondsPerPacket * 1000).toLong()
-                while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
-                    bytesRead = targetDataLine.read(buffer, 0, buffer.size)
-                    circularBuffer.add(buffer, 0, bytesRead)
-                    while (circularBuffer.currentNumberOfBytes >= packetLength) {
-                        val array = ByteArray(packetLength)
-                        circularBuffer.read(array, 0, packetLength)
-                        audioBuffer.add(array)
+                try {
+                    var bytesRead = 0
+                    val endTime = (System.currentTimeMillis() + secondsPerPacket * 1000).toLong()
+                    while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
+                        bytesRead = targetDataLine.read(buffer, 0, buffer.size)
+                        circularBuffer.add(buffer, 0, bytesRead)
+                        while (circularBuffer.currentNumberOfBytes >= packetLength) {
+                            val array = ByteArray(packetLength)
+                            circularBuffer.read(array, 0, packetLength)
+                            audioBuffer.add(array)
+                        }
                     }
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
             }
+            log.info("Audio recording stopped")
         }
     }
 
