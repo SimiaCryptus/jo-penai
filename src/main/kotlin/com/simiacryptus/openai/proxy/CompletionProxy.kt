@@ -23,7 +23,7 @@ class CompletionProxy<T:Any>(
     }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
-        if(verbose) println(prompt)
+        if(verbose) log.info(prompt.toString())
         val request = CompletionRequest()
         request.prompt = """
         |Method: ${prompt.methodName}
@@ -43,7 +43,7 @@ class CompletionProxy<T:Any>(
         request.temperature = temperature
         if (moderated) api.moderate(toJson(request))
         val completion = api.complete(request, model).firstChoice.get().toString()
-        if(verbose) println(completion)
+        if(verbose) log.info(completion)
         return "{$completion"
     }
 }
