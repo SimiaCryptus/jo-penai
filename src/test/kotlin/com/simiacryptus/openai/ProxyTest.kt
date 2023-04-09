@@ -17,12 +17,11 @@ class ProxyTest {
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
         }.log.json"): ChatProxy<T> = ChatProxy(
             clazz,
-            apiKey = keyFile.readText().trim(),
+            api = OpenAIClient(keyFile.readText().trim()),
             model = "gpt-3.5-turbo-0301",
             maxTokens = 8912,
             apiLog = apiLog,
             //model = "gpt-4-0314",
-            logLevel = Level.WARN,
             deserializerRetries = 5
         )
         fun <T:Any> completionProxy(clazz : Class<T>,

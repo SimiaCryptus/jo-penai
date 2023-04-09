@@ -12,12 +12,13 @@ import javax.sound.sampled.TargetDataLine
 class AudioRecorder(
     val audioBuffer: Deque<ByteArray>,
     val secondsPerPacket: Double,
-    val continueFn: () -> Boolean
+    val continueFn: () -> Boolean,
 ) {
     val packetLength = (audioFormat.frameRate * audioFormat.frameSize * secondsPerPacket).toInt()
 
     fun run() {
-        openMic().use { targetDataLine ->
+        val targetDataLine = openMic()
+        try {
             log.info("Audio recording started")
             val buffer = ByteArray(packetLength)
             val circularBuffer = CircularByteBuffer(packetLength * 2)
@@ -39,6 +40,8 @@ class AudioRecorder(
                 }
             }
             log.info("Audio recording stopped")
+        } finally {
+            targetDataLine.close()
         }
     }
 

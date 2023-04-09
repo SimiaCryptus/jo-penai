@@ -18,7 +18,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo1() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(TextSummarizer::class.java, apiKey)
+        val gptProxy = ChatProxy(TextSummarizer::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         val summarizer = gptProxy.create()
         val summary = summarizer.summarize("Your long text goes here.")
         println(summary)
@@ -35,7 +35,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo2() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(BlogPostGenerator::class.java, apiKey)
+        val gptProxy = ChatProxy(BlogPostGenerator::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         val generator = gptProxy.create()
         val blogPost = generator.generateBlogPost(
             "The Future of AI",
@@ -64,7 +64,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo3() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(RecipeGenerator::class.java, apiKey)
+        val gptProxy = ChatProxy(RecipeGenerator::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         val generator = gptProxy.create()
         val recipeInput = RecipeInput("Chocolate Cake", listOf("flour", "sugar", "cocoa powder", "eggs", "milk"), 8)
         val recipeOutput = generator.generateRecipe(recipeInput)
@@ -83,7 +83,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo4() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(ShoppingListParser::class.java, apiKey)
+        val gptProxy = ChatProxy(ShoppingListParser::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         val parser = gptProxy.create()
         val plainTextList = "2 apples\n1 loaf of bread\n3 cans of soup\n4 bananas"
         val parsedList = parser.parseShoppingList(plainTextList)
@@ -108,7 +108,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo5() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(WeatherForecast::class.java, apiKey)
+        val gptProxy = ChatProxy(WeatherForecast::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         gptProxy.addExample(WeatherOutput("New York", listOf("Sunny", "Partly Cloudy", "Rainy"))) {
             it.getWeatherForecast(WeatherInput("New York", 3))
         }
@@ -139,7 +139,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo6() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(MathSolver::class.java, apiKey)
+        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
         val mathOutput = solver.solveMathProblem(mathInput)
@@ -149,7 +149,7 @@ class ReadmeProxyTest {
     @Test
     fun testDemo7() {
         if (!keyFile.exists()) return
-        val gptProxy = ChatProxy(MathSolver::class.java, apiKey)
+        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(ProxyTest.keyFile.readText().trim()))
         gptProxy.model = "gpt-4-0314"
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
