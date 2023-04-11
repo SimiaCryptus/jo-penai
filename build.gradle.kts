@@ -36,6 +36,7 @@ tasks {
 
     test {
         useJUnitPlatform()
+        systemProperty("surefire.useManifestOnlyJar", "false")
         testLogging {
             events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
@@ -52,6 +53,7 @@ kotlin {
     jvmToolchain(11)
 }
 
+val kotlin_version = "1.7.21"
 dependencies {
     implementation("org.openimaj:JTransforms:1.3.10")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
@@ -64,7 +66,7 @@ dependencies {
     implementation("org.slf4j:slf4j-simple:2.0.5")
     implementation("commons-io:commons-io:2.11.0")
     implementation(kotlin("stdlib"))
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.10")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
     testImplementation(kotlin("script-runtime"))
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")

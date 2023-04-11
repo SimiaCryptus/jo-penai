@@ -3,21 +3,20 @@ package com.simiacryptus.openai.proxy
 import com.simiacryptus.openai.ChatMessage
 import com.simiacryptus.openai.ChatRequest
 import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.event.Level
 import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("MemberVisibilityCanBePrivate")
 class ChatProxy<T : Any>(
     clazz: Class<T>,
-    apiKey: String,
+    val api: OpenAIClient,
     var model: String = "gpt-3.5-turbo",
-    var maxTokens: Int = 3500,
+    var maxTokens: Int = 8912,
     temperature: Double = 0.7,
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
-    base: String = "https://api.openai.com/v1",
     apiLog: String? = null,
-    logLevel: Level = Level.INFO,
     val deserializerRetries: Int = 5,
     validation: Boolean = true,
 ) : GPTProxyBase<T>(clazz, apiLog, temperature, validation, deserializerRetries) {
@@ -36,12 +35,6 @@ class ChatProxy<T : Any>(
     protected val totalYamlLength = AtomicInteger(0)
     protected val totalExamplesLength = AtomicInteger(0)
     protected val totalOutputLength = AtomicInteger(0)
-
-    val api: OpenAIClient
-
-    init {
-        api = OpenAIClient(apiKey, base, logLevel)
-    }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if (verbose) log.info(prompt.toString())

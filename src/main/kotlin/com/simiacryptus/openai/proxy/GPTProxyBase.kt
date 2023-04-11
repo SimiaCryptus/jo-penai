@@ -2,13 +2,9 @@
 
 package com.simiacryptus.openai.proxy
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.core.json.JsonReadFeature
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.isKotlinClass
-import com.google.common.reflect.TypeToken
+import com.simiacryptus.util.DescriptorUtil.toYaml
+import com.simiacryptus.util.JsonUtil.fromJson
+import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File
@@ -16,9 +12,6 @@ import java.io.FileWriter
 import java.lang.reflect.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.javaType
 
 
 abstract class GPTProxyBase<T : Any>(
@@ -147,42 +140,6 @@ abstract class GPTProxyBase<T : Any>(
         }
     }
 
-    open fun toJson(data: Any): String {
-        return objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data)
-    }
-
-    open fun <T> fromJson(data: String, type: Type): T {
-        if (type is Class<*> && type.isAssignableFrom(String::class.java)) return data as T
-        val value = objectMapper().readValue(data, objectMapper().typeFactory.constructType(type)) as T
-        //log.debug("Deserialized $data to $value")
-        return value
-    }
-
-    open fun objectMapper(): ObjectMapper {
-        return ObjectMapper()
-            .enable(JsonParser.Feature.ALLOW_COMMENTS)
-            .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
-            .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
-            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES)
-            .disable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
-            .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-//            .disable(DeserializationFeature.FAIL_ON_INVALID_SUBTYPE)
-//            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
-//            .disable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY)
-            .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_YAML_COMMENTS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_TRAILING_COMMA.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_MISSING_VALUES.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_LEADING_DECIMAL_POINT_FOR_NUMBERS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_NON_NUMERIC_NUMBERS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_LEADING_PLUS_SIGN_FOR_NUMBERS.mappedFeature())
-            .enable(JsonReadFeature.ALLOW_TRAILING_DECIMAL_POINT_FOR_NUMBERS.mappedFeature())
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    }
-
     data class ProxyRequest(
         val methodName: String = "",
         val apiYaml: String = "",
@@ -202,151 +159,6 @@ abstract class GPTProxyBase<T : Any>(
 
     companion object {
         val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
-
-        fun Parameter.toYaml(): String {
-            val description = getAnnotation(Description::class.java)?.value
-            val yaml = if (description != null) {
-                val yamlEscapedDescription = description.replace("\n", """\n""")
-                """
-                |- name: ${this.name}
-                |  description: $yamlEscapedDescription
-                |  ${this.parameterizedType.toYaml().replace("\n", "\n  ")}
-                |""".trimMargin().trim()
-            } else {
-                """
-                |- name: ${this.name}
-                |  ${this.parameterizedType.toYaml().replace("\n", "\n  ")}
-                |""".trimMargin().trim()
-            }
-            return yaml
-        }
-
-
-        fun Type.toYaml(): String {
-            val typeName = this.typeName.substringAfterLast('.').replace('$', '.').toLowerCase()
-            val primitives = setOf(
-                "boolean",
-                "integer",
-                "number",
-                "string",
-                "double",
-                "float",
-                "long",
-                "short",
-                "byte",
-                "char",
-                "object"
-            )
-            val yaml = if (typeName in primitives) {
-                "type: $typeName"
-            } else if (this is ParameterizedType && List::class.java.isAssignableFrom(this.rawType as Class<*>)) {
-                """
-                |type: array
-                |items:
-                |  ${this.actualTypeArguments[0].toYaml().replace("\n", "\n  ")}
-                |""".trimMargin()
-            } else if (this is ParameterizedType && Map::class.java.isAssignableFrom(this.rawType as Class<*>)) {
-                """
-                |type: map
-                |keys:
-                |  ${this.actualTypeArguments[0].toYaml().replace("\n", "\n  ")}
-                |values:
-                |  ${this.actualTypeArguments[1].toYaml().replace("\n", "\n  ")}
-                |""".trimMargin()
-            } else if (this.isArray) {
-                """
-                |type: array
-                |items:
-                |  ${this.componentType?.toYaml()?.replace("\n", "\n  ")}
-                |""".trimMargin()
-            } else {
-                val rawType = TypeToken.of(this).rawType
-                val propertiesYaml = if (rawType.isKotlinClass() && rawType.kotlin.isData) {
-                    rawType.kotlin.memberProperties.map {
-                        val description = getAllAnnotations(rawType, it).find { x -> x is Description } as? Description
-                        // Find annotation on the kotlin data class constructor parameter
-                        val yaml = if (description != null) {
-                            """
-                            |${it.name}:
-                            |  description: ${description.value}
-                            |  ${it.returnType.javaType.toYaml().replace("\n", "\n  ")}
-                            """.trimMargin().trim()
-                        } else {
-                            """
-                            |${it.name}:
-                            |  ${it.returnType.javaType.toYaml().replace("\n", "\n  ")}
-                            """.trimMargin().trim()
-                        }
-                        yaml
-                    }.toTypedArray()
-                } else {
-                    rawType.declaredFields.map {
-                        """
-                        |${it.name}:
-                        |  ${it.genericType.toYaml().replace("\n", "\n  ")}
-                        """.trimMargin().trim()
-                    }.toTypedArray()
-                }
-                val fieldsYaml = propertiesYaml.toList().joinToString("\n")
-                """
-                |type: object
-                |properties:
-                |  ${fieldsYaml.replace("\n", "\n  ")}
-                """.trimMargin()
-            }
-            return yaml
-        }
-
-        private fun getAllAnnotations(
-            rawType: Class<in Nothing>,
-            property: KProperty1<out Any, *>
-        ) =
-            property.annotations + (rawType.kotlin.constructors.first().parameters.find { x -> x.name == property.name }?.annotations
-                ?: listOf())
-
-        fun Method.toYaml(): String {
-            val parameterYaml = parameters.map { it.toYaml() }.toTypedArray().joinToString("\n").trim()
-            val returnTypeYaml = genericReturnType.toYaml().trim()
-            val description = annotations.find { x -> x is Description } as? Description
-            val responseYaml = """
-                                      |responses:
-                                      |  application/json:
-                                      |    schema:
-                                      |      ${returnTypeYaml.replace("\n", "\n      ")}
-                                      """.trimMargin().trim()
-            val yaml = if (description != null) {
-                """
-                |operationId: $name
-                |description: ${description.value}
-                |parameters:
-                |  ${parameterYaml.replace("\n", "\n  ")}
-                |$responseYaml
-                """.trimMargin()
-            } else {
-                """
-                |operationId: $name
-                |parameters:
-                |  ${parameterYaml.replace("\n", "\n  ")}
-                |$responseYaml
-                """.trimMargin()
-            }
-
-            return yaml
-        }
-
-        val Type.isArray: Boolean
-            get() {
-                return this is Class<*> && this.isArray
-            }
-
-        val Type.componentType: Type?
-            get() {
-                return when (this) {
-                    is Class<*> -> if (this.isArray) this.componentType else null
-                    is ParameterizedType -> this.actualTypeArguments.firstOrNull()
-                    else -> null
-                }
-            }
     }
 
 }

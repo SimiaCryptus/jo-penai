@@ -1,5 +1,6 @@
 package com.simiacryptus.openai
 
+import com.simiacryptus.util.JsonUtil.toJson
 import java.awt.image.BufferedImage
 import java.io.BufferedWriter
 import java.io.File
@@ -38,7 +39,7 @@ open class GenerationReportBase<T:Any>(
                 out(
                     """
                             |```json
-                            |${proxy.toJson(obj)}
+                            |${toJson(obj)}
                             |```
                             |""".trimMargin()
                 )

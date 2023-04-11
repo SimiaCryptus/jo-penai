@@ -2,6 +2,7 @@ package com.simiacryptus.openai.proxy
 
 import com.simiacryptus.openai.CompletionRequest
 import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.event.Level
 
 class CompletionProxy<T:Any>(
