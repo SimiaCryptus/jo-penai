@@ -65,7 +65,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.5")
     implementation("org.slf4j:slf4j-simple:2.0.5")
     implementation("commons-io:commons-io:2.11.0")
-    implementation(kotlin("stdlib"))
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
     testImplementation(kotlin("script-runtime"))
