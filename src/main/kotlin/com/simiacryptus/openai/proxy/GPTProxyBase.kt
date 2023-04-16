@@ -2,7 +2,7 @@
 
 package com.simiacryptus.openai.proxy
 
-import com.simiacryptus.util.DescriptorUtil.toYaml
+import com.simiacryptus.util.YamlDescriber.Companion.toYaml
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.Logger
