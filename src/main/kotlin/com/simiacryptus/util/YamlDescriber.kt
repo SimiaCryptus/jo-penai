@@ -9,6 +9,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
+import java.util.*
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
@@ -53,7 +54,7 @@ open class YamlDescriber(
 
     fun toYaml(self: Type, stackMax : Int = 10): String {
         if (stackMax <= 0) return "..."
-        val typeName = self.typeName.substringAfterLast('.').replace('$', '.').toLowerCase()
+        val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         val primitives = setOf(
             "boolean",
             "integer",
@@ -87,7 +88,7 @@ open class YamlDescriber(
             """
                 |type: array
                 |items:
-                |  ${toYaml(self.componentType!!,stackMax-1)?.replace("\n", "\n  ")}
+                |  ${toYaml(self.componentType!!,stackMax-1).replace("\n", "\n  ")}
                 |""".trimMargin()
         } else {
             toYaml(TypeToken.of(self).rawType, stackMax)

@@ -2,9 +2,10 @@
 
 package com.simiacryptus.openai.proxy
 
-import com.simiacryptus.util.YamlDescriber.Companion.toYaml
+import com.google.gson.reflect.TypeToken
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
+import com.simiacryptus.util.YamlDescriber.Companion.toYaml
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File
@@ -22,7 +23,7 @@ abstract class GPTProxyBase<T : Any>(
     var maxRetries: Int = 5,
 ) {
 
-    open val metrics : Map<String, Any>
+    open val metrics: Map<String, Any>
         get() = hashMapOf(
             "requests" to requestCounter.get(),
             "attempts" to attemptCounter.get(),
@@ -60,24 +61,18 @@ abstract class GPTProxyBase<T : Any>(
                         temperature =
                             if (temperature <= 0.0) 0.0 else temperature.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
                     }
-                    var result = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
-                    // If the requested `type` is a list, check that result is a list
-                    if (type is ParameterizedType && List::class.java.isAssignableFrom(type.rawType as Class<*>) && !result.startsWith(
-                            "["
-                        )
-                    ) {
-                        result = "[$result]"
-                    }
-                    writeToJsonLog(ProxyRecord(method.name, prompt.argList, result))
+                    var jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
+                    var jsonResult = fixup(jsonResult0, type)
+                    writeToJsonLog(ProxyRecord(method.name, prompt.argList, jsonResult))
                     try {
-                        val obj = fromJson<Any>(result, type)
+                        val obj = fromJson<Any>(jsonResult, type)
                         if (validation && obj is ValidatedObject && !obj.validate()) {
-                            log.warn("Invalid response: $result")
+                            log.warn("Invalid response: $jsonResult")
                             continue
                         }
                         return@newProxyInstance obj
                     } catch (e: Exception) {
-                        log.warn("Failed to parse response: $result", e)
+                        log.warn("Failed to parse response: $jsonResult", e)
                         lastException = e
                         log.info("Retry $retry of $maxRetries")
                     }
@@ -88,7 +83,6 @@ abstract class GPTProxyBase<T : Any>(
             }
         } as T
     }
-
 
     private val apiLog = apiLogFile?.let { openApiLog(it) }
     val examples = HashMap<String, MutableList<RequestResponse>>()
@@ -143,22 +137,68 @@ abstract class GPTProxyBase<T : Any>(
     data class ProxyRequest(
         val methodName: String = "",
         val apiYaml: String = "",
-        val argList: Map<String, String> = mapOf()
+        val argList: Map<String, String> = mapOf(),
     )
 
     data class ProxyRecord(
         val methodName: String = "",
         val argList: Map<String, String> = mapOf(),
-        val response: String = ""
+        val response: String = "",
     )
 
     data class RequestResponse(
         val argList: Map<String, String> = mapOf(),
-        val response: String
+        val response: String,
     )
 
     companion object {
         val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
+
+
+        // If the requested `type` is a list, and jsonResult is not a list:
+        //  1) If jsonResult is an object with a single key whose value is a list, return the value of that key
+        //  2) Otherwise, return a list containing jsonResult
+        fun fixup(jsonResult: String, type: Type): String {
+            var jsonResult1 = jsonResult
+            if (type is ParameterizedType && List::class.java.isAssignableFrom(type.rawType as Class<*>) && !jsonResult1.startsWith(
+                    "["
+                )
+            ) {
+                val obj = fromJson<Map<String, Any>>(jsonResult1, object : TypeToken<Map<String, Any>>() {}.type)
+                if (obj.size == 1) {
+                    val key = obj.keys.firstOrNull()
+                    if (key is String && obj[key] is List<*>) {
+                        jsonResult1 = obj[key]?.let { toJson(it) } ?: "[]"
+                    }
+                }
+            }
+            return jsonResult1
+        }
+
+        @JvmStatic
+        fun main(args: Array<String>) {
+            println(
+                fixup(
+                    """
+                    {
+                      "topics": [
+                        "Stand-up comedy",
+                        "Slapstick humor",
+                        "Satire",
+                        "Parody",
+                        "Impressions",
+                        "Observational comedy",
+                        "Sketch comedy",
+                        "Dark humor",
+                        "Physical comedy",
+                        "Improvisational comedy"
+                      ]
+                    }
+                """.trimIndent(), object : TypeToken<List<String>>() {}.type
+                )
+            )
+
+        }
     }
 
 }
