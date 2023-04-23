@@ -113,7 +113,7 @@ open class OpenAIClient(
     fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
 
     @Throws(IOException::class)
-    open protected fun authorize(request: HttpRequestBase) {
+    protected open fun authorize(request: HttpRequestBase) {
         request.addHeader("Authorization", "Bearer $key")
     }
 
