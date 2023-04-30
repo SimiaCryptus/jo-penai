@@ -57,19 +57,28 @@ kotlin {
 val kotlin_version = "1.7.21"
 dependencies {
     implementation("org.openimaj:JTransforms:1.3.10")
+
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.14.2")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+
     implementation("com.google.guava:guava:31.1-jre")
     implementation("com.google.code.gson:gson:2.10.1")
+
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
-    implementation("org.slf4j:slf4j-api:2.0.5")
-    implementation("org.slf4j:slf4j-simple:2.0.5")
     implementation("commons-io:commons-io:2.11.0")
+
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+
+    implementation("org.slf4j:slf4j-api:2.0.5")
+
     testImplementation(kotlin("script-runtime"))
+
+    testImplementation("ch.qos.logback:logback-classic:1.2.9")
+    testImplementation("ch.qos.logback:logback-core:1.2.9")
+
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
 }
