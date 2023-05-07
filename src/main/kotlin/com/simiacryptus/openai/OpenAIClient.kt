@@ -32,7 +32,7 @@ import javax.imageio.ImageIO
 
 @Suppress("unused")
 open class OpenAIClient(
-    private val key: String,
+    protected var key: String,
     private val apiBase: String = "https://api.openai.com/v1",
     private val logLevel: Level = Level.INFO
 ) : HttpClientManager() {
@@ -54,7 +54,6 @@ open class OpenAIClient(
     private val transcriptionCounter = AtomicInteger(0)
     private val editCounter = AtomicInteger(0)
     private val tokens = AtomicInteger(0)
-
 
     fun getEngines(): Array<CharSequence?> {
         val engines = mapper.readValue(
@@ -134,7 +133,6 @@ open class OpenAIClient(
         val entity = response.entity
         EntityUtils.toString(entity)
     }
-
 
     fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
         withPerformanceLogging {
@@ -279,41 +277,16 @@ open class OpenAIClient(
         tokens.addAndGet(totalTokens)
     }
 
-    companion object {
-        val log = LoggerFactory.getLogger(OpenAIClient::class.java)
-
-        fun log(level: Level, msg: String) {
-            val message = msg.trim { it <= ' ' }.replace("\n", "\n\t")
-            when (level) {
-                Level.ERROR -> log.error(message)
-                Level.WARN -> log.warn(message)
-                Level.INFO -> log.info(message)
-                else -> log.debug(message)
-            }
+    open fun log(level: Level, msg: String) {
+        val message = msg.trim().replace("\n", "\n\t")
+        when (level) {
+            Level.ERROR -> log.error(message)
+            Level.WARN -> log.warn(message)
+            Level.INFO -> log.info(message)
+            Level.DEBUG -> log.debug(message)
+            Level.TRACE -> log.debug(message)
+            else -> log.debug(message)
         }
-
-        val mapper: ObjectMapper
-            get() {
-                val mapper = ObjectMapper()
-                mapper
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-                    .enable(MapperFeature.USE_STD_BEAN_NAMING)
-                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                    .activateDefaultTyping(mapper.polymorphicTypeValidator)
-                return mapper
-            }
-        val allowedCharset: Charset = Charset.forName("ASCII")
-        private val maxTokenErrorMessage = listOf(
-            Pattern.compile(
-                """This model's maximum context length is (\d+) tokens. However, you requested (\d+) tokens \((\d+) in the messages, (\d+) in the completion\).*"""
-            ),
-            // This model's maximum context length is 4097 tokens, however you requested 80052 tokens (52 in your prompt; 80000 for the completion). Please reduce your prompt; or completion length.
-            Pattern.compile(
-                """This model's maximum context length is (\d+) tokens, however you requested (\d+) tokens \((\d+) in your prompt; (\d+) for the completion\).*"""
-            )
-        )
-
     }
 
     fun complete(
@@ -486,6 +459,31 @@ open class OpenAIClient(
                 )
             )
         }
+    }
+
+    companion object {
+        val log = LoggerFactory.getLogger(OpenAIClient::class.java)
+        val mapper: ObjectMapper
+            get() {
+                val mapper = ObjectMapper()
+                mapper
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                    .enable(MapperFeature.USE_STD_BEAN_NAMING)
+                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                    .activateDefaultTyping(mapper.polymorphicTypeValidator)
+                return mapper
+            }
+        val allowedCharset: Charset = Charset.forName("ASCII")
+        private val maxTokenErrorMessage = listOf(
+            Pattern.compile(
+                """This model's maximum context length is (\d+) tokens. However, you requested (\d+) tokens \((\d+) in the messages, (\d+) in the completion\).*"""
+            ),
+            // This model's maximum context length is 4097 tokens, however you requested 80052 tokens (52 in your prompt; 80000 for the completion). Please reduce your prompt; or completion length.
+            Pattern.compile(
+                """This model's maximum context length is (\d+) tokens, however you requested (\d+) tokens \((\d+) in your prompt; (\d+) for the completion\).*"""
+            )
+        )
     }
 
 }

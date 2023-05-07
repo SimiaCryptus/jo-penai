@@ -1,10 +1,6 @@
 package com.simiacryptus.openai
 
-class ChatRequest @Suppress("unused") constructor() {
-    fun uiIntercept(): ChatRequest {
-        return this
-    }
-
+class ChatRequest() {
     constructor(request: ChatRequest) : this() {
         model = (request.model)
         temperature = (request.temperature)

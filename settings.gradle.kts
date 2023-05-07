@@ -1,4 +1,1 @@
-rootProject.name = "JoePenai"
-
-//include("joe-penai")
-
+rootProject.name = "joe-penai"
