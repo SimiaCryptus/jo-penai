@@ -9,7 +9,7 @@ plugins {
     `java`
     `java-library`
     `maven-publish`
-    id("org.jetbrains.kotlin.jvm") version "1.7.21"
+    id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("signing")
 //    kotlin("jvm") version "1.8.20"
 }
@@ -54,7 +54,7 @@ kotlin {
     jvmToolchain(11)
 }
 
-val kotlin_version = "1.7.21"
+val kotlin_version = "1.8.21"
 dependencies {
     implementation("org.openimaj:JTransforms:1.3.10")
 
