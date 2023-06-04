@@ -13,7 +13,7 @@ import java.util.*
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
-open class YamlDescriber() : TypeDescriber {
+open class YamlDescriber : TypeDescriber {
 
     override fun describe(
         rawType: Class<in Nothing>,

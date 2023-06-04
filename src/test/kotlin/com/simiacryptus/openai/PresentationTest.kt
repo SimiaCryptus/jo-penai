@@ -2,7 +2,6 @@
 
 package com.simiacryptus.openai
 
-import com.google.gson.Gson
 import com.simiacryptus.openai.proxy.Description
 import org.junit.jupiter.api.Test
 import java.io.File

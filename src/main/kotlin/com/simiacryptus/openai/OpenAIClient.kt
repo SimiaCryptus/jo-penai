@@ -517,8 +517,7 @@ open class OpenAIClient(
                 // ISO 3166 - Uzbekistan
                 if (locale.country.compareTo("UZ", true) == 0) return false
                 // ISO 3166 - Mongolia
-                if (locale.country.compareTo("MN", true) == 0) return false
-                return true
+                return locale.country.compareTo("MN", true) != 0
             }
             return false
         }

@@ -4,7 +4,6 @@ import com.simiacryptus.openai.ChatMessage
 import com.simiacryptus.openai.ChatRequest
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.util.JsonUtil.toJson
-import org.slf4j.event.Level
 import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("MemberVisibilityCanBePrivate")
