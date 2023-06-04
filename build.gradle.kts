@@ -9,7 +9,7 @@ plugins {
     `java`
     `java-library`
     `maven-publish`
-    id("org.jetbrains.kotlin.jvm") version "1.7.21"
+    id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("signing")
 //    kotlin("jvm") version "1.8.20"
 }
@@ -54,33 +54,33 @@ kotlin {
     jvmToolchain(11)
 }
 
-val kotlin_version = "1.7.21"
+val kotlin_version = "1.8.21"
 dependencies {
-    implementation("org.openimaj:JTransforms:1.3.10")
+    implementation(group = "org.openimaj", name = "JTransforms", version = "1.3.10")
 
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.14.2")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.14.2")
+    implementation(group = "com.fasterxml.jackson.core", name = "jackson-databind", version = "2.14.2")
+    implementation(group = "com.fasterxml.jackson.core", name = "jackson-annotations", version = "2.14.2")
+    implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.14.2")
 
-    implementation("com.google.guava:guava:31.1-jre")
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation(group = "com.google.guava", name = "guava", version = "31.1-jre")
+    implementation(group = "com.google.code.gson", name = "gson", version = "2.10.1")
 
-    implementation("org.apache.httpcomponents:httpclient:4.5.14")
-    implementation("org.apache.httpcomponents:httpmime:4.5.14")
-    implementation("commons-io:commons-io:2.11.0")
+    implementation(group = "org.apache.httpcomponents", name = "httpclient", version = "4.5.14")
+    implementation(group = "org.apache.httpcomponents", name = "httpmime", version = "4.5.14")
+    implementation(group = "commons-io", name = "commons-io", version = "2.11.0")
 
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlin_version")
+    implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version = kotlin_version)
+    implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = kotlin_version)
 
-    implementation("org.slf4j:slf4j-api:2.0.5")
+    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.5")
 
     testImplementation(kotlin("script-runtime"))
 
-    testImplementation("ch.qos.logback:logback-classic:1.2.9")
-    testImplementation("ch.qos.logback:logback-core:1.2.9")
+    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
+    testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.2.9")
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.2")
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.9.2")
+    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.9.2")
 }
 
 publishing {
@@ -127,8 +127,10 @@ publishing {
             val snapshotsRepoUrl = "https://oss.sonatype.org/mask/repositories/snapshots"
             url = URI(if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl)
             credentials {
-                username = System.getenv("OSSRH_USERNAME") ?: System.getProperty("ossrhUsername") ?: properties("ossrhUsername")
-                password = System.getenv("OSSRH_PASSWORD") ?: System.getProperty("ossrhPassword") ?: properties("ossrhPassword")
+                username = System.getenv("OSSRH_USERNAME") ?: System.getProperty("ossrhUsername")
+                        ?: properties("ossrhUsername")
+                password = System.getenv("OSSRH_PASSWORD") ?: System.getProperty("ossrhPassword")
+                        ?: properties("ossrhPassword")
             }
         }
     }

@@ -5,7 +5,7 @@ package com.simiacryptus.openai.proxy
 import com.google.gson.reflect.TypeToken
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
-import com.simiacryptus.util.YamlDescriber.Companion.toYaml
+import com.simiacryptus.util.YamlDescriber
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File
@@ -18,7 +18,7 @@ import kotlin.math.pow
 abstract class GPTProxyBase<T : Any>(
     val clazz: Class<T>,
     apiLogFile: String?,
-    var temperature: Double = 0.7,
+    var temperature: Double = 0.1,
     var validation: Boolean = true,
     var maxRetries: Int = 5,
 ) {
@@ -40,7 +40,7 @@ abstract class GPTProxyBase<T : Any>(
             if (method.name == "toString") return@newProxyInstance clazz.simpleName
             requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
             val type = method.genericReturnType
-            val typeString = method.toYaml().trimIndent()
+            val typeString = YamlDescriber().describe(method).trimIndent()
             val prompt = ProxyRequest(
                 method.name,
                 typeString,

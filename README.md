@@ -41,11 +41,11 @@ Maven:
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.9'
+implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.10'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:joe-penai:1.0.9")
+implementation("com.simiacryptus:joe-penai:1.0.10")
 ```
 
 

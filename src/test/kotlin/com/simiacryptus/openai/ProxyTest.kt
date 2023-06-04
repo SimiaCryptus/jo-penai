@@ -3,8 +3,6 @@ package com.simiacryptus.openai
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.openai.proxy.CompletionProxy
 import org.junit.jupiter.api.Test
-
-import org.slf4j.event.Level
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

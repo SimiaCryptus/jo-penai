@@ -1,15 +1,12 @@
 package com.simiacryptus.openai
 
-import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.MapperFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.simiacryptus.util.StringTools
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.openai.*
+import com.simiacryptus.util.JsonUtil
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -56,7 +53,7 @@ open class OpenAIClient(
     private val tokens = AtomicInteger(0)
 
     fun getEngines(): Array<CharSequence?> {
-        val engines = mapper.readValue(
+        val engines = JsonUtil.objectMapper().readValue(
             get(apiBase + "/engines"),
             ObjectNode::class.java
         )
@@ -155,7 +152,7 @@ open class OpenAIClient(
                 throw RuntimeException(IOException(errorObject["message"].asString))
             }
             try {
-                val result = mapper.readValue(response, TranscriptionResult::class.java)
+                val result = JsonUtil.objectMapper().readValue(response, TranscriptionResult::class.java)
                 result.text!!
             } catch (e: Exception) {
                 jsonObject.get("text").asString!!
@@ -183,7 +180,7 @@ open class OpenAIClient(
                 val errorObject = jsonObject.getAsJsonObject("error")
                 throw RuntimeException(IOException(errorObject["message"].asString))
             }
-            return@withPerformanceLogging mapper.readValue(response, TranscriptionResult::class.java)
+            return@withPerformanceLogging JsonUtil.objectMapper().readValue(response, TranscriptionResult::class.java)
         }
     }
 
@@ -218,7 +215,7 @@ open class OpenAIClient(
     @Throws(IOException::class)
     private fun processCompletionResponse(result: String): CompletionResponse {
         checkError(result)
-        val response = mapper.readValue(
+        val response = JsonUtil.objectMapper().readValue(
             result,
             CompletionResponse::class.java
         )
@@ -231,7 +228,7 @@ open class OpenAIClient(
     @Throws(IOException::class)
     protected fun processChatResponse(result: String): ChatResponse {
         checkError(result)
-        val response = mapper.readValue(
+        val response = JsonUtil.objectMapper().readValue(
             result,
             ChatResponse::class.java
         )
@@ -299,7 +296,7 @@ open class OpenAIClient(
             val completionResponse = try {
                 val request: String =
                     StringTools.restrictCharacterSet(
-                        mapper.writeValueAsString(completionRequest),
+                        JsonUtil.objectMapper().writeValueAsString(completionRequest),
                         allowedCharset
                     )
                 val result =
@@ -309,7 +306,7 @@ open class OpenAIClient(
                 completionRequest.max_tokens = (e.modelMax - e.messages) - 1
                 val request: String =
                     StringTools.restrictCharacterSet(
-                        mapper.writeValueAsString(completionRequest),
+                        JsonUtil.objectMapper().writeValueAsString(completionRequest),
                         allowedCharset
                     )
                 val result =
@@ -335,7 +332,7 @@ open class OpenAIClient(
                 processChatResponse(
                     post(
                         url, StringTools.restrictCharacterSet(
-                            mapper.writeValueAsString(completionRequest),
+                            JsonUtil.objectMapper().writeValueAsString(completionRequest),
                             allowedCharset
                         )
                     )
@@ -345,7 +342,7 @@ open class OpenAIClient(
                 processChatResponse(
                     post(
                         url, StringTools.restrictCharacterSet(
-                            mapper.writeValueAsString(completionRequest),
+                            JsonUtil.objectMapper().writeValueAsString(completionRequest),
                             allowedCharset
                         )
                     )
@@ -360,7 +357,7 @@ open class OpenAIClient(
         log(
             logLevel, String.format(
                 "Chat Request\nPrefix:\n\t%s\n",
-                mapper.writeValueAsString(completionRequest).replace("\n", "\n\t")
+                JsonUtil.objectMapper().writeValueAsString(completionRequest).replace("\n", "\n\t")
             )
         )
     }
@@ -369,7 +366,7 @@ open class OpenAIClient(
         withPerformanceLogging {
             moderationCounter.incrementAndGet()
             val body: String = try {
-                mapper.writeValueAsString(
+                JsonUtil.objectMapper().writeValueAsString(
                     mapOf(
                         "input" to StringTools.restrictCharacterSet(text, allowedCharset)
                     )
@@ -427,7 +424,7 @@ open class OpenAIClient(
             logStart(editRequest, logLevel)
             val request: String =
                 StringTools.restrictCharacterSet(
-                    mapper.writeValueAsString(editRequest),
+                    JsonUtil.objectMapper().writeValueAsString(editRequest),
                     allowedCharset
                 )
             val result = post("$apiBase/edits", request)
@@ -463,17 +460,6 @@ open class OpenAIClient(
 
     companion object {
         val log = LoggerFactory.getLogger(OpenAIClient::class.java)
-        val mapper: ObjectMapper
-            get() {
-                val mapper = ObjectMapper()
-                mapper
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-                    .enable(MapperFeature.USE_STD_BEAN_NAMING)
-                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                    .activateDefaultTyping(mapper.polymorphicTypeValidator)
-                return mapper
-            }
         val allowedCharset: Charset = Charset.forName("ASCII")
         private val maxTokenErrorMessage = listOf(
             Pattern.compile(
@@ -484,6 +470,66 @@ open class OpenAIClient(
                 """This model's maximum context length is (\d+) tokens, however you requested (\d+) tokens \((\d+) in your prompt; (\d+) for the completion\).*"""
             )
         )
+        fun isSanctioned(): Boolean {
+            // Due to the invasion of Ukraine, Russia and allied groups are currently sanctioned.
+            // Slava Ukraini!
+            val locale = Locale.getDefault()
+            // ISO 3166 - Russia
+            if (locale.country.compareTo("RU", true) == 0) return true
+            // ISO 3166 - Belarus
+            if (locale.country.compareTo("BY", true) == 0) return true
+            // ISO 639 - Russian
+            if (locale.language.compareTo("ru", true) == 0) {
+                // ISO 3166 - Ukraine
+                if (locale.country.compareTo("UA", true) == 0) return false
+                // ISO 3166 - United States
+                if (locale.country.compareTo("US", true) == 0) return false
+                // ISO 3166 - Britian
+                if (locale.country.compareTo("GB", true) == 0) return false
+                // ISO 3166 - United Kingdom
+                if (locale.country.compareTo("UK", true) == 0) return false
+                // ISO 3166 - Georgia
+                if (locale.country.compareTo("GE", true) == 0) return false
+                // ISO 3166 - Kazakhstan
+                if (locale.country.compareTo("KZ", true) == 0) return false
+                // ISO 3166 - Germany
+                if (locale.country.compareTo("DE", true) == 0) return false
+                // ISO 3166 - Poland
+                if (locale.country.compareTo("PL", true) == 0) return false
+                // ISO 3166 - Latvia
+                if (locale.country.compareTo("LV", true) == 0) return false
+                // ISO 3166 - Lithuania
+                if (locale.country.compareTo("LT", true) == 0) return false
+                // ISO 3166 - Estonia
+                if (locale.country.compareTo("EE", true) == 0) return false
+                // ISO 3166 - Moldova
+                if (locale.country.compareTo("MD", true) == 0) return false
+                // ISO 3166 - Armenia
+                if (locale.country.compareTo("AM", true) == 0) return false
+                // ISO 3166 - Azerbaijan
+                if (locale.country.compareTo("AZ", true) == 0) return false
+                // ISO 3166 - Kyrgyzstan
+                if (locale.country.compareTo("KG", true) == 0) return false
+                // ISO 3166 - Tajikistan
+                if (locale.country.compareTo("TJ", true) == 0) return false
+                // ISO 3166 - Turkmenistan
+                if (locale.country.compareTo("TM", true) == 0) return false
+                // ISO 3166 - Uzbekistan
+                if (locale.country.compareTo("UZ", true) == 0) return false
+                // ISO 3166 - Mongolia
+                return locale.country.compareTo("MN", true) != 0
+            }
+            return false
+        }
+
+        // On classload, if isSanctioned==false, call System.exit(0)
+        init {
+            if (isSanctioned()) {
+                log.error("You are not allowed to use this software. Slava Ukraini!")
+                System.exit(0)
+            }
+        }
+
     }
 
 }
