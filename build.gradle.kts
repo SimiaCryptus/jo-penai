@@ -11,7 +11,6 @@ plugins {
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.8.21"
     id("signing")
-//    kotlin("jvm") version "1.8.20"
 }
 
 repositories {
