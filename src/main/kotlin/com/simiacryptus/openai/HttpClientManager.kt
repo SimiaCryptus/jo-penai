@@ -39,6 +39,8 @@ open class HttpClientManager {
             for (i in 0 until retryCount) {
                 try {
                     return fn()
+                } catch (e: ModelMaxException) {
+                    throw e
                 } catch (e: Exception) {
                     lastException = e
                     log.warn("Request failed; retrying ($i/$retryCount): " + e.message)
@@ -59,7 +61,7 @@ open class HttpClientManager {
             client
         }
 
-    fun closeClient(thread: Thread) {
+    protected fun closeClient(thread: Thread) {
         try {
             synchronized(clients) {
                 clients[thread]
@@ -69,7 +71,7 @@ open class HttpClientManager {
         }
     }
 
-    fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean = { Thread.currentThread().isInterrupted }): T {
+    protected fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean = { Thread.currentThread().isInterrupted }): T {
         val thread = Thread.currentThread()
         val isCompleted = AtomicBoolean(false)
         val start = Date()
@@ -87,7 +89,7 @@ open class HttpClientManager {
         }
     }
 
-    fun <T> withTimeout(duration: Duration, fn: () -> T): T {
+    protected fun <T> withTimeout(duration: Duration, fn: () -> T): T {
         val thread = Thread.currentThread()
         val isCompleted = AtomicBoolean(false)
         val start = Date()
@@ -115,7 +117,7 @@ open class HttpClientManager {
         }
     }
 
-    fun <T> withReliability(requestTimeoutSeconds: Long = 180, retryCount: Int = 3, fn: () -> T): T =
+    protected fun <T> withReliability(requestTimeoutSeconds: Long = 180, retryCount: Int = 3, fn: () -> T): T =
         withExpBackoffRetry(retryCount) {
             withTimeout(Duration.ofSeconds(requestTimeoutSeconds)) {
 //            withPool {
@@ -124,7 +126,7 @@ open class HttpClientManager {
             }
         }
 
-    fun <T> withPerformanceLogging(fn: () -> T):T {
+    protected fun <T> withPerformanceLogging(fn: () -> T):T {
         val start = Date()
         try {
             return fn()
@@ -133,7 +135,7 @@ open class HttpClientManager {
         }
     }
 
-    fun <T> withClient(fn: java.util.function.Function<CloseableHttpClient,T>): T {
+    protected fun <T> withClient(fn: java.util.function.Function<CloseableHttpClient,T>): T {
         val client = getClient()
         try {
             synchronized(clients) {

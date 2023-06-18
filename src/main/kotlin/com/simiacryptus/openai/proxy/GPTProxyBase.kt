@@ -5,7 +5,7 @@ package com.simiacryptus.openai.proxy
 import com.google.gson.reflect.TypeToken
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
-import com.simiacryptus.util.YamlDescriber
+import com.simiacryptus.util.describe.YamlDescriber
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File

@@ -1,23 +1,21 @@
-package com.simiacryptus.openai
+package com.simiacryptus.labs
 
+import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.openai.proxy.CompletionProxy
 import org.junit.jupiter.api.Test
-import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class ProxyTest {
     companion object {
-        val keyFile = File("C:\\Users\\andre\\code\\all-projects\\openai.key")
         fun <T:Any> chatProxy(clazz : Class<T>,
                               apiLog: String = "api.${
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss"))
         }.log.json"): ChatProxy<T> = ChatProxy(
             clazz,
-            api = OpenAIClient(keyFile.readText().trim()),
-            model = "gpt-3.5-turbo-0301",
-            maxTokens = 8912,
+            api = OpenAIClient(OpenAIClient.keyTxt),
+            model = OpenAIClient.Models.GPT35Turbo,
             apiLog = apiLog,
             //model = "gpt-4-0314",
             deserializerRetries = 5
@@ -25,7 +23,7 @@ class ProxyTest {
         fun <T:Any> completionProxy(clazz : Class<T>,
                             apiLog: String = "api.log.json"): CompletionProxy<T> = CompletionProxy(
             clazz,
-            apiKey = keyFile.readText().trim(),
+            apiKey = OpenAIClient.keyTxt,
             apiLog = apiLog,
             deserializerRetries = 5
         )
@@ -85,7 +83,7 @@ class ProxyTest {
 
     @Test
     fun test_essayOutline() {
-        if (!keyFile.exists()) return
+        if (OpenAIClient.keyTxt.isBlank()) return
         //println(TestGPTInterfaceProxy().api.getEngines().joinToString("\n"))
         val statement = "The meaning of life is to live a life of meaning."
         for (proxyFactory in listOf(completionProxy(EssayAPI::class.java), chatProxy(EssayAPI::class.java))) {
@@ -99,7 +97,7 @@ class ProxyTest {
 
     @Test
     fun test_simpleQuestion() {
-        if (!keyFile.exists()) return
+        if (OpenAIClient.keyTxt.isBlank()) return
         val question = "What is the meaning of life?"
         for (proxyFactory in listOf(completionProxy(TestAPI::class.java), chatProxy(TestAPI::class.java))) {
             val proxy = proxyFactory.create()
@@ -110,7 +108,7 @@ class ProxyTest {
 
     @Test
     fun test_topTen() {
-        if (!keyFile.exists()) return
+        if (OpenAIClient.keyTxt.isBlank()) return
         val proxy = chatProxy(TestAPI::class.java).create()
         println(proxy.topTen(TestAPI.TopTenQuestion()).answers.joinToString("\n"))
     }
