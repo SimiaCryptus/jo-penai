@@ -9,9 +9,8 @@ plugins {
     `java`
     `java-library`
     `maven-publish`
-    id("org.jetbrains.kotlin.jvm") version "1.8.21"
+    id("org.jetbrains.kotlin.jvm") version "1.7.22"
     id("signing")
-//    kotlin("jvm") version "1.8.20"
 }
 
 repositories {
@@ -54,7 +53,7 @@ kotlin {
     jvmToolchain(11)
 }
 
-val kotlin_version = "1.8.21"
+val kotlin_version = "1.7.22"
 dependencies {
     implementation(group = "org.openimaj", name = "JTransforms", version = "1.3.10")
 
@@ -69,15 +68,16 @@ dependencies {
     implementation(group = "org.apache.httpcomponents", name = "httpmime", version = "4.5.14")
     implementation(group = "commons-io", name = "commons-io", version = "2.11.0")
 
-    implementation(group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version = kotlin_version)
-    implementation(group = "org.jetbrains.kotlin", name = "kotlin-reflect", version = kotlin_version)
-
-    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.5")
-
+    compileOnlyApi(kotlin("stdlib"))
+    compileOnlyApi(kotlin("reflect"))
+    testImplementation(kotlin("stdlib"))
+    testImplementation(kotlin("reflect"))
     testImplementation(kotlin("script-runtime"))
 
-    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
-    testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.2.9")
+    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.5")
+    testImplementation(group = "org.slf4j", name = "slf4j-simple", version = "2.0.5")
+//    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
+    //testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.2.9")
 
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.9.2")
     testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.9.2")

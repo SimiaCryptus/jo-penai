@@ -1,7 +1,7 @@
 package com.simiacryptus.openai.proxy
 
-import com.simiacryptus.openai.ChatMessage
-import com.simiacryptus.openai.ChatRequest
+import com.simiacryptus.openai.OpenAIClient.ChatMessage
+import com.simiacryptus.openai.OpenAIClient.ChatRequest
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
@@ -10,8 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
-    var model: String = "gpt-3.5-turbo",
-    var maxTokens: Int = 8912,
+    var model: OpenAIClient.Model = OpenAIClient.Models.GPT35Turbo,
     temperature: Double = 0.7,
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
@@ -75,14 +74,14 @@ class ChatProxy<T : Any>(
                             )
                         )
                 ).toTypedArray()
-        request.model = model
-        request.max_tokens = maxTokens
+        request.model = model.modelName
+        request.max_tokens = model.maxTokens
         request.temperature = temperature
         val json = toJson(request)
         if (moderated) api.moderate(json)
         totalInputLength.addAndGet(json.length)
 
-        val completion = api.chat(request).response.get().toString()
+        val completion = api.chat(request).choices?.first()?.message?.content.orEmpty()
         if (verbose) log.info(completion)
         totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)

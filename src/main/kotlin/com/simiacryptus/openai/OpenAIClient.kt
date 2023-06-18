@@ -2,47 +2,53 @@ package com.simiacryptus.openai
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.simiacryptus.util.StringTools
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.openai.*
 import com.simiacryptus.util.JsonUtil
-import org.apache.http.HttpResponse
-import org.apache.http.client.methods.HttpGet
+import com.simiacryptus.util.StringUtil
 import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpRequestBase
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.apache.http.util.EntityUtils
-import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.awt.image.BufferedImage
+import java.io.File
 import java.io.IOException
 import java.net.URL
-import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.regex.Pattern
 import javax.imageio.ImageIO
 
-@Suppress("unused")
 open class OpenAIClient(
-    protected var key: String,
+    key: String,
     private val apiBase: String = "https://api.openai.com/v1",
     private val logLevel: Level = Level.INFO
-) : HttpClientManager() {
+) : APIClientBase(key, apiBase, logLevel) {
 
-    open val metrics : Map<String, Any>
-        get() = hashMapOf(
+    interface Model {
+        val modelName: String
+        val maxTokens: Int
+    }
+    enum class Models(
+        override val modelName: String,
+        override val maxTokens: Int
+    ) : Model {
+        AdaEmbedding("text-embedding-ada-002", 2049),
+        DaVinci("text-davinci-003", 2049),
+        DaVinciEdit("text-davinci-edit-001", 2049),
+        GPT35Turbo("gpt-3.5-turbo-16k",16384),
+        GPT4("gpt-4",8192)
+    }
+
+    override val metrics: Map<String, Any>
+        get() = super.metrics + hashMapOf(
             "chats" to chatCounter.get(),
             "completions" to completionCounter.get(),
             "moderations" to moderationCounter.get(),
             "renders" to renderCounter.get(),
             "transcriptions" to transcriptionCounter.get(),
             "edits" to editCounter.get(),
-            "tokens" to tokens.get(),
         )
     private val chatCounter = AtomicInteger(0)
     private val completionCounter = AtomicInteger(0)
@@ -50,86 +56,199 @@ open class OpenAIClient(
     private val renderCounter = AtomicInteger(0)
     private val transcriptionCounter = AtomicInteger(0)
     private val editCounter = AtomicInteger(0)
-    private val tokens = AtomicInteger(0)
 
-    fun getEngines(): Array<CharSequence?> {
-        val engines = JsonUtil.objectMapper().readValue(
+    @Suppress("unused")
+    data class ApiError(
+        var message: String? = null,
+        var type: String? = null,
+        var param: String? = null,
+        var code: Double? = null,
+    )
+
+    @Suppress("unused")
+    data class LogProbs(
+        var tokens: Array<CharSequence> = arrayOf(),
+        var token_logprobs: DoubleArray = DoubleArray(0),
+        var top_logprobs: Array<ObjectNode> = arrayOf(),
+        var text_offset: IntArray = IntArray(0),
+    )
+
+    @Suppress("unused")
+    data class Usage(
+        var prompt_tokens: Int = 0,
+        var completion_tokens: Int = 0,
+        var total_tokens: Int = 0
+    )
+
+    @Suppress("unused")
+    data class Engine(
+        var id: String? = null,
+        var ready: Boolean = false,
+        var owner: String? = null,
+        var `object`: String? = null,
+        var created: Int? = null,
+        var permissions: String? = null,
+        var replicas: Int? = null,
+        var max_replicas: Int? = null,
+    )
+
+    fun listEngines(): List<Engine> = JsonUtil.objectMapper().readValue(
+        JsonUtil.objectMapper().readValue(
             get(apiBase + "/engines"),
             ObjectNode::class.java
+        )["data"]!!.toString(),
+        JsonUtil.objectMapper().typeFactory.constructCollectionType(
+            List::class.java,
+            Engine::class.java
         )
-        val data = engines["data"]
-        val items =
-            arrayOfNulls<CharSequence>(data.size())
-        for (i in 0 until data.size()) {
-            items[i] = data[i]["id"].asText()
+    )
+
+    fun getEngineIds(): Array<CharSequence?> = listEngines().map { it.id }.sortedBy { it }.toTypedArray()
+
+    @Suppress("unused")
+    data class CompletionRequest(
+        var prompt: String = "",
+        var suffix: String? = null,
+        var temperature: Double = 0.0,
+        var max_tokens: Int = 1000,
+        var stop: Array<CharSequence>? = null,
+        var logprobs: Int? = null,
+        var echo: Boolean = false,
+    ) {
+
+        fun appendPrompt(prompt: CharSequence): CompletionRequest {
+            this.prompt = this.prompt + prompt
+            return this
         }
-        Arrays.sort(items)
-        return items
+
+        fun addStops(vararg newStops: CharSequence): CompletionRequest {
+            val stops = ArrayList<CharSequence>()
+            for (x in newStops) {
+                if (x.isNotEmpty()) {
+                    stops.add(x)
+                }
+            }
+            if (stops.isNotEmpty()) {
+                if (null != stop) Arrays.stream(stop).forEach { e: CharSequence ->
+                    stops.add(
+                        e
+                    )
+                }
+                stop = stops.stream().distinct().toArray { size: Int -> arrayOfNulls<CharSequence>(size) }
+            }
+            return this
+        }
+
+        fun setSuffix(suffix: CharSequence?): CompletionRequest {
+            this.suffix = suffix?.toString()
+            return this
+        }
+
     }
 
-    private fun logComplete(completionResult: CharSequence) {
-        log(
-            logLevel, String.format(
-                "Chat Completion:\n\t%s",
-                completionResult.toString().replace("\n", "\n\t")
-            )
-        )
+    @Suppress("unused")
+    data class CompletionResponse(
+        var id: String? = null,
+        var `object`: String? = null,
+        var created: Int = 0,
+        var model: String? = null,
+        var choices: Array<CompletionChoice> = arrayOf(),
+        var error: ApiError? = null,
+        var usage: Usage? = null,
+    ) {
+        val firstChoice: Optional<CharSequence>
+            get() = choices.first()?.text?.trim()?.let { Optional.of(it) } ?: Optional.empty()
     }
 
-    private fun logStart(completionRequest: CompletionRequest) {
-        if (completionRequest.suffix == null) {
-            log(
-                logLevel, String.format(
-                    "Text Completion Request\nPrefix:\n\t%s\n",
-                    completionRequest.prompt.replace("\n", "\n\t")
-                )
-            )
-        } else {
-            log(
-                logLevel, String.format(
-                    "Text Completion Request\nPrefix:\n\t%s\nSuffix:\n\t%s\n",
-                    completionRequest.prompt.replace("\n", "\n\t"),
-                    completionRequest.suffix!!.replace("\n", "\n\t")
-                )
-            )
+    data class CompletionChoice(
+        var text: String? = null,
+        var index: Int = 0,
+        var logprobs: LogProbs? = null,
+        var finish_reason: String? = null
+    )
+
+    private class TruncatedModel(
+        override val modelName: String,
+        override val maxTokens: Int
+    ) : Model
+    fun complete(
+        request: CompletionRequest,
+        model: Model
+    ): CompletionResponse {
+        request.max_tokens = model.maxTokens
+        try {
+            return withReliability {
+                withPerformanceLogging {
+                    completionCounter.incrementAndGet()
+                    if (request.suffix == null) {
+                        log(
+                            logLevel, String.format(
+                                "Text Completion Request\nPrefix:\n\t%s\n",
+                                request.prompt.replace("\n", "\n\t")
+                            )
+                        )
+                    } else {
+                        log(
+                            logLevel, String.format(
+                                "Text Completion Request\nPrefix:\n\t%s\nSuffix:\n\t%s\n",
+                                request.prompt.replace("\n", "\n\t"),
+                                request.suffix!!.replace("\n", "\n\t")
+                            )
+                        )
+                    }
+                    val result = post(
+                        "$apiBase/engines/${model.modelName}/completions",
+                        StringUtil.restrictCharacterSet(
+                            JsonUtil.objectMapper().writeValueAsString(request),
+                            allowedCharset
+                        )
+                    )
+                    checkError(result)
+                    val response = JsonUtil.objectMapper().readValue(
+                        result,
+                        CompletionResponse::class.java
+                    )
+                    if (response.usage != null) {
+                        incrementTokens(response.usage!!.total_tokens)
+                    }
+                    val completionResult = StringUtil.stripPrefix(
+                        response.firstChoice.orElse("").toString().trim { it <= ' ' },
+                        request.prompt.trim { it <= ' ' })
+                    log(
+                        logLevel, String.format(
+                            "Chat Completion:\n\t%s",
+                            completionResult.toString().replace("\n", "\n\t")
+                        )
+                    )
+                    response
+                }
+            }
+        } catch (e: ModelMaxException) {
+            return complete(request, TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1))
         }
     }
 
-    @Throws(IOException::class, InterruptedException::class)
-    protected fun post(url: String, json: String): String {
-        val request = HttpPost(url)
-        request.addHeader("Content-Type", "application/json")
-        request.addHeader("Accept", "application/json")
-        authorize(request)
-        request.entity = StringEntity(json)
-        return post(request)
-    }
+    data class TranscriptionPacket(
+        val id: Int? = 0,
+        val seek: Int? = 0,
+        val start: Double? = 0.0,
+        val end: Double? = 0.0,
+        val text: String? = "",
+        val tokens: Array<Int>? = arrayOf(),
+        val temperature: Double? = 0.0,
+        val avg_logprob: Double? = 0.0,
+        val compression_ratio: Double? = 0.0,
+        val no_speech_prob: Double? = 0.0,
+        val `transient`: Boolean? = false
+    )
 
-    @Suppress("MemberVisibilityCanBePrivate")
-    fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
-
-    @Throws(IOException::class)
-    protected open fun authorize(request: HttpRequestBase) {
-        request.addHeader("Authorization", "Bearer $key")
-    }
-
-    /**
-     * Gets the response from the given URL.
-     *
-     * @param url The URL to GET the response from.
-     * @return The response from the given URL.
-     * @throws IOException If an I/O error occurs.
-     */
-    @Throws(IOException::class)
-    protected operator fun get(url: String?): String = withClient {
-        val request = HttpGet(url)
-        request.addHeader("Content-Type", "application/json")
-        request.addHeader("Accept", "application/json")
-        authorize(request)
-        val response: HttpResponse = it.execute(request)
-        val entity = response.entity
-        EntityUtils.toString(entity)
-    }
+    data class TranscriptionResult(
+        val task: String? = "",
+        val language: String? = "",
+        val duration: Double = 0.0,
+        val segments: Array<TranscriptionPacket> = arrayOf(),
+        val text: String? = ""
+    )
 
     fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
         withPerformanceLogging {
@@ -157,30 +276,6 @@ open class OpenAIClient(
             } catch (e: Exception) {
                 jsonObject.get("text").asString!!
             }
-        }
-    }
-
-    fun transcriptionVerbose(wavAudio: ByteArray, prompt: String = ""): TranscriptionResult = withReliability {
-        withPerformanceLogging {
-            transcriptionCounter.incrementAndGet()
-            val url = "$apiBase/audio/transcriptions"
-            val request = HttpPost(url)
-            request.addHeader("Accept", "application/json")
-            authorize(request)
-            val entity = MultipartEntityBuilder.create()
-            entity.setMode(HttpMultipartMode.RFC6532)
-            entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
-            entity.addTextBody("model", "whisper-1")
-            entity.addTextBody("response_format", "verbose_json")
-            if (prompt.isNotEmpty()) entity.addTextBody("prompt", prompt)
-            request.entity = entity.build()
-            val response = post(request)
-            val jsonObject = Gson().fromJson(response, JsonObject::class.java)
-            if (jsonObject.has("error")) {
-                val errorObject = jsonObject.getAsJsonObject("error")
-                throw RuntimeException(IOException(errorObject["message"].asString))
-            }
-            return@withPerformanceLogging JsonUtil.objectMapper().readValue(response, TranscriptionResult::class.java)
         }
     }
 
@@ -212,154 +307,108 @@ open class OpenAIClient(
         }
     }
 
-    @Throws(IOException::class)
-    private fun processCompletionResponse(result: String): CompletionResponse {
-        checkError(result)
-        val response = JsonUtil.objectMapper().readValue(
-            result,
-            CompletionResponse::class.java
-        )
-        if (response.usage != null) {
-            incrementTokens(response.usage!!.total_tokens)
-        }
-        return response
-    }
+    data class ChatRequest(
+        var messages: Array<ChatMessage> = arrayOf(),
+        var model: String? = null,
+        var temperature: Double = 0.0,
+        var max_tokens: Int = 1000,
+        var stop: Array<CharSequence>? = null
+    ) {
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
 
-    @Throws(IOException::class)
-    protected fun processChatResponse(result: String): ChatResponse {
-        checkError(result)
-        val response = JsonUtil.objectMapper().readValue(
-            result,
-            ChatResponse::class.java
-        )
-        if (response.usage != null) {
-            incrementTokens(response.usage!!.total_tokens)
-        }
-        return response
-    }
+            other as ChatRequest
 
-    private fun checkError(result: String) {
-        try {
-            val jsonObject = Gson().fromJson(
-                result,
-                JsonObject::class.java
-            )
-            if (jsonObject.has("error")) {
-                val errorObject = jsonObject.getAsJsonObject("error")
-                val errorMessage = errorObject["message"].asString
-                if (errorMessage.startsWith("That model is currently overloaded with other requests.")) {
-                    throw RequestOverloadException(errorMessage)
-                }
-                maxTokenErrorMessage.find { it.matcher(errorMessage).matches() }?.let {
-                    val matcher = it.matcher(errorMessage)
-                    if (matcher.find()) {
-                        val modelMax = matcher.group(1).toInt()
-                        val request = matcher.group(2).toInt()
-                        val messages = matcher.group(3).toInt()
-                        val completion = matcher.group(4).toInt()
-                        throw ModelMaxException(modelMax, request, messages, completion)
-                    }
-                }
-                throw IOException(errorMessage)
-            }
-        } catch (e: com.google.gson.JsonSyntaxException) {
-            throw IOException("Invalid JSON response: $result")
+            if (!messages.contentEquals(other.messages)) return false
+            if (model != other.model) return false
+            if (temperature != other.temperature) return false
+            if (max_tokens != other.max_tokens) return false
+            if (stop != null) {
+                if (other.stop == null) return false
+                if (!stop.contentEquals(other.stop)) return false
+            } else if (other.stop != null) return false
+
+            return true
+        }
+
+        override fun hashCode(): Int {
+            var result = messages.contentHashCode()
+            result = 31 * result + (model?.hashCode() ?: 0)
+            result = 31 * result + temperature.hashCode()
+            result = 31 * result + max_tokens
+            result = 31 * result + (stop?.contentHashCode() ?: 0)
+            return result
         }
     }
 
-    class RequestOverloadException(message: String = "That model is currently overloaded with other requests.") :
-        IOException(message)
+    data class ChatResponse(
+        val id: String? = null,
+        val `object`: String? = null,
+        val created: Long = 0,
+        val model: String? = null,
+        val choices: Array<ChatChoice> = arrayOf(),
+        val error: ApiError? = null,
+        val usage: Usage? = null,
+    )
 
-    open fun incrementTokens(totalTokens: Int) {
-        tokens.addAndGet(totalTokens)
-    }
+    @Suppress("unused")
+    data class ChatChoice(
+        var message: ChatMessage? = null,
+        var index: Int = 0,
+        var finish_reason: String? = null,
+    )
 
-    open fun log(level: Level, msg: String) {
-        val message = msg.trim().replace("\n", "\n\t")
-        when (level) {
-            Level.ERROR -> log.error(message)
-            Level.WARN -> log.warn(message)
-            Level.INFO -> log.info(message)
-            Level.DEBUG -> log.debug(message)
-            Level.TRACE -> log.debug(message)
-            else -> log.debug(message)
-        }
-    }
-
-    fun complete(
-        completionRequest: CompletionRequest,
-        model: String
-    ): CompletionResponse = withReliability {
-        withPerformanceLogging {
-            completionCounter.incrementAndGet()
-            logStart(completionRequest)
-            val completionResponse = try {
-                val request: String =
-                    StringTools.restrictCharacterSet(
-                        JsonUtil.objectMapper().writeValueAsString(completionRequest),
-                        allowedCharset
-                    )
-                val result =
-                    post("$apiBase/engines/$model/completions", request)
-                processCompletionResponse(result)
-            } catch (e: ModelMaxException) {
-                completionRequest.max_tokens = (e.modelMax - e.messages) - 1
-                val request: String =
-                    StringTools.restrictCharacterSet(
-                        JsonUtil.objectMapper().writeValueAsString(completionRequest),
-                        allowedCharset
-                    )
-                val result =
-                    post("$apiBase/engines/$model/completions", request)
-                processCompletionResponse(result)
-            }
-            val completionResult = StringTools.stripPrefix(
-                completionResponse.firstChoice.orElse("").toString().trim { it <= ' ' },
-                completionRequest.prompt.trim { it <= ' ' })
-            logComplete(completionResult)
-            completionResponse
+    data class ChatMessage(
+        var role: Role? = null,
+        var content: String? = null
+    ) {
+        enum class Role {
+            assistant, user, system
         }
     }
 
     fun chat(
         completionRequest: ChatRequest
-    ): ChatResponse = withReliability {
-        withPerformanceLogging {
-            chatCounter.incrementAndGet()
-            logStart(completionRequest)
-            val url = "$apiBase/chat/completions"
-            val completionResponse = try {
-                processChatResponse(
-                    post(
-                        url, StringTools.restrictCharacterSet(
-                            JsonUtil.objectMapper().writeValueAsString(completionRequest),
-                            allowedCharset
+    ): ChatResponse {
+        try {
+            return withReliability {
+                withPerformanceLogging {
+                    chatCounter.incrementAndGet()
+                    log(
+                        logLevel, String.format(
+                            "Chat Request\nPrefix:\n\t%s\n",
+                            JsonUtil.objectMapper().writeValueAsString(completionRequest).replace("\n", "\n\t")
                         )
                     )
-                )
-            } catch (e: ModelMaxException) {
-                completionRequest.max_tokens = (e.modelMax - e.messages) - 1
-                processChatResponse(
-                    post(
-                        url, StringTools.restrictCharacterSet(
-                            JsonUtil.objectMapper().writeValueAsString(completionRequest),
-                            allowedCharset
-                        )
+                    fun json() = StringUtil.restrictCharacterSet(
+                        JsonUtil.objectMapper().writeValueAsString(completionRequest),
+                        allowedCharset
                     )
-                )
-            }
-            logComplete(completionResponse.choices.first().message!!.content!!.trim { it <= ' ' })
-            completionResponse
-        }
-    }
 
-    private fun logStart(completionRequest: ChatRequest) {
-        log(
-            logLevel, String.format(
-                "Chat Request\nPrefix:\n\t%s\n",
-                JsonUtil.objectMapper().writeValueAsString(completionRequest).replace("\n", "\n\t")
-            )
-        )
+                    val result = post("$apiBase/chat/completions", json())
+                    checkError(result)
+                    val response = JsonUtil.objectMapper().readValue(
+                        result,
+                        ChatResponse::class.java
+                    )
+                    if (response.usage != null) {
+                        incrementTokens(response.usage.total_tokens)
+                    }
+                    log(
+                        logLevel, String.format(
+                            "Chat Completion:\n\t%s",
+                            response.choices.first().message!!.content!!.trim { it <= ' ' }.toString()
+                                .replace("\n", "\n\t")
+                        )
+                    )
+                    response
+                }
+            }
+        } catch (e: ModelMaxException) {
+            completionRequest.max_tokens = (e.modelMax - e.messages) - 1
+            return chat(completionRequest)
+        }
     }
 
     fun moderate(text: String) = withReliability {
@@ -368,7 +417,7 @@ open class OpenAIClient(
             val body: String = try {
                 JsonUtil.objectMapper().writeValueAsString(
                     mapOf(
-                        "input" to StringTools.restrictCharacterSet(text, allowedCharset)
+                        "input" to StringUtil.restrictCharacterSet(text, allowedCharset)
                     )
                 )
             } catch (e: JsonProcessingException) {
@@ -416,120 +465,139 @@ open class OpenAIClient(
         }
     }
 
+    data class EditRequest(
+        var model: String = "",
+        var input: String? = null,
+        var instruction: String = "",
+        var temperature: Double? = 0.0,
+        var n: Int? = null,
+        var top_p: Double? = null
+    )
+
     fun edit(
         editRequest: EditRequest
     ): CompletionResponse = withReliability {
+
         withPerformanceLogging {
             editCounter.incrementAndGet()
-            logStart(editRequest, logLevel)
+            if (editRequest.input == null) {
+                log(
+                    logLevel, String.format(
+                        "Text Edit Request\nInstruction:\n\t%s\n",
+                        editRequest.instruction.replace("\n", "\n\t")
+                    )
+                )
+            } else {
+                log(
+                    logLevel, String.format(
+                        "Text Edit Request\nInstruction:\n\t%s\nInput:\n\t%s\n",
+                        editRequest.instruction.replace("\n", "\n\t"),
+                        editRequest.input!!.replace("\n", "\n\t")
+                    )
+                )
+            }
             val request: String =
-                StringTools.restrictCharacterSet(
+                StringUtil.restrictCharacterSet(
                     JsonUtil.objectMapper().writeValueAsString(editRequest),
                     allowedCharset
                 )
             val result = post("$apiBase/edits", request)
-            val completionResponse = processCompletionResponse(result)
-            logComplete(
-                completionResponse.firstChoice.orElse("").toString().trim { it <= ' ' }
+            checkError(result)
+            val response = JsonUtil.objectMapper().readValue(
+                result,
+                CompletionResponse::class.java
             )
-            completionResponse
+            if (response.usage != null) {
+                incrementTokens(response.usage!!.total_tokens)
+            }
+            log(
+                logLevel, String.format(
+                    "Chat Completion:\n\t%s",
+                    response.firstChoice.orElse("").toString().trim { it <= ' ' }
+                        .toString().replace("\n", "\n\t")
+                )
+            )
+            response
         }
     }
 
-    private fun logStart(
-        editRequest: EditRequest,
-        level: Level
-    ) {
-        if (editRequest.input == null) {
-            log(
-                level, String.format(
-                    "Text Edit Request\nInstruction:\n\t%s\n",
-                    editRequest.instruction.replace("\n", "\n\t")
+    data class ModelListResponse(
+        val data: List<ModelData>? = listOf(),
+        val `object`: String? = null
+    )
+
+    data class ModelData(
+        val id: String? = null,
+        val `object`: String? = null,
+        val owned_by: String? = null,
+        val root: String? = null,
+        val parent: String? = null,
+        val created: Long? = null,
+        val permission: List<Map<String, Object>>? = listOf(),
+    )
+
+    fun listModels(): ModelListResponse {
+        val result = get("$apiBase/models")
+        checkError(result)
+        return JsonUtil.objectMapper().readValue(result, ModelListResponse::class.java)
+    }
+
+    @Suppress("unused")
+    class EmbeddingResponse {
+        var `object`: String? = null
+        var data: Array<EmbeddingData> = arrayOf()
+        var model: String? = null
+        var usage: Usage? = null
+    }
+
+    data class EmbeddingData(
+        val `object`: String? = null,
+        val embedding: Array<Double>? = arrayOf(),
+        val index: Int? = null
+    )
+
+    data class EmbeddingRequest(
+        val model: String? = null,
+        val input: String? = null,
+        val user: String? = null
+    )
+
+    fun createEmbedding(
+        request: EmbeddingRequest
+    ): EmbeddingResponse {
+        return withReliability {
+            withPerformanceLogging {
+                if (request.input is String) {
+                    log(
+                        logLevel, String.format(
+                            "Embedding Creation Request\nModel:\n\t%s\nInput:\n\t%s\n",
+                            request.model,
+                            request.input.replace("\n", "\n\t")
+                        )
+                    )
+                }
+                val result = post(
+                    "$apiBase/embeddings",
+                    StringUtil.restrictCharacterSet(
+                        JsonUtil.objectMapper().writeValueAsString(request),
+                        allowedCharset
+                    )
                 )
-            )
-        } else {
-            log(
-                level, String.format(
-                    "Text Edit Request\nInstruction:\n\t%s\nInput:\n\t%s\n",
-                    editRequest.instruction.replace("\n", "\n\t"),
-                    editRequest.input!!.replace("\n", "\n\t")
+                checkError(result)
+                val response = JsonUtil.objectMapper().readValue(
+                    result,
+                    EmbeddingResponse::class.java
                 )
-            )
+                if (response.usage != null) {
+                    incrementTokens(response.usage!!.total_tokens)
+                }
+                response
+            }
         }
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(OpenAIClient::class.java)
-        val allowedCharset: Charset = Charset.forName("ASCII")
-        private val maxTokenErrorMessage = listOf(
-            Pattern.compile(
-                """This model's maximum context length is (\d+) tokens. However, you requested (\d+) tokens \((\d+) in the messages, (\d+) in the completion\).*"""
-            ),
-            // This model's maximum context length is 4097 tokens, however you requested 80052 tokens (52 in your prompt; 80000 for the completion). Please reduce your prompt; or completion length.
-            Pattern.compile(
-                """This model's maximum context length is (\d+) tokens, however you requested (\d+) tokens \((\d+) in your prompt; (\d+) for the completion\).*"""
-            )
-        )
-        fun isSanctioned(): Boolean {
-            // Due to the invasion of Ukraine, Russia and allied groups are currently sanctioned.
-            // Slava Ukraini!
-            val locale = Locale.getDefault()
-            // ISO 3166 - Russia
-            if (locale.country.compareTo("RU", true) == 0) return true
-            // ISO 3166 - Belarus
-            if (locale.country.compareTo("BY", true) == 0) return true
-            // ISO 639 - Russian
-            if (locale.language.compareTo("ru", true) == 0) {
-                // ISO 3166 - Ukraine
-                if (locale.country.compareTo("UA", true) == 0) return false
-                // ISO 3166 - United States
-                if (locale.country.compareTo("US", true) == 0) return false
-                // ISO 3166 - Britian
-                if (locale.country.compareTo("GB", true) == 0) return false
-                // ISO 3166 - United Kingdom
-                if (locale.country.compareTo("UK", true) == 0) return false
-                // ISO 3166 - Georgia
-                if (locale.country.compareTo("GE", true) == 0) return false
-                // ISO 3166 - Kazakhstan
-                if (locale.country.compareTo("KZ", true) == 0) return false
-                // ISO 3166 - Germany
-                if (locale.country.compareTo("DE", true) == 0) return false
-                // ISO 3166 - Poland
-                if (locale.country.compareTo("PL", true) == 0) return false
-                // ISO 3166 - Latvia
-                if (locale.country.compareTo("LV", true) == 0) return false
-                // ISO 3166 - Lithuania
-                if (locale.country.compareTo("LT", true) == 0) return false
-                // ISO 3166 - Estonia
-                if (locale.country.compareTo("EE", true) == 0) return false
-                // ISO 3166 - Moldova
-                if (locale.country.compareTo("MD", true) == 0) return false
-                // ISO 3166 - Armenia
-                if (locale.country.compareTo("AM", true) == 0) return false
-                // ISO 3166 - Azerbaijan
-                if (locale.country.compareTo("AZ", true) == 0) return false
-                // ISO 3166 - Kyrgyzstan
-                if (locale.country.compareTo("KG", true) == 0) return false
-                // ISO 3166 - Tajikistan
-                if (locale.country.compareTo("TJ", true) == 0) return false
-                // ISO 3166 - Turkmenistan
-                if (locale.country.compareTo("TM", true) == 0) return false
-                // ISO 3166 - Uzbekistan
-                if (locale.country.compareTo("UZ", true) == 0) return false
-                // ISO 3166 - Mongolia
-                return locale.country.compareTo("MN", true) != 0
-            }
-            return false
-        }
-
-        // On classload, if isSanctioned==false, call System.exit(0)
-        init {
-            if (isSanctioned()) {
-                log.error("You are not allowed to use this software. Slava Ukraini!")
-                System.exit(0)
-            }
-        }
-
+        private val keyFile get() = File(File(System.getProperty("user.home")), "openai.key")
+        val keyTxt: String get() = if (keyFile.exists()) keyFile.readText().trim() else ""
     }
-
 }

@@ -1,6 +1,6 @@
 package com.simiacryptus.openai.proxy
 
-import com.simiacryptus.openai.CompletionRequest
+import com.simiacryptus.openai.OpenAIClient.CompletionRequest
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.event.Level
@@ -8,7 +8,7 @@ import org.slf4j.event.Level
 class CompletionProxy<T:Any>(
     clazz: Class<T>,
     apiKey: String,
-    var model: String = "text-davinci-003",
+    var model: OpenAIClient.Model = OpenAIClient.Models.DaVinci,
     var maxTokens: Int = 4000,
     temperature: Double = 0.7,
     var verbose: Boolean = false,
