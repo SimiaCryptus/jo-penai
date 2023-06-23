@@ -10,6 +10,8 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.util.EntityUtils
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import java.io.BufferedOutputStream
+import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.*
@@ -18,12 +20,13 @@ import java.util.regex.Pattern
 
 open class APIClientBase(
     protected var key: String,
-    private val apiBase: String = "https://api.openai.com/v1",
-    private val logLevel: Level = Level.INFO
-) : HttpClientManager() {
+    private val apiBase: String,
+    logLevel: Level = Level.INFO,
+    auxillaryLogOutputStream: BufferedOutputStream?
+) : HttpClientManager(logLevel, auxillaryLogOutputStream) {
 
     companion object {
-        val log = LoggerFactory.getLogger(OpenAIClient::class.java)
+        val log = LoggerFactory.getLogger(APIClientBase::class.java)
         val allowedCharset: Charset = Charset.forName("ASCII")
         val maxTokenErrorMessage = listOf(
             Pattern.compile(
@@ -86,16 +89,14 @@ open class APIClientBase(
             }
             return false
         }
-
-        // On classload, if isSanctioned==false, call System.exit(0)
-        init {
-            if (isSanctioned()) {
-                log.error("You are not allowed to use this software. Slava Ukraini!")
-                System.exit(0)
-            }
-        }
-
     }
+
+    init {
+        if (isSanctioned()) {
+            throw RuntimeException("You are not allowed to use this software. Slava Ukraini!")
+        }
+    }
+
     open val metrics : Map<String, Any> get() = hashMapOf(
         "tokens" to tokens.get(),
     )
@@ -172,18 +173,6 @@ open class APIClientBase(
 
     open fun incrementTokens(totalTokens: Int) {
         tokens.addAndGet(totalTokens)
-    }
-
-    open fun log(level: Level, msg: String) {
-        val message = msg.trim().replace("\n", "\n\t")
-        when (level) {
-            Level.ERROR -> log.error(message)
-            Level.WARN -> log.warn(message)
-            Level.INFO -> log.info(message)
-            Level.DEBUG -> log.debug(message)
-            Level.TRACE -> log.debug(message)
-            else -> log.debug(message)
-        }
     }
 
 }

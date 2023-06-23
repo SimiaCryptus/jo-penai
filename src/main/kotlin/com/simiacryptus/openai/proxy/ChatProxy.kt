@@ -14,10 +14,9 @@ class ChatProxy<T : Any>(
     temperature: Double = 0.7,
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
-    apiLog: String? = null,
     val deserializerRetries: Int = 5,
     validation: Boolean = true,
-) : GPTProxyBase<T>(clazz, apiLog, temperature, validation, deserializerRetries) {
+) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
     override val metrics : Map<String, Any>
         get() = hashMapOf(
             "totalInputLength" to totalInputLength.get(),

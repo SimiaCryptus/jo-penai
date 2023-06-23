@@ -31,8 +31,10 @@ class ChatProxyTest {
     @Test
     fun testDemo2() {
         if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(BlogPostGenerator::class.java, api = OpenAIClient(
-            OpenAIClient.keyTxt))
+        val gptProxy = ChatProxy(
+            BlogPostGenerator::class.java, api = OpenAIClient(
+                OpenAIClient.keyTxt)
+        )
         val generator = gptProxy.create()
         val blogPost = generator.generateBlogPost(
             "The Future of AI",
@@ -80,8 +82,10 @@ class ChatProxyTest {
     @Test
     fun testDemo4() {
         if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(ShoppingListParser::class.java, api = OpenAIClient(
-            OpenAIClient.keyTxt))
+        val gptProxy = ChatProxy(
+            ShoppingListParser::class.java, api = OpenAIClient(
+                OpenAIClient.keyTxt)
+        )
         val parser = gptProxy.create()
         val plainTextList = "2 apples\n1 loaf of bread\n3 cans of soup\n4 bananas"
         val parsedList = parser.parseShoppingList(plainTextList)

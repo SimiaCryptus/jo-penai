@@ -13,6 +13,7 @@ import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
 import org.slf4j.event.Level
 import java.awt.image.BufferedImage
+import java.io.BufferedOutputStream
 import java.io.File
 import java.io.IOException
 import java.net.URL
@@ -23,8 +24,8 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
     key: String,
     private val apiBase: String = "https://api.openai.com/v1",
-    private val logLevel: Level = Level.INFO
-) : APIClientBase(key, apiBase, logLevel) {
+    logLevel: Level = Level.INFO
+) : APIClientBase(key, apiBase, logLevel, auxillaryLogOutputStream) {
 
     interface Model {
         val modelName: String
@@ -182,14 +183,14 @@ open class OpenAIClient(
                     completionCounter.incrementAndGet()
                     if (request.suffix == null) {
                         log(
-                            logLevel, String.format(
+                            msg=String.format(
                                 "Text Completion Request\nPrefix:\n\t%s\n",
                                 request.prompt.replace("\n", "\n\t")
                             )
                         )
                     } else {
                         log(
-                            logLevel, String.format(
+                            msg=String.format(
                                 "Text Completion Request\nPrefix:\n\t%s\nSuffix:\n\t%s\n",
                                 request.prompt.replace("\n", "\n\t"),
                                 request.suffix!!.replace("\n", "\n\t")
@@ -199,7 +200,7 @@ open class OpenAIClient(
                     val result = post(
                         "$apiBase/engines/${model.modelName}/completions",
                         StringUtil.restrictCharacterSet(
-                            JsonUtil.objectMapper().writeValueAsString(request),
+                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(request),
                             allowedCharset
                         )
                     )
@@ -215,7 +216,7 @@ open class OpenAIClient(
                         response.firstChoice.orElse("").toString().trim { it <= ' ' },
                         request.prompt.trim { it <= ' ' })
                     log(
-                        logLevel, String.format(
+                        msg=String.format(
                             "Chat Completion:\n\t%s",
                             completionResult.toString().replace("\n", "\n\t")
                         )
@@ -376,9 +377,9 @@ open class OpenAIClient(
                 withPerformanceLogging {
                     chatCounter.incrementAndGet()
                     log(
-                        logLevel, String.format(
+                        msg=String.format(
                             "Chat Request\nPrefix:\n\t%s\n",
-                            JsonUtil.objectMapper().writeValueAsString(completionRequest).replace("\n", "\n\t")
+                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(completionRequest).replace("\n", "\n\t")
                         )
                     )
                     fun json() = StringUtil.restrictCharacterSet(
@@ -396,7 +397,7 @@ open class OpenAIClient(
                         incrementTokens(response.usage.total_tokens)
                     }
                     log(
-                        logLevel, String.format(
+                        msg=String.format(
                             "Chat Completion:\n\t%s",
                             response.choices.first().message!!.content!!.trim { it <= ' ' }.toString()
                                 .replace("\n", "\n\t")
@@ -482,14 +483,14 @@ open class OpenAIClient(
             editCounter.incrementAndGet()
             if (editRequest.input == null) {
                 log(
-                    logLevel, String.format(
+                    msg=String.format(
                         "Text Edit Request\nInstruction:\n\t%s\n",
                         editRequest.instruction.replace("\n", "\n\t")
                     )
                 )
             } else {
                 log(
-                    logLevel, String.format(
+                    msg=String.format(
                         "Text Edit Request\nInstruction:\n\t%s\nInput:\n\t%s\n",
                         editRequest.instruction.replace("\n", "\n\t"),
                         editRequest.input!!.replace("\n", "\n\t")
@@ -511,7 +512,7 @@ open class OpenAIClient(
                 incrementTokens(response.usage!!.total_tokens)
             }
             log(
-                logLevel, String.format(
+                msg=String.format(
                     "Chat Completion:\n\t%s",
                     response.firstChoice.orElse("").toString().trim { it <= ' ' }
                         .toString().replace("\n", "\n\t")
@@ -569,7 +570,7 @@ open class OpenAIClient(
             withPerformanceLogging {
                 if (request.input is String) {
                     log(
-                        logLevel, String.format(
+                        msg=String.format(
                             "Embedding Creation Request\nModel:\n\t%s\nInput:\n\t%s\n",
                             request.model,
                             request.input.replace("\n", "\n\t")
@@ -597,6 +598,8 @@ open class OpenAIClient(
     }
 
     companion object {
+        var auxillaryLog : File? = null
+        val auxillaryLogOutputStream: BufferedOutputStream? by lazy { auxillaryLog?.outputStream()?.buffered() }
         private val keyFile get() = File(File(System.getProperty("user.home")), "openai.key")
         val keyTxt: String get() = if (keyFile.exists()) keyFile.readText().trim() else ""
     }

@@ -16,7 +16,6 @@ class ProxyTest {
             clazz,
             api = OpenAIClient(OpenAIClient.keyTxt),
             model = OpenAIClient.Models.GPT35Turbo,
-            apiLog = apiLog,
             //model = "gpt-4-0314",
             deserializerRetries = 5
         )
@@ -24,7 +23,6 @@ class ProxyTest {
                             apiLog: String = "api.log.json"): CompletionProxy<T> = CompletionProxy(
             clazz,
             apiKey = OpenAIClient.keyTxt,
-            apiLog = apiLog,
             deserializerRetries = 5
         )
 

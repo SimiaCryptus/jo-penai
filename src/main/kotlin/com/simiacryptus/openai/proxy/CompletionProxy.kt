@@ -14,9 +14,8 @@ class CompletionProxy<T:Any>(
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
     base: String = "https://api.openai.com/v1",
-    apiLog: String,
     val deserializerRetries: Int
-) : GPTProxyBase<T>(clazz, apiLog, temperature, true, deserializerRetries) {
+) : GPTProxyBase<T>(clazz, temperature, true, deserializerRetries) {
     val api: OpenAIClient
 
     init {
