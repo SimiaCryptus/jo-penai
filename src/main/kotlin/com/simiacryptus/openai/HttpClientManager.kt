@@ -1,55 +1,78 @@
 package com.simiacryptus.openai
 
-import com.google.common.util.concurrent.ListeningExecutorService
-import com.google.common.util.concurrent.ListeningScheduledExecutorService
-import com.google.common.util.concurrent.MoreExecutors
-import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.google.common.util.concurrent.*
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClientBuilder
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
+import java.io.BufferedOutputStream
 import java.io.IOException
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.collections.HashSet
 import kotlin.math.pow
 
 @Suppress("MemberVisibilityCanBePrivate")
-open class HttpClientManager {
+open class HttpClientManager(
+    protected val logLevel: Level = Level.INFO,
+    val auxillaryLogOutputStream: BufferedOutputStream? = null
+) {
 
     companion object {
         val log = LoggerFactory.getLogger(HttpClientManager::class.java)
-        val threadFactory: ThreadFactory = ThreadFactoryBuilder().setNameFormat("API Thread %d").build()
         val scheduledPool: ListeningScheduledExecutorService =
-            MoreExecutors.listeningDecorator(ScheduledThreadPoolExecutor(4, threadFactory))
+            MoreExecutors.listeningDecorator(
+                ScheduledThreadPoolExecutor(
+                    4,
+                    ThreadFactoryBuilder().setNameFormat("API Scheduler %d").build()
+                )
+            )
         val workPool: ListeningExecutorService =
             MoreExecutors.listeningDecorator(
                 ThreadPoolExecutor(
-                    1, 32,
-                    0, TimeUnit.MILLISECONDS, LinkedBlockingQueue(), threadFactory
+                    8,
+                    16,
+                    0,
+                    TimeUnit.MILLISECONDS,
+                    LinkedBlockingQueue(),
+                    ThreadFactoryBuilder().setNameFormat("API Thread %d").build()
                 )
             )
+        val startTime by lazy { System.currentTimeMillis() }
 
-        fun <T> withPool(fn: () -> T): T = workPool.submit(Callable {
-            return@Callable fn()
-        }).get()
+    }
 
-        fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
-            var lastException: Exception? = null
-            for (i in 0 until retryCount) {
-                try {
-                    return fn()
-                } catch (e: ModelMaxException) {
-                    throw e
-                } catch (e: Exception) {
-                    lastException = e
-                    log.warn("Request failed; retrying ($i/$retryCount): " + e.message)
-                    Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
+    fun <T> withPool(fn: () -> T): T = workPool.submit(Callable {
+        return@Callable fn()
+    }).get()
+
+    fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
+        var lastException: Exception? = null
+        for (i in 0 until retryCount) {
+            try {
+                return fn()
+            } catch (e: ModelMaxException) {
+                throw e
+            } catch (e: Exception) {
+                val modelMaxException = modelMaxException(e)
+                if (null != modelMaxException) {
+                    throw modelMaxException
                 }
+                lastException = e
+                this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + e.message)
+                Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
             }
-            throw lastException!!
         }
+        throw lastException!!
+    }
 
+    private fun modelMaxException(e: Throwable?): ModelMaxException? {
+        if (e == null) return null
+        if (e is ModelMaxException) return e
+        if (e is ExecutionException) return modelMaxException(e.cause)
+        return null
     }
 
     protected val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
@@ -66,76 +89,107 @@ open class HttpClientManager {
             synchronized(clients) {
                 clients[thread]
             }?.close()
+            thread.interrupt()
         } catch (e: IOException) {
-            log.info("Error closing client: " + e.message)
+            log(Level.DEBUG, "Error closing client: " + e.message)
         }
     }
 
-    protected fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean = { Thread.currentThread().isInterrupted }): T {
-        val thread = Thread.currentThread()
+    protected fun <T> withCancellationMonitor(fn: () -> T): T {
+        val currentThread = Thread.currentThread()
+        return withCancellationMonitor(fn) { currentThread.isInterrupted }
+    }
+
+    protected fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
+        val threads = HashSet<Thread>()
+        threads.add(Thread.currentThread())
         val isCompleted = AtomicBoolean(false)
         val start = Date()
-        val future = scheduledPool.scheduleAtFixedRate({
+        val cancellationFuture = scheduledPool.scheduleAtFixedRate({
             if (cancelCheck()) {
-                log.info("Request cancelled at ${Date()} (started $start); closing client for thread $thread")
-                closeClient(thread, isCompleted)
+                log(Level.DEBUG, "Request cancelled at ${Date()} (started $start); closing client for thread $threads")
+                threads.forEach { closeClient(it) }
             }
         }, 0, 10, TimeUnit.MILLISECONDS)
         try {
-            return fn()
+            return runAsync(threads, fn)
         } finally {
-            isCompleted.set(true)
-            future.cancel(false)
+            cancellationFuture.cancel(false)
         }
     }
 
     protected fun <T> withTimeout(duration: Duration, fn: () -> T): T {
-        val thread = Thread.currentThread()
-        val isCompleted = AtomicBoolean(false)
+        val threads = HashSet<Thread>()
+        val currentThread = Thread.currentThread()
+        threads.add(currentThread)
+        val isTimeout = AtomicBoolean(false)
         val start = Date()
-        val future = scheduledPool.schedule({
-            log.info("Request timed out after $duration at ${Date()} (started $start); closing client for thread $thread")
-            closeClient(thread, isCompleted)
+        val cancellationFuture = scheduledPool.schedule({
+            log(
+                Level.DEBUG,
+                "Request timed out after $duration at ${Date()} (started $start); closing client for thread $threads"
+            )
+            isTimeout.set(true)
+            threads.forEach { closeClient(it) }
         }, duration.toMillis(), TimeUnit.MILLISECONDS)
         try {
             return fn()
+        } catch (ex: InterruptedException) {
+            if (!isTimeout.get()) throw ex
+            throw RuntimeException(ex)
         } finally {
-            isCompleted.set(true)
-            future.cancel(false)
+            threads.remove(currentThread)
+            cancellationFuture.cancel(false)
         }
     }
 
-    private fun closeClient(thread: Thread, isCompleted: AtomicBoolean) {
-        closeClient(thread)
-        Thread.sleep(10)
-        while (isCompleted.get()) {
-            Thread.sleep(5000)
-            if (isCompleted.get()) break
-            log.info("Request still not completed; thread stack: \n\t${thread.stackTrace.joinToString { "\n\t" }}\nkilling thread $thread")
-            @Suppress("DEPRECATION")
-            thread.stop()
+
+    private fun <T> runAsync(
+        threads: MutableSet<Thread>,
+        fn: () -> T
+    ): T {
+        val isDone = Semaphore(0)
+        log.info("Async request started")
+        val future = workPool.submit(Callable<T> {
+            val currentThread = Thread.currentThread()
+            try {
+                threads.add(currentThread)
+                log.info("Async request started; running $fn")
+                fn()
+            } finally {
+                threads.remove(currentThread)
+                isDone.release()
+                log.info("Async request completed; isDone ${System.identityHashCode(isDone)} released")
+            }
+        })
+        try {
+            isDone.acquire()
+            log.info("Async request completed; getting value")
+            val get = future.get()
+            log.info("Async request completed; got value")
+            return get
+        } finally {
+            log.info("Async request completed")
         }
     }
 
-    protected fun <T> withReliability(requestTimeoutSeconds: Long = 180, retryCount: Int = 3, fn: () -> T): T =
+    protected fun <T> withReliability(requestTimeoutSeconds: Long = (5 * 60), retryCount: Int = 3, fn: () -> T): T =
         withExpBackoffRetry(retryCount) {
             withTimeout(Duration.ofSeconds(requestTimeoutSeconds)) {
-//            withPool {
                 withCancellationMonitor(fn)
-//            }
             }
         }
 
-    protected fun <T> withPerformanceLogging(fn: () -> T):T {
+    protected fun <T> withPerformanceLogging(fn: () -> T): T {
         val start = Date()
         try {
             return fn()
         } finally {
-            log.debug("Request completed in ${Date().time - start.time}ms")
+            log(Level.DEBUG, "Request completed in ${Date().time - start.time}ms")
         }
     }
 
-    protected fun <T> withClient(fn: java.util.function.Function<CloseableHttpClient,T>): T {
+    protected fun <T> withClient(fn: java.util.function.Function<CloseableHttpClient, T>): T {
         val client = getClient()
         try {
             synchronized(clients) {
@@ -148,6 +202,29 @@ open class HttpClientManager {
             synchronized(clients) {
                 clients.remove(Thread.currentThread())
             }
+        }
+    }
+
+    protected open fun log(level: Level = logLevel, msg: String) {
+        val message = msg.trim().replace("\n", "\n\t")
+        when (level) {
+            Level.ERROR -> log.error(message)
+            Level.WARN -> log.warn(message)
+            Level.INFO -> log.info(message)
+            Level.DEBUG -> log.debug(message)
+            Level.TRACE -> log.debug(message)
+            else -> log.debug(message)
+        }
+        if (auxillaryLogOutputStream != null) {
+            auxillaryLogOutputStream?.write(
+                "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${
+                    message.replace(
+                        "\n",
+                        "\n\t"
+                    )
+                }\n".toByteArray()
+            )
+            auxillaryLogOutputStream?.flush()
         }
     }
 

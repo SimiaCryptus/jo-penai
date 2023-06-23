@@ -9,7 +9,18 @@ It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be s
 
 <!-- TOC -->
 * [JoePenai - Unofficial Open Source OpenAI API Client for Java/Kotlin](#joepenai---unofficial-open-source-openai-api-client-for-javakotlin)
+  * [To Import](#to-import)
   * [Basic Features](#basic-features)
+    * [listEngines](#listengines)
+    * [getEngineIds](#getengineids)
+    * [complete](#complete)
+    * [transcription](#transcription)
+    * [render](#render)
+    * [chat](#chat)
+    * [moderate](#moderate)
+    * [edit](#edit)
+    * [listModels](#listmodels)
+    * [createEmbedding](#createembedding)
   * [GPT-Proxy API](#gpt-proxy-api)
     * [Key Features](#key-features)
     * [Getting Started](#getting-started)
@@ -35,17 +46,17 @@ Maven:
 <dependency>
     <groupId>com.simiacryptus</groupId>
     <artifactId>joe-penai</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.12</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.10'
+implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.12'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:joe-penai:1.0.10")
+implementation("com.simiacryptus:joe-penai:1.0.12")
 ```
 
 
@@ -61,7 +72,107 @@ All main features of the OpenAI API are supported, including:
 | Text Transcription | Generate text transcriptions from audio, converting spoken language into written text          |
 | Text Rendering     | Generate images from a prompt, creating visual representations based on text descriptions      |
 
-These are demonstrated in [ReadmeBasicTest.kt](src/test/kotlin/com/simiacryptus/openai/ReadmeBasicTest.kt)
+To use the `OpenAIClient`, you need to provide an API key and optionally an API base URL and log level.
+
+```kotlin
+import com.simiacryptus.openai.OpenAIClient
+
+val apiKey = "your_api_key"
+val apiBase = "https://api.openai.com/v1"
+val logLevel = Level.INFO
+
+val client = OpenAIClient(apiKey, apiBase, logLevel)
+```
+
+### listEngines
+
+Returns a list of available engines.
+
+```kotlin
+val engines = client.listEngines()
+```
+
+### getEngineIds
+
+Returns an array of engine IDs.
+
+```kotlin
+val engineIds = client.getEngineIds()
+```
+
+### complete
+
+Performs a text completion using the specified model.
+
+```kotlin
+val request = OpenAIClient.CompletionRequest(prompt = "Once upon a time")
+val model = OpenAIClient.Models.GPT35Turbo
+val response = client.complete(request, model)
+```
+
+### transcription
+
+Transcribes audio data in WAV format.
+
+```kotlin
+val wavAudio: ByteArray = ...
+val transcription = client.transcription(wavAudio)
+```
+
+### render
+
+Generates images based on a prompt.
+
+```kotlin
+val prompt = "A beautiful sunset over the ocean"
+val resolution = 1024
+val count = 1
+val images = client.render(prompt, resolution, count)
+```
+
+### chat
+
+Performs a chat completion.
+
+```kotlin
+val chatRequest = OpenAIClient.ChatRequest(/*...*/)
+val chatResponse = client.chat(chatRequest)
+```
+
+### moderate
+
+Moderates a given text.
+
+```kotlin
+val text = "Some text to moderate"
+client.moderate(text)
+```
+
+### edit
+
+Performs a text edit.
+
+```kotlin
+val editRequest = OpenAIClient.EditRequest(/*...*/)
+val editResponse = client.edit(editRequest)
+```
+
+### listModels
+
+Lists available models.
+
+```kotlin
+val modelListResponse = client.listModels()
+```
+
+### createEmbedding
+
+Creates an embedding for a given input.
+
+```kotlin
+val embeddingRequest = OpenAIClient.EmbeddingRequest(/*...*/)
+val embeddingResponse = client.createEmbedding(embeddingRequest)
+```
 
 ## GPT-Proxy API
 

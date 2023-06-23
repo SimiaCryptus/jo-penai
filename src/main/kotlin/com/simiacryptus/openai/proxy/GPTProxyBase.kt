@@ -17,7 +17,6 @@ import kotlin.math.pow
 
 abstract class GPTProxyBase<T : Any>(
     val clazz: Class<T>,
-    apiLogFile: String?,
     var temperature: Double = 0.1,
     var validation: Boolean = true,
     var maxRetries: Int = 5,
@@ -63,7 +62,6 @@ abstract class GPTProxyBase<T : Any>(
                     }
                     var jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
                     var jsonResult = fixup(jsonResult0, type)
-                    writeToJsonLog(ProxyRecord(method.name, prompt.argList, jsonResult))
                     try {
                         val obj = fromJson<Any>(jsonResult, type)
                         if (validation && obj is ValidatedObject && !obj.validate()) {
@@ -84,7 +82,6 @@ abstract class GPTProxyBase<T : Any>(
         } as T
     }
 
-    private val apiLog = apiLogFile?.let { openApiLog(it) }
     val examples = HashMap<String, MutableList<RequestResponse>>()
     private fun loadExamples(file: File = File("api.examples.json")): List<ProxyRecord> {
         if (!file.exists()) return listOf()
@@ -123,15 +120,6 @@ abstract class GPTProxyBase<T : Any>(
         writer.newLine()
         writer.flush()
         return writer
-    }
-
-    private fun writeToJsonLog(record: ProxyRecord) {
-        if (apiLog != null) {
-            apiLog.write(toJson(record))
-            apiLog.write(",")
-            apiLog.newLine()
-            apiLog.flush()
-        }
     }
 
     data class ProxyRequest(
