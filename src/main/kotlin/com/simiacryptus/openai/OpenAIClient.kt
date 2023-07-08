@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 open class OpenAIClient(
-    key: String,
+    key: String = keyTxt,
     private val apiBase: String = "https://api.openai.com/v1",
     logLevel: Level = Level.INFO
 ) : APIClientBase(key, apiBase, logLevel, auxillaryLogOutputStream) {
@@ -172,11 +172,14 @@ open class OpenAIClient(
         override val modelName: String,
         override val maxTokens: Int
     ) : Model
-    fun complete(
+
+    val codex = GPT4Tokenizer(false)
+
+    open fun complete(
         request: CompletionRequest,
         model: Model
     ): CompletionResponse {
-        request.max_tokens = model.maxTokens
+        request.max_tokens = model.maxTokens - codex.estimateTokenCount(request.prompt)
         try {
             return withReliability {
                 withPerformanceLogging {
@@ -251,7 +254,7 @@ open class OpenAIClient(
         val text: String? = ""
     )
 
-    fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
+    open fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
         withPerformanceLogging {
             transcriptionCounter.incrementAndGet()
             val url = "$apiBase/audio/transcriptions"
@@ -280,7 +283,7 @@ open class OpenAIClient(
         }
     }
 
-    fun render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage> = withReliability {
+    open fun render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage> = withReliability {
         withPerformanceLogging {
             renderCounter.incrementAndGet()
             val url = "$apiBase/images/generations"
@@ -369,19 +372,23 @@ open class OpenAIClient(
         }
     }
 
-    fun chat(
-        completionRequest: ChatRequest
+    open fun chat(
+        completionRequest: ChatRequest,
+        model: Model
     ): ChatResponse {
         try {
             return withReliability {
                 withPerformanceLogging {
                     chatCounter.incrementAndGet()
+                    val reqJson =
+                        JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(completionRequest)
                     log(
                         msg=String.format(
                             "Chat Request\nPrefix:\n\t%s\n",
-                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(completionRequest).replace("\n", "\n\t")
+                            reqJson.replace("\n", "\n\t")
                         )
                     )
+                    completionRequest.max_tokens = model.maxTokens - codex.estimateTokenCount(reqJson)
                     fun json() = StringUtil.restrictCharacterSet(
                         JsonUtil.objectMapper().writeValueAsString(completionRequest),
                         allowedCharset
@@ -408,11 +415,11 @@ open class OpenAIClient(
             }
         } catch (e: ModelMaxException) {
             completionRequest.max_tokens = (e.modelMax - e.messages) - 1
-            return chat(completionRequest)
+            return chat(completionRequest, TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1))
         }
     }
 
-    fun moderate(text: String) = withReliability {
+    open fun moderate(text: String) = withReliability {
         withPerformanceLogging {
             moderationCounter.incrementAndGet()
             val body: String = try {
@@ -475,7 +482,7 @@ open class OpenAIClient(
         var top_p: Double? = null
     )
 
-    fun edit(
+    open fun edit(
         editRequest: EditRequest
     ): CompletionResponse = withReliability {
 
@@ -537,7 +544,7 @@ open class OpenAIClient(
         val permission: List<Map<String, Object>>? = listOf(),
     )
 
-    fun listModels(): ModelListResponse {
+    open fun listModels(): ModelListResponse {
         val result = get("$apiBase/models")
         checkError(result)
         return JsonUtil.objectMapper().readValue(result, ModelListResponse::class.java)
@@ -563,7 +570,7 @@ open class OpenAIClient(
         val user: String? = null
     )
 
-    fun createEmbedding(
+    open fun createEmbedding(
         request: EmbeddingRequest
     ): EmbeddingResponse {
         return withReliability {
