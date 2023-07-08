@@ -10,12 +10,14 @@ import kotlin.math.abs
 
 object StringUtil {
 
+    @JvmStatic
     fun indentJoin(fields: List<Any>, indent: String = "\t"): String {
         val joinToString = fields.joinToString("\n$indent")
             { it.toString().replace("\n", "\n$indent") }
         return "{\n$indent$joinToString\n}"
     }
 
+    @JvmStatic
     fun stripUnbalancedTerminators(input: CharSequence): CharSequence {
         var openCount = 0
         var inQuotes = false
@@ -44,6 +46,7 @@ object StringUtil {
         return output.toString()
     }
 
+    @JvmStatic
     fun stripPrefix(text: CharSequence, prefix: CharSequence): CharSequence {
         val startsWith = text.toString().startsWith(prefix.toString())
         return if (startsWith) {
@@ -53,16 +56,19 @@ object StringUtil {
         }
     }
 
+    @JvmStatic
     fun trimPrefix(text: CharSequence): CharSequence {
         val prefix = getWhitespacePrefix(text)
         return stripPrefix(text, prefix)
     }
 
+    @JvmStatic
     fun trimSuffix(text: CharSequence): String {
         val suffix = getWhitespaceSuffix(text)
         return stripSuffix(text, suffix)
     }
 
+    @JvmStatic
     fun stripSuffix(text: CharSequence, suffix: CharSequence): String {
         val endsWith = text.toString().endsWith(suffix.toString())
         return if (endsWith) {
@@ -72,6 +78,7 @@ object StringUtil {
         }
     }
 
+    @JvmStatic
     fun lineWrapping(description: CharSequence, width: Int): String {
         val output = StringBuilder()
         val lines = description.toString().split("\n".toRegex()).dropLastWhile { it.isEmpty() }
@@ -95,6 +102,7 @@ object StringUtil {
         return output.toString()
     }
 
+    @JvmStatic
     private fun wrapSentence(line: CharSequence, width: Int, xPointer: AtomicInteger): String {
         val sentenceBuffer = StringBuilder()
         val words = line.toString().split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -112,6 +120,7 @@ object StringUtil {
         return sentenceBuffer.toString()
     }
 
+    @JvmStatic
     fun toString(ints: IntArray): CharSequence {
         val chars = CharArray(ints.size)
         for (i in ints.indices) {
@@ -120,6 +129,7 @@ object StringUtil {
         return String(chars)
     }
 
+    @JvmStatic
     fun getWhitespacePrefix(vararg lines: CharSequence): CharSequence {
         return Arrays.stream(lines)
             .map { l: CharSequence ->
@@ -135,6 +145,7 @@ object StringUtil {
             .min(Comparator.comparing { obj: CharSequence -> obj.length }).orElse("")
     }
 
+    @JvmStatic
     fun getWhitespacePrefix2(vararg lines: CharSequence): CharSequence {
         return Arrays.stream(lines)
             .map { l: CharSequence ->
@@ -149,6 +160,7 @@ object StringUtil {
             .min(Comparator.comparing { obj: CharSequence -> obj.length }).orElse("")
     }
 
+    @JvmStatic
     fun getWhitespaceSuffix(vararg lines: CharSequence): String {
         return reverse(Arrays.stream(lines)
             .map { obj: CharSequence? -> reverse(obj!!) }
@@ -165,10 +177,12 @@ object StringUtil {
         ).toString()
     }
 
+    @JvmStatic
     private fun reverse(l: CharSequence): CharSequence {
         return StringBuffer(l).reverse().toString()
     }
 
+    @JvmStatic
     fun trim(items: List<CharSequence>, max: Int, preserveHead: Boolean): List<CharSequence> {
         var items = items
         items = ArrayList(items)
@@ -181,6 +195,7 @@ object StringUtil {
         return items
     }
 
+    @JvmStatic
     fun transposeMarkdownTable(table: String, inputHeader: Boolean, outputHeader: Boolean): String {
         val cells = parseMarkdownTable(table, inputHeader)
         val transposedTable = StringBuilder()
@@ -209,6 +224,7 @@ object StringUtil {
         return transposedTable.toString()
     }
 
+    @JvmStatic
     private fun parseMarkdownTable(table: String, removeHeader: Boolean): Array<Array<CharSequence>> {
         val rows = Arrays.stream(table.split("\n".toRegex()).map { it.trim() }.dropLastWhile { it.isEmpty() }
             .toTypedArray()).map { x: String ->
@@ -224,6 +240,7 @@ object StringUtil {
         return rows.toTypedArray()
     }
 
+    @JvmStatic
     fun getPrefixForContext(text: String, idealLength: Int): CharSequence {
         return getPrefixForContext(text, idealLength, ".", "\n", ",", ";")
     }
@@ -236,14 +253,17 @@ object StringUtil {
      * @param delimiters  The delimiters to split the text by.
      * @return The prefix for the given context.
      */
+    @JvmStatic
     fun getPrefixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence {
         return getSuffixForContext(text.reversed(), idealLength, *delimiters).reversed()
     }
 
+    @JvmStatic
     fun getSuffixForContext(text: String, idealLength: Int): CharSequence {
         return getSuffixForContext(text, idealLength, ".", "\n", ",", ";")
     }
 
+    @JvmStatic
     fun restrictCharacterSet(text: String, charset: Charset): String {
         val encoder = charset.newEncoder()
         val sb = StringBuilder()
@@ -252,11 +272,13 @@ object StringUtil {
     }
 
 
+    @JvmStatic
     fun replaceAll(
         replaceString: String,
         vararg replacements: Pair<String, String>
     ) = replacements.fold(replaceString) { acc, (a, b) -> acc.replace(a, b) }
 
+    @JvmStatic
     fun replaceAllNonOverlapping(
         replaceString: String,
         vararg replacements: Pair<String, String>
@@ -278,6 +300,7 @@ object StringUtil {
      * @param delimiters The delimiters to use when splitting the text.
      * @return The suffix for the given context.
      */
+    @JvmStatic
     fun getSuffixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence {
         // Create a list of candidates by splitting the text by each of the delimiters
         val candidates = Stream.of(*delimiters).flatMap { d: CharSequence? ->

@@ -7,20 +7,16 @@ import org.slf4j.event.Level
 
 class CompletionProxy<T:Any>(
     clazz: Class<T>,
-    apiKey: String,
     var model: OpenAIClient.Model = OpenAIClient.Models.DaVinci,
     var maxTokens: Int = 4000,
     temperature: Double = 0.7,
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
+    val deserializerRetries: Int,
+    apiKey: String = OpenAIClient.keyTxt,
     base: String = "https://api.openai.com/v1",
-    val deserializerRetries: Int
+    val api: OpenAIClient = OpenAIClient(apiKey, base, Level.DEBUG)
 ) : GPTProxyBase<T>(clazz, temperature, true, deserializerRetries) {
-    val api: OpenAIClient
-
-    init {
-        api = OpenAIClient(apiKey, base, Level.DEBUG)
-    }
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if(verbose) log.info(prompt.toString())
