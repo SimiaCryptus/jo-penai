@@ -5,6 +5,8 @@ package com.simiacryptus.openai.proxy
 import com.google.gson.reflect.TypeToken
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
+import com.simiacryptus.util.describe.AbbrevWhitelistYamlDescriber
+import com.simiacryptus.util.describe.TypeDescriber
 import com.simiacryptus.util.describe.YamlDescriber
 import org.slf4j.Logger
 import java.io.BufferedWriter
@@ -39,7 +41,7 @@ abstract class GPTProxyBase<T : Any>(
             if (method.name == "toString") return@newProxyInstance clazz.simpleName
             requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
             val type = method.genericReturnType
-            val typeString = YamlDescriber().describe(method).trimIndent()
+            val typeString = describer.describe(method).trimIndent()
             val prompt = ProxyRequest(
                 method.name,
                 typeString,
@@ -81,6 +83,10 @@ abstract class GPTProxyBase<T : Any>(
             }
         } as T
     }
+
+    open val describer: TypeDescriber = AbbrevWhitelistYamlDescriber(
+        "com.simiacryptus", "com.github.simiacryptus"
+    )
 
     val examples = HashMap<String, MutableList<RequestResponse>>()
     private fun loadExamples(file: File = File("api.examples.json")): List<ProxyRecord> {

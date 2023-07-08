@@ -54,7 +54,7 @@ class OpenAIClientTest {
             ChatMessage(ChatMessage.Role.system, "You are a spiritual teacher"),
             ChatMessage(ChatMessage.Role.user, "What is the meaning of life?"),
         )
-        val chatResponse = client.chat(request)
+        val chatResponse = client.chat(request, model)
         println(chatResponse.choices.first().message?.content ?: "No response")
     }
 

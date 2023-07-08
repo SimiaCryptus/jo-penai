@@ -15,9 +15,20 @@ class ChatProxy<T : Any>(
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
     val deserializerRetries: Int = 5,
-    validation: Boolean = true,
-) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
-    override val metrics : Map<String, Any>
+    validation: Boolean = true,) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
+
+    constructor(params: LinkedHashMap<String, Any?>) : this(
+        clazz = params["clazz"] as Class<T>,
+        api = params["api"] as OpenAIClient? ?: OpenAIClient(),
+        model = params["model"] as OpenAIClient.Model? ?: OpenAIClient.Models.GPT35Turbo,
+        temperature = params["temperature"] as Double? ?: 0.7,
+        verbose = params["verbose"] as Boolean? ?: false,
+        moderated = params["moderated"] as Boolean? ?: true,
+        deserializerRetries = params["deserializerRetries"] as Int? ?: 5,
+        validation = params["validation"] as Boolean? ?: true,
+    )
+
+    override val metrics: Map<String, Any>
         get() = hashMapOf(
             "totalInputLength" to totalInputLength.get(),
             "totalOutputLength" to totalOutputLength.get(),
@@ -80,7 +91,7 @@ class ChatProxy<T : Any>(
         if (moderated) api.moderate(json)
         totalInputLength.addAndGet(json.length)
 
-        val completion = api.chat(request).choices?.first()?.message?.content.orEmpty()
+        val completion = api.chat(request, model).choices?.first()?.message?.content.orEmpty()
         if (verbose) log.info(completion)
         totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)
@@ -91,6 +102,7 @@ class ChatProxy<T : Any>(
     }
 
     companion object {
+
         val log = org.slf4j.LoggerFactory.getLogger(ChatProxy::class.java)
         private fun trimPrefix(completion: String): Pair<String, String> {
             val start = completion.indexOf('{').coerceAtMost(completion.indexOf('['))
