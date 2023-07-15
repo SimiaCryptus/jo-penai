@@ -145,6 +145,7 @@ open class APIClientBase(
                 result,
                 JsonObject::class.java
             )
+            if(null == jsonObject) return
             if (jsonObject.has("error")) {
                 val errorObject = jsonObject.getAsJsonObject("error")
                 val errorMessage = errorObject["message"].asString

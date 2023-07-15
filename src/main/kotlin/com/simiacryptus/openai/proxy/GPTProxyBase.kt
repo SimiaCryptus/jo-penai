@@ -7,7 +7,6 @@ import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
 import com.simiacryptus.util.describe.AbbrevWhitelistYamlDescriber
 import com.simiacryptus.util.describe.TypeDescriber
-import com.simiacryptus.util.describe.YamlDescriber
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File
@@ -84,9 +83,11 @@ abstract class GPTProxyBase<T : Any>(
         } as T
     }
 
-    open val describer: TypeDescriber = AbbrevWhitelistYamlDescriber(
+    open val describer: TypeDescriber = object : AbbrevWhitelistYamlDescriber(
         "com.simiacryptus", "com.github.simiacryptus"
-    )
+    ) {
+        override val includeMethods: Boolean get() = false
+    }
 
     val examples = HashMap<String, MutableList<RequestResponse>>()
     private fun loadExamples(file: File = File("api.examples.json")): List<ProxyRecord> {

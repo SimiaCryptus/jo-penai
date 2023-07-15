@@ -389,6 +389,9 @@ open class OpenAIClient(
                         )
                     )
                     completionRequest.max_tokens = model.maxTokens - codex.estimateTokenCount(reqJson)
+                    require(completionRequest.max_tokens > 0) {
+                        "Model max tokens exceeded"
+                    }
                     fun json() = StringUtil.restrictCharacterSet(
                         JsonUtil.objectMapper().writeValueAsString(completionRequest),
                         allowedCharset
@@ -443,6 +446,7 @@ open class OpenAIClient(
                     result,
                     JsonObject::class.java
                 )
+            if(null == jsonObject) return@withPerformanceLogging
             if (jsonObject.has("error")) {
                 val errorObject = jsonObject.getAsJsonObject("error")
                 throw RuntimeException(IOException(errorObject["message"].asString))
