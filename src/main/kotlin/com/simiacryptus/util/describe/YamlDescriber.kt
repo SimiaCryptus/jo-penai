@@ -21,7 +21,7 @@ open class YamlDescriber : TypeDescriber {
         rawType: Class<in Nothing>,
         stackMax: Int,
     ): String {
-        if (isAbbreviated(rawType.name) || stackMax <= 0) return """
+        if (isAbbreviated(rawType) || stackMax <= 0) return """
             |type: object
             |class: ${rawType.name}
             """.trimMargin()
@@ -70,18 +70,22 @@ open class YamlDescriber : TypeDescriber {
             """.trimMargin().trim()
             }.toTypedArray()
         } else {
-            rawType.methods
-                .filter {
-                    Modifier.isPublic(it.modifiers) && !it.isSynthetic && !it.name.contains("$") && !methodBlacklist.contains(
-                        it.name
-                    )
-                }
-                .map {
-                    """
-            |${it.name}:
-            |  ${describe(it, stackMax - 1).replace("\n", "\n  ")}
-            """.trimMargin().trim()
-                }.toTypedArray()
+            if(includeMethods) {
+                rawType.methods
+                    .filter {
+                        Modifier.isPublic(it.modifiers) && !it.isSynthetic && !it.name.contains("$") && !methodBlacklist.contains(
+                            it.name
+                        )
+                    }
+                    .map {
+                        """
+                |${it.name}:
+                |  ${describe(it, stackMax - 1).replace("\n", "\n  ")}
+                """.trimMargin().trim()
+                    }.toTypedArray()
+            } else {
+                arrayOf()
+            }
         }
         if (propertiesYaml.isEmpty() && methodsYaml.isEmpty()) return """
             |type: object
@@ -109,7 +113,8 @@ open class YamlDescriber : TypeDescriber {
             """.trimMargin()
     }
 
-    override val methodBlacklist = setOf("equals", "hashCode", "copy", "toString", "valueOf")
+    open val includeMethods: Boolean = true
+    override val methodBlacklist = setOf("equals", "hashCode", "copy", "toString", "valueOf", "wait", "notify", "notifyAll", "getClass", "invokeMethod")
 
     override fun describe(self: Method, stackMax: Int): String {
         if (stackMax <= 0) return "..."
@@ -199,7 +204,7 @@ open class YamlDescriber : TypeDescriber {
     }
 
     private fun toYaml(self: Type, stackMax: Int): String {
-        if (isAbbreviated(self.typeName) || stackMax <= 0) return """
+        if (isAbbreviated(self) || stackMax <= 0) return """
             |type: object
             |class: ${self.typeName}
             """.trimMargin()
@@ -232,7 +237,7 @@ open class YamlDescriber : TypeDescriber {
     }
 
     private fun toYaml(self: KType, stackMax: Int): String {
-        if (isAbbreviated(self.toString()) || stackMax <= 0) return """
+        if (isAbbreviated(self.javaType) || stackMax <= 0) return """
             |type: object
             |class: ${self.toString()}
             """.trimMargin()

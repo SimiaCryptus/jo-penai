@@ -16,10 +16,9 @@ import kotlin.reflect.KVisibility
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.javaType
 
-private const val s = "class"
-
 class ApiFunctionDescriber : TypeDescriber {
 
+    open val includeMethods: Boolean = true
     private val truncation = "..."
 
     override fun describe(self: Method, stackMax: Int): String {
@@ -32,7 +31,7 @@ class ApiFunctionDescriber : TypeDescriber {
     }
 
     override fun describe(rawType: Class<in Nothing>, stackMax: Int): String {
-        if (isAbbreviated(rawType.name)) return rawType.simpleName
+        if (isAbbreviated(rawType)) return rawType.simpleName
         if (stackMax <= 0) return truncation
         return if (!rawType.isKotlinClass()) {
             describeJavaClass(rawType, stackMax)
@@ -106,6 +105,7 @@ class ApiFunctionDescriber : TypeDescriber {
     private fun describeJavaClass(rawType: Class<in Nothing>, stackMax: Int): String {
         val typeName = rawType.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         if (typeName in primitives) return typeName
+        if (!includeMethods) return rawType.simpleName
         val methods =
             rawType.methods.toList()
                 .filter {
