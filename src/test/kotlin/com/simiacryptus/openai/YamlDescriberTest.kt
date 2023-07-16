@@ -18,14 +18,17 @@ class YamlDescriberTest : TypeDescriberTestBase() {
             |    type: object
             |    class: int
             |  b:
-            |    type: object
-            |    class: java.lang.String
+            |    type: string
             |  c:
-            |    type: object
-            |    class: java.util.List<java.lang.String>
+            |    type: array
+            |    items:
+            |      type: string
             |  d:
-            |    type: object
-            |    class: java.util.Map<java.lang.String, java.lang.Integer>
+            |    type: map
+            |    keys:
+            |      type: string
+            |    values:
+            |      type: integer
             """.trimMargin()
 
     override val methodDescription
@@ -40,13 +43,11 @@ class YamlDescriberTest : TypeDescriberTestBase() {
             |    type: object
             |    class: int
             |  - name: p2
-            |    type: object
-            |    class: java.lang.String
+            |    type: string
             |responses:
             |  application/json:
             |    schema:
-            |      type: object
-            |      class: java.lang.String
+            |      type: string
             |
             """.trimMargin()
 
