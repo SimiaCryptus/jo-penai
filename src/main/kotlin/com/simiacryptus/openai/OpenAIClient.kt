@@ -445,8 +445,7 @@ open class OpenAIClient(
                 Gson().fromJson(
                     result,
                     JsonObject::class.java
-                )
-            if(null == jsonObject) return@withPerformanceLogging
+                ) ?: return@withPerformanceLogging
             if (jsonObject.has("error")) {
                 val errorObject = jsonObject.getAsJsonObject("error")
                 throw RuntimeException(IOException(errorObject["message"].asString))
