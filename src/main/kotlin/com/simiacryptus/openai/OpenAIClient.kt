@@ -31,6 +31,7 @@ open class OpenAIClient(
         val modelName: String
         val maxTokens: Int
     }
+
     enum class Models(
         override val modelName: String,
         override val maxTokens: Int
@@ -38,8 +39,8 @@ open class OpenAIClient(
         AdaEmbedding("text-embedding-ada-002", 2049),
         DaVinci("text-davinci-003", 2049),
         DaVinciEdit("text-davinci-edit-001", 2049),
-        GPT35Turbo("gpt-3.5-turbo-16k",16384),
-        GPT4("gpt-4",8192)
+        GPT35Turbo("gpt-3.5-turbo-16k", 16384),
+        GPT4("gpt-4", 8192)
     }
 
     override val metrics: Map<String, Any>
@@ -186,14 +187,14 @@ open class OpenAIClient(
                     completionCounter.incrementAndGet()
                     if (request.suffix == null) {
                         log(
-                            msg=String.format(
+                            msg = String.format(
                                 "Text Completion Request\nPrefix:\n\t%s\n",
                                 request.prompt.replace("\n", "\n\t")
                             )
                         )
                     } else {
                         log(
-                            msg=String.format(
+                            msg = String.format(
                                 "Text Completion Request\nPrefix:\n\t%s\nSuffix:\n\t%s\n",
                                 request.prompt.replace("\n", "\n\t"),
                                 request.suffix!!.replace("\n", "\n\t")
@@ -219,7 +220,7 @@ open class OpenAIClient(
                         response.firstChoice.orElse("").toString().trim { it <= ' ' },
                         request.prompt.trim { it <= ' ' })
                     log(
-                        msg=String.format(
+                        msg = String.format(
                             "Chat Completion:\n\t%s",
                             completionResult.toString().replace("\n", "\n\t")
                         )
@@ -283,33 +284,34 @@ open class OpenAIClient(
         }
     }
 
-    open fun render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage> = withReliability {
-        withPerformanceLogging {
-            renderCounter.incrementAndGet()
-            val url = "$apiBase/images/generations"
-            val request = HttpPost(url)
-            request.addHeader("Accept", "application/json")
-            request.addHeader("Content-Type", "application/json")
-            authorize(request)
-            val jsonObject = JsonObject()
-            jsonObject.addProperty("prompt", prompt)
-            jsonObject.addProperty("n", count)
-            jsonObject.addProperty("size", "${resolution}x$resolution")
-            request.entity = StringEntity(jsonObject.toString())
-            val response = post(request)
-            val jsonObject2 = Gson().fromJson(response, JsonObject::class.java)
-            if (jsonObject2.has("error")) {
-                val errorObject = jsonObject2.getAsJsonObject("error")
-                throw RuntimeException(IOException(errorObject["message"].asString))
+    open fun render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage> =
+        withReliability {
+            withPerformanceLogging {
+                renderCounter.incrementAndGet()
+                val url = "$apiBase/images/generations"
+                val request = HttpPost(url)
+                request.addHeader("Accept", "application/json")
+                request.addHeader("Content-Type", "application/json")
+                authorize(request)
+                val jsonObject = JsonObject()
+                jsonObject.addProperty("prompt", prompt)
+                jsonObject.addProperty("n", count)
+                jsonObject.addProperty("size", "${resolution}x$resolution")
+                request.entity = StringEntity(jsonObject.toString())
+                val response = post(request)
+                val jsonObject2 = Gson().fromJson(response, JsonObject::class.java)
+                if (jsonObject2.has("error")) {
+                    val errorObject = jsonObject2.getAsJsonObject("error")
+                    throw RuntimeException(IOException(errorObject["message"].asString))
+                }
+                val dataArray = jsonObject2.getAsJsonArray("data")
+                val images = ArrayList<BufferedImage>()
+                for (i in 0 until dataArray.size()) {
+                    images.add(ImageIO.read(URL(dataArray[i].asJsonObject.get("url").asString)))
+                }
+                images
             }
-            val dataArray = jsonObject2.getAsJsonArray("data")
-            val images = ArrayList<BufferedImage>()
-            for (i in 0 until dataArray.size()) {
-                images.add(ImageIO.read(URL(dataArray[i].asJsonObject.get("url").asString)))
-            }
-            images
         }
-    }
 
     data class ChatRequest(
         var messages: Array<ChatMessage> = arrayOf(),
@@ -383,7 +385,7 @@ open class OpenAIClient(
                     val reqJson =
                         JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(completionRequest)
                     log(
-                        msg=String.format(
+                        msg = String.format(
                             "Chat Request\nPrefix:\n\t%s\n",
                             reqJson.replace("\n", "\n\t")
                         )
@@ -407,7 +409,7 @@ open class OpenAIClient(
                         incrementTokens(response.usage.total_tokens)
                     }
                     log(
-                        msg=String.format(
+                        msg = String.format(
                             "Chat Completion:\n\t%s",
                             response.choices.first().message!!.content!!.trim { it <= ' ' }.toString()
                                 .replace("\n", "\n\t")
@@ -493,14 +495,14 @@ open class OpenAIClient(
             editCounter.incrementAndGet()
             if (editRequest.input == null) {
                 log(
-                    msg=String.format(
+                    msg = String.format(
                         "Text Edit Request\nInstruction:\n\t%s\n",
                         editRequest.instruction.replace("\n", "\n\t")
                     )
                 )
             } else {
                 log(
-                    msg=String.format(
+                    msg = String.format(
                         "Text Edit Request\nInstruction:\n\t%s\nInput:\n\t%s\n",
                         editRequest.instruction.replace("\n", "\n\t"),
                         editRequest.input!!.replace("\n", "\n\t")
@@ -522,7 +524,7 @@ open class OpenAIClient(
                 incrementTokens(response.usage!!.total_tokens)
             }
             log(
-                msg=String.format(
+                msg = String.format(
                     "Chat Completion:\n\t%s",
                     response.firstChoice.orElse("").toString().trim { it <= ' ' }
                         .toString().replace("\n", "\n\t")
@@ -580,7 +582,7 @@ open class OpenAIClient(
             withPerformanceLogging {
                 if (request.input is String) {
                     log(
-                        msg=String.format(
+                        msg = String.format(
                             "Embedding Creation Request\nModel:\n\t%s\nInput:\n\t%s\n",
                             request.model,
                             request.input.replace("\n", "\n\t")
@@ -608,9 +610,22 @@ open class OpenAIClient(
     }
 
     companion object {
-        var auxillaryLog : File? = null
+        var auxillaryLog: File? = null
         val auxillaryLogOutputStream: BufferedOutputStream? by lazy { auxillaryLog?.outputStream()?.buffered() }
-        private val keyFile get() = File(File(System.getProperty("user.home")), "openai.key")
-        val keyTxt: String get() = if (keyFile.exists()) keyFile.readText().trim() else ""
+
+        var _keyTxt: String? = null
+        var keyTxt: String
+            get() {
+                if (null != _keyTxt) return _keyTxt!!
+                val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key")
+                if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
+                val keyFile = File(File(System.getProperty("user.home")), "openai.key")
+                if (keyFile.exists()) return keyFile.readText().trim()
+                if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
+                return ""
+            }
+            set(value) {
+                _keyTxt = value
+            }
     }
 }
