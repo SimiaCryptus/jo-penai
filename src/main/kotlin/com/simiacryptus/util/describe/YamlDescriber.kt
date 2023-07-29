@@ -32,7 +32,7 @@ open class YamlDescriber : TypeDescriber {
                 if (description != null) {
                     """
                     |${it.name}:
-                    |  description: ${description.value}
+                    |  description: ${description.value.trim()}
                     |  ${toYaml(it.returnType.javaType, stackMax - 1).replace("\n", "\n  ")}
                     """.trimMargin().trim()
                 } else {
@@ -48,7 +48,7 @@ open class YamlDescriber : TypeDescriber {
                     it.annotations.find { x -> x is Description } as? Description
                 return@map if (description != null) """
                 |${it.name}:
-                |  description: ${description.value}
+                |  description: ${description.value.trim()}
                 |  ${toYaml(it.genericType, stackMax - 1).replace("\n", "\n  ")}
                 """.trimIndent()
                 else
@@ -130,7 +130,7 @@ open class YamlDescriber : TypeDescriber {
         val buffer = StringBuffer()
         buffer.append("operationId: ${self.name}\n")
         if (description != null) {
-            buffer.append("description: ${description.value}\n")
+            buffer.append("description: ${description.value.trim()}\n")
         }
         if (parameterYaml.isNotBlank()) {
             buffer.append("parameters:\n  ${parameterYaml.replace("\n", "\n  ")}\n")
@@ -154,7 +154,7 @@ open class YamlDescriber : TypeDescriber {
         return if (description != null) {
             """
             |operationId: ${self.name}
-            |description: ${description.value}
+            |description: ${description.value.trim()}
             |parameters:
             |  ${parameterYaml.replace("\n", "\n  ")}
             |$responseYaml
@@ -171,7 +171,7 @@ open class YamlDescriber : TypeDescriber {
 
     private fun toYaml(self: Parameter, stackMax: Int): String {
         if (stackMax <= 0) return "..."
-        val description = self.getAnnotation(Description::class.java)?.value
+        val description = self.getAnnotation(Description::class.java)?.value?.trim()
         return if (description != null) {
             """
             |- name: ${self.name}
@@ -188,7 +188,7 @@ open class YamlDescriber : TypeDescriber {
 
     private fun toYaml(self: KParameter, stackMax: Int): String {
         if (stackMax <= 0) return "..."
-        val description = (self.annotations.find { it is Description } as? Description)?.value
+        val description = (self.annotations.find { it is Description } as? Description)?.value?.trim()
         return if (description != null) {
             """
             |- name: ${self.name}
