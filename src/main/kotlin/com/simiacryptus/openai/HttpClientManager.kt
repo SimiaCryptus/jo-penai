@@ -57,9 +57,9 @@ open class HttpClientManager(
                 throw e
             } catch (e: Exception) {
                 val modelMaxException = modelMaxException(e)
-                if (null != modelMaxException) {
-                    throw modelMaxException
-                }
+                if (null != modelMaxException) throw modelMaxException
+                val apiKeyException = apiKeyException(e)
+                if (null != apiKeyException) throw apiKeyException
                 lastException = e
                 this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + e.message)
                 Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
@@ -71,7 +71,14 @@ open class HttpClientManager(
     private fun modelMaxException(e: Throwable?): ModelMaxException? {
         if (e == null) return null
         if (e is ModelMaxException) return e
-        if (e is ExecutionException) return modelMaxException(e.cause)
+        if (e.cause != null && e.cause != e) return modelMaxException(e.cause)
+        return null
+    }
+
+    private fun apiKeyException(e: Throwable?): IOException? {
+        if (e == null) return null
+        if (e is IOException && true == e.message?.contains("Incorrect API key")) return e
+        if (e.cause != null && e.cause != e) return apiKeyException(e.cause)
         return null
     }
 
