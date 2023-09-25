@@ -50,14 +50,21 @@ open class HttpClientManager(
 
     fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
         var lastException: Exception? = null
-        for (i in 0 until retryCount) {
+        var i = 0
+        while (i++ < retryCount) {
             try {
                 return fn()
             } catch (e: ModelMaxException) {
                 throw e
+            } catch (e: RateLimitException) {
+                i--;
+                this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + e.message)
+                Thread.sleep(e.delay)
             } catch (e: Exception) {
                 val modelMaxException = modelMaxException(e)
                 if (null != modelMaxException) throw modelMaxException
+                val rateLimitException = rateLimitException(e)
+                if (null != rateLimitException) throw rateLimitException
                 val apiKeyException = apiKeyException(e)
                 if (null != apiKeyException) throw apiKeyException
                 lastException = e
@@ -72,6 +79,13 @@ open class HttpClientManager(
         if (e == null) return null
         if (e is ModelMaxException) return e
         if (e.cause != null && e.cause != e) return modelMaxException(e.cause)
+        return null
+    }
+
+    private fun rateLimitException(e: Throwable?): RateLimitException? {
+        if (e == null) return null
+        if (e is RateLimitException) return e
+        if (e.cause != null && e.cause != e) return rateLimitException(e.cause)
         return null
     }
 
