@@ -42,13 +42,19 @@ open class APIClientBase(
         )
 
         fun isSanctioned(): Boolean {
-            // Due to the invasion of Ukraine, Russia and allied groups are currently sanctioned.
+            // Due to the invasion of Ukraine, Russia and allies are currently sanctioned.
             // Slava Ukraini!
             val locale = Locale.getDefault()
             // ISO 3166 - Russia
             if (locale.country.compareTo("RU", true) == 0) return true
             // ISO 3166 - Belarus
             if (locale.country.compareTo("BY", true) == 0) return true
+            // ISO 3166 - Iran
+            if (locale.country.compareTo("IR", true) == 0) return true
+            // ISO 3166 - North Korea
+            if (locale.country.compareTo("KP", true) == 0) return true
+            // ISO 3166 - Syria
+            if (locale.country.compareTo("SY", true) == 0) return true
             return false
         }
     }
