@@ -57,7 +57,7 @@ open class HttpClientManager(
             } catch (e: ModelMaxException) {
                 throw e
             } catch (e: RateLimitException) {
-                i--;
+                i--
                 this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + e.message)
                 Thread.sleep(e.delay)
             } catch (e: Exception) {
@@ -237,7 +237,7 @@ open class HttpClientManager(
             else -> log.debug(message)
         }
         if (auxillaryLogOutputStream != null) {
-            auxillaryLogOutputStream?.write(
+            auxillaryLogOutputStream.write(
                 "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${
                     message.replace(
                         "\n",
@@ -245,7 +245,7 @@ open class HttpClientManager(
                     )
                 }\n".toByteArray()
             )
-            auxillaryLogOutputStream?.flush()
+            auxillaryLogOutputStream.flush()
         }
     }
 
