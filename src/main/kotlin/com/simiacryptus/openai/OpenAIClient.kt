@@ -159,7 +159,7 @@ open class OpenAIClient(
         var usage: Usage? = null,
     ) {
         val firstChoice: Optional<CharSequence>
-            get() = choices.first()?.text?.trim()?.let { Optional.of(it) } ?: Optional.empty()
+            get() = choices.first().text?.trim()?.let { Optional.of(it) } ?: Optional.empty()
     }
 
     data class CompletionChoice(

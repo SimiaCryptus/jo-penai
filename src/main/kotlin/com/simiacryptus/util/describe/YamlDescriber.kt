@@ -239,7 +239,7 @@ open class YamlDescriber : TypeDescriber {
     private fun toYaml(self: KType, stackMax: Int): String {
         if (isAbbreviated(self.javaType) || stackMax <= 0) return """
             |type: object
-            |class: ${self.toString()}
+            |class: $self
             """.trimMargin()
         val typeName = self.toString().substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return if (typeName in primitives) {

@@ -10,7 +10,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
 
     class TextEncoder {
         fun encode(text: String): ByteArray {
-            return text.map { c -> c.toInt() }.map { i -> i.toByte() }.toByteArray()
+            return text.map { c -> c.code }.map { i -> i.toByte() }.toByteArray()
         }
 
     }
@@ -39,7 +39,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         }
 
         val ord = { x: String ->
-            x[0].toInt()
+            x[0].code
         }
 
         val chr = { n: Int ->
@@ -239,7 +239,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
             var newTokens = this.encodeCache[token]
             if (newTokens == null) {
                 val joinToString = token.toCharArray()
-                    .map { this.byteEncoder[it.toInt()] }
+                    .map { this.byteEncoder[it.code] }
                     .joinToString(separator = "")
                 val tokens = this.bpe(joinToString)
                 newTokens = tokens
@@ -273,7 +273,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         val matches = bpeRegex.toRegex().findAll(input).flatMap { it.groupValues }.toList().toTypedArray()
         for (token in matches) {
             var newToken = token.toCharArray()
-                .map { this.byteEncoder[it.toInt()] }
+                .map { this.byteEncoder[it.code] }
                 .joinToString(separator = "")
             val newTokens = this.bpe(newToken).split(" ")
             count += newTokens.size
