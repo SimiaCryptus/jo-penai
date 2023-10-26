@@ -40,6 +40,12 @@ open class APIClientBase(
         val rateLimitErrorMessage = Pattern.compile(
             """Rate limit reached for (\d+)KTPM-(\d+)RPM in organization (\S+) on tokens per min. Limit: (\d+) / min. Please try again in (\d+)ms. Contact us through our help center at help.openai.com if you continue to have issues."""
         )
+        val quotaErrorMessage = Pattern.compile(
+            """You exceeded your current quota, please check your plan and billing details."""
+        )
+        val invalidModelException = Pattern.compile(
+            """The model `(\S+)` does not exist or you do not have access to it."""
+        )
 
         fun isSanctioned(): Boolean {
             // Due to the invasion of Ukraine, Russia and allies are currently sanctioned.
@@ -136,6 +142,17 @@ open class APIClientBase(
                         val limit = it.group(4).toInt()
                         val delay = it.group(5).toLong()
                         throw RateLimitException(org, limit, delay)
+                    }
+                }
+                quotaErrorMessage.matcher(errorMessage).let {
+                    if (it.matches()) {
+                        throw QuotaException()
+                    }
+                }
+                invalidModelException.matcher(errorMessage).let {
+                    if (it.matches()) {
+                        val model = it.group(1)
+                        throw InvalidModelException(model)
                     }
                 }
                 throw IOException(errorMessage)
