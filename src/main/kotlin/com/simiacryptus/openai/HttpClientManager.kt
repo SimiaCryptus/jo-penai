@@ -67,6 +67,10 @@ open class HttpClientManager(
                 if (null != rateLimitException) throw rateLimitException
                 val apiKeyException = apiKeyException(e)
                 if (null != apiKeyException) throw apiKeyException
+                val quotaException = quotaLimitException(e)
+                if (null != quotaException) throw quotaException
+                val invalidModelException = invalidModelException(e)
+                if (null != invalidModelException) throw invalidModelException
                 lastException = e
                 this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + e.message)
                 Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
@@ -86,6 +90,20 @@ open class HttpClientManager(
         if (e == null) return null
         if (e is RateLimitException) return e
         if (e.cause != null && e.cause != e) return rateLimitException(e.cause)
+        return null
+    }
+
+    private fun quotaLimitException(e: Throwable?): QuotaException? {
+        if (e == null) return null
+        if (e is QuotaException) return e
+        if (e.cause != null && e.cause != e) return quotaLimitException(e.cause)
+        return null
+    }
+
+    private fun invalidModelException(e: Throwable?): InvalidModelException? {
+        if (e == null) return null
+        if (e is InvalidModelException) return e
+        if (e.cause != null && e.cause != e) return invalidModelException(e.cause)
         return null
     }
 
