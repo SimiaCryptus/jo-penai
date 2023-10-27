@@ -7,7 +7,7 @@ import com.simiacryptus.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
 
 @Suppress("MemberVisibilityCanBePrivate")
-class ChatProxy<T : Any>(
+open class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
     var model: OpenAIClient.Model = OpenAIClient.Models.GPT35Turbo,
@@ -15,7 +15,8 @@ class ChatProxy<T : Any>(
     var verbose: Boolean = false,
     private val moderated: Boolean = true,
     val deserializerRetries: Int = 5,
-    validation: Boolean = true,) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
+    validation: Boolean = true
+) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
 
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
