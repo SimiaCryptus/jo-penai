@@ -82,6 +82,7 @@ dependencies {
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.9.2")
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = "5.9.2")
     testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.9.2")
+    //testImplementation(group = "com.amazonaws", name = "aws-java-sdk", version = "1.12.454")
 }
 
 publishing {
