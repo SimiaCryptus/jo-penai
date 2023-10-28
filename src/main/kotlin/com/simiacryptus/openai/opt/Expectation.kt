@@ -8,7 +8,7 @@ abstract class Expectation {
         val log = LoggerFactory.getLogger(PromptOptimization::class.java)
     }
 
-    open class VectorMatch(val example: String) : Expectation() {
+    open class VectorMatch(val example: String, val metric: DistanceType = DistanceType.Cosine) : Expectation() {
         override fun matches(api: OpenAIClient, prompt: OpenAIClient.ChatResponse): Boolean {
             return true
         }
@@ -17,13 +17,15 @@ abstract class Expectation {
             val promptStr = prompt.choices.first().message?.content ?: ""
             val contentEmbedding = createEmbedding(api, example)
             val promptEmbedding = createEmbedding(api, promptStr)
-            return distance(contentEmbedding, promptEmbedding)
+            val distance = metric.distance(contentEmbedding, promptEmbedding)
+            log.info(
+                """Distance = $distance
+                |  from "${example.replace("\n", "\\n")}" 
+                |  to "${promptStr.replace("\n", "\\n")}"
+                """.trimMargin().trim()
+            )
+            return -distance
         }
-
-        open  fun distance(
-            contentEmbedding: Array<Double>,
-            promptEmbedding: Array<Double>
-        ) = 1.0 - contentEmbedding.zip(promptEmbedding).map { (a, b) -> Math.abs(a - b) }.average()
 
         protected fun createEmbedding(api: OpenAIClient, str: String) = api.createEmbedding(
             OpenAIClient.EmbeddingRequest(
@@ -37,13 +39,23 @@ abstract class Expectation {
         val critical: Boolean = true
     ) : Expectation() {
         override fun matches(api: OpenAIClient, prompt: OpenAIClient.ChatResponse): Boolean {
-            return !critical || pattern.containsMatchIn(prompt.choices.first().message?.content?:"")
+            if (!critical) return true
+            return _matches(prompt)
+        }
+        override fun score(api: OpenAIClient, prompt: OpenAIClient.ChatResponse): Double {
+            return if (_matches(prompt)) 1.0 else 0.0
         }
 
-        override fun score(api: OpenAIClient, prompt: OpenAIClient.ChatResponse): Double {
-            return if(!critical) {
-                if(matches(api, prompt)) 1.0 else 0.0
-            } else 1.0
+        private fun _matches(prompt: OpenAIClient.ChatResponse): Boolean {
+            if (pattern.containsMatchIn(prompt.choices.first().message?.content ?: "")) return true
+            log.info(
+                """Failed to match ${
+                    pattern.pattern.replace("\n", "\\n")
+                } in ${
+                    prompt.choices.first().message?.content?.replace("\n", "\\n") ?: ""
+                }"""
+            )
+            return false
         }
 
     }

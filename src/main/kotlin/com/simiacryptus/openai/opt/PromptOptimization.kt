@@ -1,13 +1,24 @@
 package com.simiacryptus.openai.opt
 
 import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.openai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.util.describe.Description
 import org.slf4j.LoggerFactory
+import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
-    val model: OpenAIClient.Models = OpenAIClient.Models.GPT35Turbo
+    val model: OpenAIClient.Models = OpenAIClient.Models.GPT35Turbo,
+    val mutationRate: Double = 0.5,
+    val mutatonTypes: Map<String, Double> = mapOf(
+        "Rephrase" to 1.0,
+        "Randomize" to 1.0,
+        "Summarize" to 1.0,
+        "Expand" to 1.0,
+        "Reorder" to 1.0,
+        "Remove Duplicate" to 1.0,
+    )
 ) {
 
     data class TestCase(val turns: List<Turn>, val retries: Int = 3)
@@ -19,21 +30,27 @@ open class PromptOptimization(
         testCases: List<TestCase>,
         selectionSize: Int = Math.max(Math.ceil(Math.log((systemPrompts.size + 1).toDouble()) / Math.log(2.0)), 3.0)
             .toInt(), // apx ln(N)
+        populationSize: Int = Math.max(Math.max(selectionSize, 5), systemPrompts.size),
         generations: Int = 3
     ): List<String> {
-        val populationSize = Math.max(Math.max(selectionSize, 5), systemPrompts.size)
         var topPrompts = regenerate(systemPrompts, populationSize)
         for (generation in 0..generations) {
             val scores = topPrompts.map { prompt ->
-                val score = testCases.map { testCase ->
+                prompt to testCases.map { testCase ->
                     evaluate(prompt, testCase)
                 }.average()
-                log.info("Scored $prompt -> $score")
-                prompt to score
             }
-            val survivors = scores.sortedByDescending { it.second }.take(selectionSize).map { it.first }
-            topPrompts = regenerate(survivors, populationSize)
-            println("Generation $generation: ${topPrompts.first()}")
+            scores.sortedByDescending { it.second }.forEach {
+                log.info("""Scored ${it.second}: ${it.first.replace("\n", "\\n")}""")
+            }
+            if (generation == generations) {
+                log.info("Final generation: ${topPrompts.first()}")
+                break
+            } else {
+                val survivors = scores.sortedByDescending { it.second }.take(selectionSize).map { it.first }
+                topPrompts = regenerate(survivors, populationSize)
+                log.info("Generation $generation: ${topPrompts.first()}")
+            }
         }
         return topPrompts
     }
@@ -62,15 +79,26 @@ open class PromptOptimization(
     }
 
     open fun recombine(a: String, b: String): String {
-        for(retry in 0..3) {
+        val temperature = 0.3
+        for (retry in 0..3) {
             try {
-                val child = geneticApi.recombine(a, b)
-                if(child.contains(a) || child.contains(b)) {
+                val child = geneticApi(temperature.pow(1.0 / (retry + 1))).recombine(Prompt(a), Prompt(b)).prompt
+                if (child.contentEquals(a) || child.contentEquals(b)) {
                     log.info("Recombine failure: retry $retry")
                     continue
                 }
-                log.info("Recombined $a + $b -> $child")
-                return child
+                log.info(
+                    "Recombined Prompts\n\t${
+                        a.replace("\n", "\n\t")
+                    }\n\t-- + --\n\t${
+                        b.replace("\n", "\n\t")
+                    }\n\t-- -> --\n\t${child.replace("\n", "\n\t")}"
+                )
+                if (Math.random() < mutationRate) {
+                    return mutate(child)
+                } else {
+                    return child
+                }
             } catch (e: Exception) {
                 log.warn("Failed to recombine $a + $b", e)
             }
@@ -79,14 +107,23 @@ open class PromptOptimization(
     }
 
     open fun mutate(selected: String): String {
-        for(retry in 0..3) {
+        val temperature = 0.3
+        for (retry in 0..10) {
             try {
-                val mutated = geneticApi.mutate(selected)
-                if(mutated.contains(selected)) {
-                    log.info("Mutate failure: retry $retry")
+                val directive = getMutationDirective()
+                val mutated = geneticApi(temperature.pow(1.0 / (retry + 1))).mutate(Prompt(selected), directive).prompt
+                if (mutated.contentEquals(selected)) {
+                    log.info("Mutate failure $retry ($directive): ${selected.replace("\n", "\\n")}")
                     continue
                 }
-                log.info("Mutated $selected -> $mutated")
+                log.info(
+                    "Mutated Prompt\n\t${selected.replace("\n", "\n\t")}\n\t-- -> --\n\t${
+                        mutated.replace(
+                            "\n",
+                            "\n\t"
+                        )
+                    }"
+                )
                 return mutated
             } catch (e: Exception) {
                 log.warn("Failed to mutate $selected", e)
@@ -95,28 +132,46 @@ open class PromptOptimization(
         throw RuntimeException("Failed to mutate $selected")
     }
 
+    open fun getMutationDirective(): String {
+        val fate = mutatonTypes.values.sum() * Math.random()
+        var cumulative = 0.0
+        for ((key, value) in mutatonTypes) {
+            cumulative += value
+            if (fate < cumulative) {
+                return key
+            }
+        }
+        return mutatonTypes.keys.random()
+    }
+
     protected interface GeneticApi {
         @Description("Mutate the given prompt; rephrase, make random edits, etc.")
         fun mutate(
-            systemPrompt: String
-        ): String
+            systemPrompt: Prompt,
+            directive: String = "Rephrase"
+        ): Prompt
 
         @Description("Recombine the given prompts to produce a third with about the same length; swap phrases, reword, etc.")
         fun recombine(
-            systemPromptA: String,
-            systemPromptB: String
-        ): String
+            systemPromptA: Prompt,
+            systemPromptB: Prompt
+        ): Prompt
+
+        data class Prompt(
+            val prompt: String
+        )
     }
 
-
-    protected open val geneticApi = ChatProxy(
+    protected open fun geneticApi(temperature: Double = 0.3) = ChatProxy(
         clazz = GeneticApi::class.java,
         api = api,
         model = model,
+        temperature = temperature
     ).create()
 
     open fun evaluate(systemPrompt: String, testCase: TestCase): Double {
-        return run(systemPrompt, testCase).map { it.second }.average()
+        val steps = run(systemPrompt, testCase)
+        return steps.map { it.second }.average()
     }
 
     open fun run(
@@ -124,8 +179,7 @@ open class PromptOptimization(
         testCase: TestCase
     ): List<Pair<OpenAIClient.ChatResponse, Double>> {
         val chatRequest = OpenAIClient.ChatRequest(
-            model = model.modelName,
-            temperature = 0.3
+            model = model.modelName
         )
         var response = OpenAIClient.ChatResponse()
         chatRequest.messages += OpenAIClient.ChatMessage(
@@ -138,24 +192,30 @@ open class PromptOptimization(
                 OpenAIClient.ChatMessage.Role.user,
                 turn.userMessage
             )
-            for (i in 0..testCase.retries) {
+            val startTemp = 0.3
+            chatRequest.temperature = startTemp
+            for (retry in 0..testCase.retries) {
                 response = api.chat(chatRequest, model)
                 matched = turn.expectations.all { it.matches(api, response) }
                 if (matched) {
                     break
                 } else {
-                    log.info("Retry $i: $systemPrompt / ${turn.userMessage} -> ${response.choices.first().message?.content}")
+                    chatRequest.temperature = startTemp.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
+                    log.info(
+                        "Retry $retry (T=${"%.3f".format(chatRequest.temperature)}): ${
+                            systemPrompt.replace(
+                                "\n",
+                                "\\n"
+                            )
+                        } / ${turn.userMessage}\n\t${response.choices.first().message?.content?.replace("\n", "\n\t")}"
+                    )
                 }
             }
             chatRequest.messages += OpenAIClient.ChatMessage(
                 OpenAIClient.ChatMessage.Role.assistant,
                 response.choices.first().message?.content ?: ""
             )
-            if (!matched) {
-                response to 0.0
-            } else {
-                response to turn.expectations.map { it.score(api, response) }.average()
-            }
+            response to turn.expectations.map { it.score(api, response) }.average()
         }
     }
 
