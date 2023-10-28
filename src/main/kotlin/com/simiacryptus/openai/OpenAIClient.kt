@@ -318,14 +318,15 @@ open class OpenAIClient(
         var model: String? = null,
         var temperature: Double = 0.0,
         var max_tokens: Int = 1000,
-        var stop: Array<CharSequence>? = null
+        var stop: Array<CharSequence>? = null,
+        val function_call: String? = null,
+        val n: Int? = null,
+        val functions: Array<RequestFunction>? = null,
     ) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
-
             other as ChatRequest
-
             if (!messages.contentEquals(other.messages)) return false
             if (model != other.model) return false
             if (temperature != other.temperature) return false
@@ -334,7 +335,9 @@ open class OpenAIClient(
                 if (other.stop == null) return false
                 if (!stop.contentEquals(other.stop)) return false
             } else if (other.stop != null) return false
-
+            if (function_call != other.function_call) return false
+            if (n != other.n) return false
+            if (!functions.contentEquals(other.functions)) return false
             return true
         }
 
@@ -344,9 +347,18 @@ open class OpenAIClient(
             result = 31 * result + temperature.hashCode()
             result = 31 * result + max_tokens
             result = 31 * result + (stop?.contentHashCode() ?: 0)
+            result = 31 * result + function_call.hashCode()
+            result = 31 * result + (n ?: 0)
+            result = 31 * result + functions.contentHashCode()
             return result
         }
     }
+
+    data class RequestFunction(
+        val name: String = "",
+        val description: String = "",
+        val parameters: Map<String, String> = mapOf(),
+    )
 
     data class ChatResponse(
         val id: String? = null,
@@ -367,12 +379,18 @@ open class OpenAIClient(
 
     data class ChatMessage(
         var role: Role? = null,
-        var content: String? = null
+        var content: String? = null,
+        var function_call: FunctionCall? = null,
     ) {
         enum class Role {
             assistant, user, system
         }
     }
+
+    data class FunctionCall(
+        var name: String? = null,
+        var arguments: String? = null,
+    )
 
     open fun chat(
         completionRequest: ChatRequest,

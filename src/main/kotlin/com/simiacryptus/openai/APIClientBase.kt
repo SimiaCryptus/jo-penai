@@ -46,6 +46,9 @@ open class APIClientBase(
         val invalidModelException = Pattern.compile(
             """The model `(\S+)` does not exist or you do not have access to it."""
         )
+        val invalidValueException = Pattern.compile(
+            """Invalid value for '(\S+)': (\S+)"""
+        )
 
         fun isSanctioned(): Boolean {
             // Due to the invasion of Ukraine, Russia and allies are currently sanctioned.
@@ -153,6 +156,13 @@ open class APIClientBase(
                     if (it.matches()) {
                         val model = it.group(1)
                         throw InvalidModelException(model)
+                    }
+                }
+                invalidValueException.matcher(errorMessage).let {
+                    if (it.matches()) {
+                        val field = it.group(1)
+                        val value = it.group(2)
+                        throw InvalidValueException(field, value)
                     }
                 }
                 throw IOException(errorMessage)

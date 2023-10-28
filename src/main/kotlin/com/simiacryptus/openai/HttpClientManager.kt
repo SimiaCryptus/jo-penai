@@ -188,27 +188,27 @@ open class HttpClientManager(
         fn: () -> T
     ): T {
         val isDone = Semaphore(0)
-        log.info("Async request started")
+        log.debug("Async request started")
         val future = workPool.submit(Callable<T> {
             val currentThread = Thread.currentThread()
             try {
                 threads.add(currentThread)
-                log.info("Async request started; running $fn")
+                log.debug("Async request started; running $fn")
                 fn()
             } finally {
                 threads.remove(currentThread)
                 isDone.release()
-                log.info("Async request completed; isDone ${System.identityHashCode(isDone)} released")
+                log.debug("Async request completed; isDone ${System.identityHashCode(isDone)} released")
             }
         })
         try {
             isDone.acquire()
-            log.info("Async request completed; getting value")
+            log.debug("Async request completed; getting value")
             val get = future.get()
-            log.info("Async request completed; got value")
+            log.debug("Async request completed; got value")
             return get
         } finally {
-            log.info("Async request completed")
+            log.debug("Async request completed")
         }
     }
 
