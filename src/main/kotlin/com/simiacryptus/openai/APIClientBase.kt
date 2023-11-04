@@ -51,6 +51,7 @@ open class APIClientBase(
         )
 
         fun isSanctioned(): Boolean {
+
             // Due to the invasion of Ukraine, Russia and allies are currently sanctioned.
             // Slava Ukraini!
             val locale = Locale.getDefault()
@@ -64,13 +65,18 @@ open class APIClientBase(
             if (locale.country.compareTo("KP", true) == 0) return true
             // ISO 3166 - Syria
             if (locale.country.compareTo("SY", true) == 0) return true
+
+            // Due to ongoing war crimes in Gaza, Israel is currently sanctioned.
+            // ISO 3166 - Israel
+            if (locale.country.compareTo("IL", true) == 0) return true
+
             return false
         }
     }
 
     init {
         if (isSanctioned()) {
-            throw RuntimeException("You are not allowed to use this software. Slava Ukraini!")
+            throw RuntimeException("You are not allowed to use this software.")
         }
     }
 

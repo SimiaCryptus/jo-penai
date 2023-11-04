@@ -53,7 +53,6 @@ kotlin {
     jvmToolchain(11)
 }
 
-val kotlin_version = "1.7.22"
 dependencies {
     implementation(group = "org.openimaj", name = "JTransforms", version = "1.3.10")
 
@@ -74,10 +73,10 @@ dependencies {
     testImplementation(kotlin("reflect"))
     testImplementation(kotlin("script-runtime"))
 
-    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.5")
-    testImplementation(group = "org.slf4j", name = "slf4j-simple", version = "2.0.5")
-//    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.2.9")
-    //testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.2.9")
+    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.9")
+    testImplementation(group = "org.slf4j", name = "slf4j-simple", version = "2.0.9")
+//    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.11")
+    //testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.4.11")
 
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.9.2")
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = "5.9.2")
