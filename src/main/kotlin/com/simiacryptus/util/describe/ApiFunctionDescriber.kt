@@ -21,7 +21,7 @@ class ApiFunctionDescriber : TypeDescriber {
     open val includeMethods: Boolean = true
     private val truncation = "..."
 
-    override fun describe(self: Method, stackMax: Int): String {
+    override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
         if (stackMax <= 0) return truncation
         val parameters = self.parameters.joinToString("\n") {
             "  ${describe(it, stackMax - 1).replace("\n", "\n  ")}"
@@ -114,7 +114,7 @@ class ApiFunctionDescriber : TypeDescriber {
                     )
                 }
                 .sortedBy { it.toString() }
-                .joinToString("\n") { "  ${describe(it, stackMax - 1).replace("\n", "\n  ")}" }
+                .joinToString("\n") { "  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}" }
         if (methods.isBlank()) return rawType.simpleName
         return "class ${rawType.simpleName} {\n$methods\n}"
     }

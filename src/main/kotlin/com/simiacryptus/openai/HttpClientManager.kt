@@ -17,7 +17,7 @@ import kotlin.math.pow
 @Suppress("MemberVisibilityCanBePrivate")
 open class HttpClientManager(
     protected val logLevel: Level = Level.INFO,
-    val auxillaryLogOutputStream: BufferedOutputStream? = null
+    val auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
 ) {
 
     companion object {
@@ -254,7 +254,7 @@ open class HttpClientManager(
             Level.TRACE -> log.debug(message)
             else -> log.debug(message)
         }
-        if (auxillaryLogOutputStream != null) {
+        auxillaryLogOutputStream.forEach { auxillaryLogOutputStream ->
             auxillaryLogOutputStream.write(
                 "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${
                     message.replace(

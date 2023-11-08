@@ -2,10 +2,12 @@
 
 package com.simiacryptus.openai.proxy
 
+import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.google.gson.reflect.TypeToken
 import com.simiacryptus.util.JsonUtil.fromJson
 import com.simiacryptus.util.JsonUtil.toJson
 import com.simiacryptus.util.describe.AbbrevWhitelistYamlDescriber
+import com.simiacryptus.util.describe.DescriptorUtil.resolveMethodReturnType
 import com.simiacryptus.util.describe.TypeDescriber
 import org.slf4j.Logger
 import java.io.BufferedWriter
@@ -14,6 +16,8 @@ import java.io.FileWriter
 import java.lang.reflect.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
+import kotlin.reflect.full.starProjectedType
+import kotlin.reflect.jvm.javaType
 
 
 abstract class GPTProxyBase<T : Any>(
@@ -22,6 +26,9 @@ abstract class GPTProxyBase<T : Any>(
     var validation: Boolean = true,
     var maxRetries: Int = 5,
 ) {
+    init {
+        log.info("Created ${clazz.simpleName} proxy")
+    }
 
     open val metrics: Map<String, Any>
         get() = hashMapOf(
@@ -39,8 +46,14 @@ abstract class GPTProxyBase<T : Any>(
         return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { proxy, method, args ->
             if (method.name == "toString") return@newProxyInstance clazz.simpleName
             requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
-            val type = method.genericReturnType
-            val typeString = describer.describe(method).trimIndent()
+            // If kotlin clazz, use kotlin reflection to get type
+            val type: Type = if (clazz.isKotlinClass()) {
+                val returnType = resolveMethodReturnType(clazz.kotlin, method.name)
+                returnType.javaType
+            } else {
+                method.genericReturnType
+            }
+            val typeString = describer.describe(method, clazz).trimIndent()
             val prompt = ProxyRequest(
                 method.name,
                 typeString,

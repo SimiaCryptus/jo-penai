@@ -22,7 +22,7 @@ open class APIClientBase(
     protected var key: String,
     private val apiBase: String,
     logLevel: Level = Level.INFO,
-    auxillaryLogOutputStream: BufferedOutputStream?
+    auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
 ) : HttpClientManager(logLevel, auxillaryLogOutputStream) {
 
     companion object {

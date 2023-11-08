@@ -4,14 +4,13 @@ import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.google.common.reflect.TypeToken
 import com.simiacryptus.util.describe.DescriptorUtil.componentType
 import com.simiacryptus.util.describe.DescriptorUtil.isArray
+import com.simiacryptus.util.describe.DescriptorUtil.resolveGenericType
 import com.simiacryptus.util.describe.TypeDescriber.Companion.primitives
 import java.lang.reflect.*
 import java.util.*
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
-import kotlin.reflect.KVisibility
+import kotlin.reflect.*
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
@@ -66,7 +65,7 @@ open class YamlDescriber : TypeDescriber {
             }.map {
                 """
             |${it.name}:
-            |  ${describe(it, stackMax - 1).replace("\n", "\n  ")}
+            |  ${describe(it, rawType.kotlin, stackMax - 1).replace("\n", "\n  ")}
             """.trimMargin().trim()
             }.toTypedArray()
         } else {
@@ -80,7 +79,7 @@ open class YamlDescriber : TypeDescriber {
                     .map {
                         """
                 |${it.name}:
-                |  ${describe(it, stackMax - 1).replace("\n", "\n  ")}
+                |  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
                 """.trimMargin().trim()
                     }.toTypedArray()
             } else {
@@ -115,9 +114,15 @@ open class YamlDescriber : TypeDescriber {
 
     open val includeMethods: Boolean = true
     override val methodBlacklist = setOf("equals", "hashCode", "copy", "toString", "valueOf", "wait", "notify", "notifyAll", "getClass", "invokeMethod")
-
-    override fun describe(self: Method, stackMax: Int): String {
+    override fun describe(self: Method, implClass: Class<*>?, stackMax: Int): String {
         if (stackMax <= 0) return "..."
+        // If implClass is a Kotlin class, resolve the KFunction and call the other describe method
+        if (implClass != null && implClass.isKotlinClass()) {
+            val function = implClass.kotlin.functions.find { it.name == self.name }
+            if (function != null) {
+                return describe(function, implClass.kotlin, stackMax)
+            }
+        }
         val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1).trim()
         val description = self.annotations.find { x -> x is Description } as? Description
@@ -139,10 +144,26 @@ open class YamlDescriber : TypeDescriber {
         return buffer.toString()
     }
 
-    private fun describe(self: KFunction<*>, stackMax: Int): String {
+    private fun toYaml(self: Parameter, stackMax: Int): String {
+        if (stackMax <= 0) return "..."
+        val description = self.getAnnotation(Description::class.java)?.value?.trim()
+        return if (description != null) {
+            """
+            |- name: ${self.name}
+            |  description: ${description.replace("\n", "\\n")}
+            |  ${toYaml(self.parameterizedType, stackMax - 1).replace("\n", "\n  ")}
+            |""".trimMargin().trim()
+        } else {
+            """
+            |- name: ${self.name}
+            |  ${toYaml(self.parameterizedType, stackMax - 1).replace("\n", "\n  ")}
+            |""".trimMargin().trim()
+        }
+    }
+    private fun describe(self: KFunction<*>, concreteClass: KClass<*>, stackMax: Int): String {
         if (stackMax <= 0) return "..."
         val parameterYaml = self.parameters.filter { it.name != null }
-            .map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
+            .map { toYaml(it, concreteClass, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
         val returnTypeYaml = toYaml(self.returnType, stackMax - 1).trim()
         val description = self.annotations.find { x -> x is Description } as? Description
         val responseYaml = """
@@ -169,36 +190,20 @@ open class YamlDescriber : TypeDescriber {
         }
     }
 
-    private fun toYaml(self: Parameter, stackMax: Int): String {
+    private fun toYaml(self: KParameter, concreteClass: KClass<*>, stackMax: Int): String {
         if (stackMax <= 0) return "..."
-        val description = self.getAnnotation(Description::class.java)?.value?.trim()
-        return if (description != null) {
-            """
-            |- name: ${self.name}
-            |  description: ${description.replace("\n", "\\n")}
-            |  ${toYaml(self.parameterizedType, stackMax - 1).replace("\n", "\n  ")}
-            |""".trimMargin().trim()
-        } else {
-            """
-            |- name: ${self.name}
-            |  ${toYaml(self.parameterizedType, stackMax - 1).replace("\n", "\n  ")}
-            |""".trimMargin().trim()
-        }
-    }
-
-    private fun toYaml(self: KParameter, stackMax: Int): String {
-        if (stackMax <= 0) return "..."
+        val kType = resolveGenericType(concreteClass, self.type)
         val description = (self.annotations.find { it is Description } as? Description)?.value?.trim()
         return if (description != null) {
             """
             |- name: ${self.name}
             |  description: ${description.replace("\n", "\\n")}
-            |  ${toYaml(self.type, stackMax - 1).replace("\n", "\n  ")}
+            |  ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
             |""".trimMargin().trim()
         } else {
             """
             |- name: ${self.name}
-            |  ${toYaml(self.type, stackMax - 1).replace("\n", "\n  ")}
+            |  ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
             |""".trimMargin().trim()
         }
     }
@@ -267,6 +272,9 @@ open class YamlDescriber : TypeDescriber {
         } else {
             describe(TypeToken.of(self.javaType).rawType, stackMax)
         }
+    }
+
+    companion object {
     }
 
 
