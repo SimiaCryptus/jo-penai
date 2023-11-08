@@ -49,7 +49,6 @@ class OpenAIClientTest {
         val request = OpenAIClient.ChatRequest()
         val model = OpenAIClient.Models.GPT35Turbo
         request.model = model.modelName
-        request.max_tokens = model.maxTokens
         request.messages = arrayOf(
             ChatMessage(ChatMessage.Role.system, "You are a spiritual teacher"),
             ChatMessage(ChatMessage.Role.user, "What is the meaning of life?"),

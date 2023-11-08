@@ -24,7 +24,8 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
     key: String = keyTxt,
     private val apiBase: String = "https://api.openai.com/v1",
-    logLevel: Level = Level.INFO
+    logLevel: Level = Level.INFO,
+    auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
 ) : APIClientBase(key, apiBase, logLevel, auxillaryLogOutputStream) {
 
     interface Model {
@@ -40,7 +41,9 @@ open class OpenAIClient(
         DaVinci("text-davinci-003", 2049),
         DaVinciEdit("text-davinci-edit-001", 2049),
         GPT35Turbo("gpt-3.5-turbo-16k", 16384),
-        GPT4("gpt-4", 8192)
+        GPT4("gpt-4", 8192),
+        GPT4Turbo("gpt-4-1106-preview", /* 128k */ 131072),
+        GPT4Vision("gpt-4-vision-preview", 8192),
     }
 
     override val metrics: Map<String, Any>
@@ -317,7 +320,7 @@ open class OpenAIClient(
         var messages: Array<ChatMessage> = arrayOf(),
         var model: String? = null,
         var temperature: Double = 0.0,
-        var max_tokens: Int = 1000,
+        var max_tokens: Int? = null,
         var stop: Array<CharSequence>? = null,
         val function_call: String? = null,
         val n: Int? = null,
@@ -345,7 +348,7 @@ open class OpenAIClient(
             var result = messages.contentHashCode()
             result = 31 * result + (model?.hashCode() ?: 0)
             result = 31 * result + temperature.hashCode()
-            result = 31 * result + max_tokens
+            result = 31 * result + (max_tokens ?: -1)
             result = 31 * result + (stop?.contentHashCode() ?: 0)
             result = 31 * result + function_call.hashCode()
             result = 31 * result + (n ?: 0)
@@ -408,10 +411,6 @@ open class OpenAIClient(
                             reqJson.replace("\n", "\n\t")
                         )
                     )
-                    completionRequest.max_tokens = model.maxTokens - codex.estimateTokenCount(reqJson)
-                    require(completionRequest.max_tokens > 0) {
-                        "Model max tokens exceeded: ${model.maxTokens} - ${codex.estimateTokenCount(reqJson)} = ${completionRequest.max_tokens}"
-                    }
                     fun json() = StringUtil.restrictCharacterSet(
                         JsonUtil.objectMapper().writeValueAsString(completionRequest),
                         allowedCharset

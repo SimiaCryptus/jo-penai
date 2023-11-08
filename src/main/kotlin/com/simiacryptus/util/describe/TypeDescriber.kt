@@ -14,7 +14,7 @@ interface TypeDescriber {
         stackMax: Int = 10,
     ): String
 
-    fun describe(self: Method, stackMax: Int = 10): String
+    fun describe(self: Method, clazz: Class<*>? = null, stackMax: Int = 5): String
     fun isAbbreviated(self: Type): Boolean {
         val name = self.typeName
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())

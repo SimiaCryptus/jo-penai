@@ -86,7 +86,6 @@ open class ChatProxy<T : Any>(
                         )
                 ).toTypedArray()
         request.model = model.modelName
-        request.max_tokens = model.maxTokens
         request.temperature = temperature
         val json = toJson(request)
         if (moderated) api.moderate(json)
