@@ -8,7 +8,7 @@ abstract class Expectation {
         val log = LoggerFactory.getLogger(PromptOptimization::class.java)
     }
 
-    open class VectorMatch(val example: String, val metric: DistanceType = DistanceType.Cosine) : Expectation() {
+    open class VectorMatch(val example: String, private val metric: DistanceType = DistanceType.Cosine) : Expectation() {
         override fun matches(api: OpenAIClient, prompt: OpenAIClient.ChatResponse): Boolean {
             return true
         }
@@ -27,7 +27,7 @@ abstract class Expectation {
             return -distance
         }
 
-        protected fun createEmbedding(api: OpenAIClient, str: String) = api.createEmbedding(
+        private fun createEmbedding(api: OpenAIClient, str: String) = api.createEmbedding(
             OpenAIClient.EmbeddingRequest(
                 model = OpenAIClient.Models.AdaEmbedding.modelName, input = str
             )

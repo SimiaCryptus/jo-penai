@@ -11,13 +11,6 @@ import kotlin.math.abs
 object StringUtil {
 
     @JvmStatic
-    fun indentJoin(fields: List<Any>, indent: String = "\t"): String {
-        val joinToString = fields.joinToString("\n$indent")
-            { it.toString().replace("\n", "\n$indent") }
-        return "{\n$indent$joinToString\n}"
-    }
-
-    @JvmStatic
     fun stripUnbalancedTerminators(input: CharSequence): CharSequence {
         var openCount = 0
         var inQuotes = false
@@ -146,21 +139,6 @@ object StringUtil {
     }
 
     @JvmStatic
-    fun getWhitespacePrefix2(vararg lines: CharSequence): CharSequence {
-        return Arrays.stream(lines)
-            .map { l: CharSequence ->
-                toString(
-                    l.chars().takeWhile { codePoint: Int ->
-                        Character.isWhitespace(
-                            codePoint
-                        )
-                    }.toArray()
-                )
-            }
-            .min(Comparator.comparing { obj: CharSequence -> obj.length }).orElse("")
-    }
-
-    @JvmStatic
     fun getWhitespaceSuffix(vararg lines: CharSequence): String {
         return reverse(Arrays.stream(lines)
             .map { obj: CharSequence? -> reverse(obj!!) }
@@ -196,51 +174,6 @@ object StringUtil {
     }
 
     @JvmStatic
-    fun transposeMarkdownTable(table: String, inputHeader: Boolean, outputHeader: Boolean): String {
-        val cells = parseMarkdownTable(table, inputHeader)
-        val transposedTable = StringBuilder()
-        var columns = cells[0].size
-        if (outputHeader) columns = columns + 1
-        for (column in 0 until columns) {
-            transposedTable.append("|")
-            for (cell in cells) {
-                var cellValue: String = if (outputHeader) {
-                    if (column < 1) {
-                        cell[column].toString().trim { it <= ' ' }
-                    } else if (column == 1) {
-                        "---"
-                    } else if (column - 1 >= cell.size) {
-                        ""
-                    } else {
-                        cell[column - 1].toString().trim { it <= ' ' }
-                    }
-                } else {
-                    cell[column].toString().trim { it <= ' ' }
-                }
-                transposedTable.append(" ").append(cellValue).append(" |")
-            }
-            transposedTable.append("\n")
-        }
-        return transposedTable.toString()
-    }
-
-    @JvmStatic
-    private fun parseMarkdownTable(table: String, removeHeader: Boolean): Array<Array<CharSequence>> {
-        val rows = Arrays.stream(table.split("\n".toRegex()).map { it.trim() }.dropLastWhile { it.isEmpty() }
-            .toTypedArray()).map { x: String ->
-            Arrays.stream(x.split("\\|".toRegex()).dropLastWhile { it.isEmpty() }
-                .toTypedArray()).filter { cell: String -> cell.isNotEmpty() }
-                .collect(Collectors.toList<CharSequence>()).toTypedArray()
-        }.collect(
-            Collectors.toCollection { ArrayList() }
-        )
-        if (removeHeader) {
-            rows.removeAt(1)
-        }
-        return rows.toTypedArray()
-    }
-
-    @JvmStatic
     fun getPrefixForContext(text: String, idealLength: Int): CharSequence {
         return getPrefixForContext(text, idealLength, ".", "\n", ",", ";")
     }
@@ -271,25 +204,6 @@ object StringUtil {
         return sb.toString()
     }
 
-
-    @JvmStatic
-    fun replaceAll(
-        replaceString: String,
-        vararg replacements: Pair<String, String>
-    ) = replacements.fold(replaceString) { acc, (a, b) -> acc.replace(a, b) }
-
-    @JvmStatic
-    fun replaceAllNonOverlapping(
-        replaceString: String,
-        vararg replacements: Pair<String, String>
-    ): String {
-        val joinedPattern = replacements.joinToString("|") { Pattern.quote(it.first) }.toRegex()
-        return joinedPattern.replace(replaceString) { result ->
-            val charSequence: CharSequence =
-                replacements.find { it.first.compareTo(result.value, true) == 0 }?.second ?: result.value
-            charSequence
-        }
-    }
 
     /**
      *

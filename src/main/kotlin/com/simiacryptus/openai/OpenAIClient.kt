@@ -21,6 +21,7 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
+@Suppress("unused")
 open class OpenAIClient(
     key: String = keyTxt,
     private val apiBase: String = "https://api.openai.com/v1",
@@ -177,7 +178,7 @@ open class OpenAIClient(
         override val maxTokens: Int
     ) : Model
 
-    val codex = GPT4Tokenizer(false)
+    private val codex = GPT4Tokenizer(false)
 
     open fun complete(
         request: CompletionRequest,
@@ -428,8 +429,9 @@ open class OpenAIClient(
                     log(
                         msg = String.format(
                             "Chat Completion:\n\t%s",
-                            response.choices.first().message!!.content!!.trim { it <= ' ' }.toString()
-                                .replace("\n", "\n\t")
+                            response.choices.firstOrNull()
+                                ?.message?.content?.trim { it <= ' ' }
+                                ?.replace("\n", "\n\t") ?: JsonUtil.toJson(response)
                         )
                     )
                     response
@@ -471,7 +473,7 @@ open class OpenAIClient(
             }
             val moderationResult =
                 jsonObject.getAsJsonArray("results")[0].asJsonObject
-            log(
+            if(false) log(
                 Level.DEBUG,
                 String.format(
                     "Moderation Request\nText:\n%s\n\nResult:\n%s",
@@ -630,7 +632,7 @@ open class OpenAIClient(
         var auxillaryLog: File? = null
         val auxillaryLogOutputStream: BufferedOutputStream? by lazy { auxillaryLog?.outputStream()?.buffered() }
 
-        var _keyTxt: String? = null
+        private var _keyTxt: String? = null
         var keyTxt: String
             get() {
                 if (null != _keyTxt) return _keyTxt!!

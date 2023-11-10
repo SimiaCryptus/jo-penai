@@ -5,6 +5,7 @@ import com.simiacryptus.util.JsonUtil
 import java.nio.charset.Charset
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
+@Suppress("unused")
 @OptIn(ExperimentalStdlibApi::class)
 class GPT4Tokenizer(isCodex:Boolean = false) {
 
@@ -129,7 +130,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         return map
     }
 
-    fun bytesToUnicode(): HashMap<Int, String> {
+    private fun bytesToUnicode(): HashMap<Int, String> {
         val bs = (range(ord("!"), ord("~") + 1) +
                 range(ord("\\xa1"), ord("\\xac") + 1) +
                 range(ord("\\xae"), ord("\\xff") + 1)).toMutableList()
@@ -152,7 +153,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         return result
     }
 
-    fun getPairs(word: List<String>): Set<Pair<String, String>> {
+    private fun getPairs(word: List<String>): Set<Pair<String, String>> {
         val pairs = mutableSetOf<Pair<String, String>>()
         var prevChar = word[0]
 
@@ -165,7 +166,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         return pairs
     }
 
-    fun bpe(token: String): String {
+    private fun bpe(token: String): String {
         if (this.cache.containsKey(token)) {
             return this.cache[token]!!
         }

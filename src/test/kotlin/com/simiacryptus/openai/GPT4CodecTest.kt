@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.ValueSource
 
 class GPT4TokenizerTest {
 
-    val codex = GPT4Tokenizer(true)
+    private val codex = GPT4Tokenizer(true)
 
     @Test
     fun testRange() {
