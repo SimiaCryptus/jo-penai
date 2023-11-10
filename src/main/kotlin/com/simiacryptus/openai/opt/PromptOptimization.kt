@@ -10,8 +10,8 @@ import kotlin.math.pow
 open class PromptOptimization(
     val api: OpenAIClient,
     val model: OpenAIClient.Models = OpenAIClient.Models.GPT35Turbo,
-    val mutationRate: Double = 0.5,
-    val mutatonTypes: Map<String, Double> = mapOf(
+    private val mutationRate: Double = 0.5,
+    private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,
         "Randomize" to 1.0,
         "Summarize" to 1.0,

@@ -5,7 +5,7 @@ import com.simiacryptus.util.describe.DescriptorUtil.isArray
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
-open class AbbrevWhitelistYamlDescriber(vararg val abbreviated: String) : YamlDescriber() {
+open class AbbrevWhitelistYamlDescriber(private vararg val abbreviated: String) : YamlDescriber() {
     override fun isAbbreviated(self: Type): Boolean {
         if (self.typeName in TypeDescriber.primitives) {
             return false

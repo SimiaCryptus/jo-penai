@@ -11,9 +11,9 @@ class LookbackLoudnessWindowBuffer(
     continueFn: () -> Boolean,
 ) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn) {
 
-    var minimumOutputTimeSeconds = 5.0
-    var rmsPercentileThreshold = 0.5
-    var iec61672PercentileThreshold = 0.25
+    private var minimumOutputTimeSeconds = 5.0
+    private var rmsPercentileThreshold = 0.5
+    private var iec61672PercentileThreshold = 0.25
 
     override fun shouldOutput(): Boolean {
 

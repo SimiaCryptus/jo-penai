@@ -17,10 +17,11 @@ data class AudioPacket(
     val sampleRate: Int = AudioRecorder.audioFormat.frameRate.toInt(),
 ) {
     val duration: Double by lazy { samples.size.toDouble() / sampleRate }
-    val fft: FloatArray by lazy { fft(samples) }
+    private val fft: FloatArray by lazy { fft(samples) }
     val rms: Double by lazy { rms(samples) }
     val size: Int by lazy { samples.size }
     val spectralEntropy: Double by lazy { spectralEntropy(fft) }
+    @Suppress("unused")
     val zeroCrossings: Int by lazy {
         samples.toList().windowed(2).count { it[0] > 0 && it[1] < 0 || it[0] < 0 && it[1] > 0 }
     }
@@ -32,6 +33,7 @@ data class AudioPacket(
         ).map { it * it }.toFloatArray().average()
     }
 
+    @Suppress("unused")
     fun spectrumWindowPower(minFrequency: Double, maxFrequency: Double): Double {
         val minIndex = (samples.size * minFrequency / sampleRate).toInt()
         val maxIndex = (samples.size * maxFrequency / sampleRate).toInt()
