@@ -274,8 +274,7 @@ open class YamlDescriber : TypeDescriber {
         }
     }
 
-    companion object {
-    }
+    companion object
 
 
 }

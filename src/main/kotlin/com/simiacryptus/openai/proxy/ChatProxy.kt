@@ -90,7 +90,7 @@ open class ChatProxy<T : Any>(
         if (moderated) api.moderate(json)
         totalInputLength.addAndGet(json.length)
 
-        val completion = api.chat(request, model).choices.first()?.message?.content.orEmpty()
+        val completion = api.chat(request, model).choices.first().message?.content.orEmpty()
         if (verbose) log.info(completion)
         totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)
