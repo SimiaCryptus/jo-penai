@@ -1,4 +1,4 @@
-@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+@file:Suppress("unused")
 
 package com.simiacryptus.util.audio
 
@@ -13,22 +13,22 @@ class PercentileLoudnessWindowBuffer(
 
 
     // Required number of quiet windows
-    var quietWindowMax = 3
+    private var quietWindowMax = 3
 
     // Threshold for quiet windows
-    var quietThreshold = 0.25
+    private var quietThreshold = 0.25
 
     // Maximum number of seconds to flush the buffer
-    var flushSeconds = 60.0
+    private var flushSeconds = 60.0
 
     // Minimum number of seconds to flush the buffer
-    var minSeconds = 1.0
+    private var minSeconds = 1.0
 
     // List of RMS values currently in the buffer
-    val rmsHeap = ArrayList<Double>()
+    private val rmsHeap = ArrayList<Double>()
 
     // List of consecutive quiet window percentiles
-    val quietWindow = ArrayList<Double>()
+    private val quietWindow = ArrayList<Double>()
 
     override fun shouldOutput(): Boolean {
         val quietPacket = synchronized(outputPacketBuffer) { outputPacketBuffer.takeLast(quietWindowMax).reduce { a, b -> a + b } }

@@ -6,13 +6,12 @@ import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
 
-@Suppress("MemberVisibilityCanBePrivate")
 open class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
     var model: OpenAIClient.Model = OpenAIClient.Models.GPT35Turbo,
     temperature: Double = 0.7,
-    var verbose: Boolean = false,
+    private var verbose: Boolean = false,
     private val moderated: Boolean = true,
     val deserializerRetries: Int = 5,
     validation: Boolean = true
@@ -38,12 +37,12 @@ open class ChatProxy<T : Any>(
             "totalYamlLength" to totalYamlLength.get(),
             "totalExamplesLength" to totalExamplesLength.get(),
         ) + super.metrics + api.metrics
-    protected val totalNonJsonPrefixLength = AtomicInteger(0)
-    protected val totalNonJsonSuffixLength = AtomicInteger(0)
-    protected val totalInputLength = AtomicInteger(0)
-    protected val totalYamlLength = AtomicInteger(0)
-    protected val totalExamplesLength = AtomicInteger(0)
-    protected val totalOutputLength = AtomicInteger(0)
+    private val totalNonJsonPrefixLength = AtomicInteger(0)
+    private val totalNonJsonSuffixLength = AtomicInteger(0)
+    private val totalInputLength = AtomicInteger(0)
+    private val totalYamlLength = AtomicInteger(0)
+    private val totalExamplesLength = AtomicInteger(0)
+    private val totalOutputLength = AtomicInteger(0)
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if (verbose) log.info(prompt.toString())
