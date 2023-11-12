@@ -47,8 +47,15 @@ open class OpenAIClient(
         GPT4Vision("gpt-4-vision-preview", 8192),
     }
 
-    override val metrics: Map<String, Any>
-        get() = super.metrics + hashMapOf(
+    private val tokenCounter = AtomicInteger(0)
+
+    open fun incrementTokens(model: Model?, tokens: Int) {
+        tokenCounter.addAndGet(tokens)
+    }
+
+    open val metrics: Map<String, Any>
+        get() = hashMapOf(
+            "tokens" to tokenCounter.get(),
             "chats" to chatCounter.get(),
             "completions" to completionCounter.get(),
             "moderations" to moderationCounter.get(),
@@ -218,7 +225,7 @@ open class OpenAIClient(
                         CompletionResponse::class.java
                     )
                     if (response.usage != null) {
-                        incrementTokens(response.usage!!.total_tokens)
+                        incrementTokens(model, response.usage!!.total_tokens)
                     }
                     val completionResult = StringUtil.stripPrefix(
                         response.firstChoice.orElse("").toString().trim { it <= ' ' },
@@ -424,7 +431,7 @@ open class OpenAIClient(
                         ChatResponse::class.java
                     )
                     if (response.usage != null) {
-                        incrementTokens(response.usage.total_tokens)
+                        incrementTokens(model, response.usage.total_tokens)
                     }
                     log(
                         msg = String.format(
@@ -540,7 +547,10 @@ open class OpenAIClient(
                 CompletionResponse::class.java
             )
             if (response.usage != null) {
-                incrementTokens(response.usage!!.total_tokens)
+                incrementTokens(
+                    Models.values().find { it.name.equals(editRequest.model, true) },
+                    response.usage!!.total_tokens
+                )
             }
             log(
                 msg = String.format(
@@ -621,7 +631,10 @@ open class OpenAIClient(
                     EmbeddingResponse::class.java
                 )
                 if (response.usage != null) {
-                    incrementTokens(response.usage!!.total_tokens)
+                    incrementTokens(
+                        Models.values().find { it.name.equals(request.model, true) },
+                        response.usage!!.total_tokens
+                    )
                 }
                 response
             }
