@@ -14,10 +14,9 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.HashSet
 import kotlin.math.pow
 
-@Suppress("MemberVisibilityCanBePrivate")
 open class HttpClientManager(
-    protected val logLevel: Level = Level.INFO,
-    val auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
+    private val logLevel: Level = Level.INFO,
+    private val auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
 ) {
 
     companion object {
@@ -48,7 +47,7 @@ open class HttpClientManager(
         return@Callable fn()
     }).get()
 
-    fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
+    private fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
         var lastException: Exception? = null
         var i = 0
         while (i++ < retryCount) {
@@ -114,8 +113,8 @@ open class HttpClientManager(
         return null
     }
 
-    protected val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
-    fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient =
+    private val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
+    private fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient =
         if (thread in clients) clients[thread]!!
         else synchronized(clients) {
             val client = HttpClientBuilder.create().build()
@@ -123,7 +122,7 @@ open class HttpClientManager(
             client
         }
 
-    protected fun closeClient(thread: Thread) {
+    private fun closeClient(thread: Thread) {
         try {
             synchronized(clients) {
                 clients[thread]
@@ -134,12 +133,12 @@ open class HttpClientManager(
         }
     }
 
-    protected fun <T> withCancellationMonitor(fn: () -> T): T {
+    private fun <T> withCancellationMonitor(fn: () -> T): T {
         val currentThread = Thread.currentThread()
         return withCancellationMonitor(fn) { currentThread.isInterrupted }
     }
 
-    protected fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
+    private fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
         val threads = HashSet<Thread>()
         threads.add(Thread.currentThread())
         val isCompleted = AtomicBoolean(false)
@@ -157,7 +156,7 @@ open class HttpClientManager(
         }
     }
 
-    protected fun <T> withTimeout(duration: Duration, fn: () -> T): T {
+    private fun <T> withTimeout(duration: Duration, fn: () -> T): T {
         val threads = HashSet<Thread>()
         val currentThread = Thread.currentThread()
         threads.add(currentThread)

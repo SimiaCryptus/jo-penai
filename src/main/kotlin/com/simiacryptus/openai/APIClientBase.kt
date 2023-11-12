@@ -80,13 +80,6 @@ open class APIClientBase(
         }
     }
 
-    open val metrics : Map<String, Any> get() = hashMapOf(
-        "tokens" to tokens.get(),
-    )
-
-    private val tokens = AtomicInteger(0)
-
-
     @Throws(IOException::class, InterruptedException::class)
     protected fun post(url: String, json: String): String {
         val request = HttpPost(url)
@@ -180,9 +173,5 @@ open class APIClientBase(
 
     class RequestOverloadException(message: String = "That model is currently overloaded with other requests.") :
         IOException(message)
-
-    open fun incrementTokens(totalTokens: Int) {
-        tokens.addAndGet(totalTokens)
-    }
 
 }

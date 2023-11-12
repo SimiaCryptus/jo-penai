@@ -1,4 +1,4 @@
-@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+@file:Suppress("unused")
 
 package com.simiacryptus.util.audio
 
@@ -6,14 +6,14 @@ import org.slf4j.LoggerFactory
 import java.util.*
 
 abstract class LoudnessWindowBuffer(
-    val inputBuffer: Deque<ByteArray>,
-    val outputBuffer: Deque<ByteArray>,
+    private val inputBuffer: Deque<ByteArray>,
+    private val outputBuffer: Deque<ByteArray>,
     var continueFn: () -> Boolean,
 ) {
 
     val outputPacketBuffer = ArrayList<AudioPacket>()
     val recentPacketBuffer = ArrayList<AudioPacket>()
-    val packetLookback = 100
+    private val packetLookback = 100
 
     // Main function of the AudioPump class
     fun run() {

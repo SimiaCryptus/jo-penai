@@ -16,7 +16,7 @@ import javax.imageio.ImageIO
 class OpenAIClientTest {
 
     companion object {
-        val logger = LoggerFactory.getLogger(OpenAIClientTest::class.java)
+        val log = LoggerFactory.getLogger(OpenAIClientTest::class.java)
     }
 
     @Test
@@ -106,7 +106,7 @@ class OpenAIClientTest {
         if (OpenAIClient.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClient.keyTxt)
         val models = client.listModels()
-        logger.info("Models: ${JsonUtil.toJson(models)}")
+        log.info("Models: ${JsonUtil.toJson(models)}")
     }
 
 
@@ -115,7 +115,7 @@ class OpenAIClientTest {
         if (OpenAIClient.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClient.keyTxt)
         val models = client.listEngines()
-        logger.info("Models: ${JsonUtil.toJson(models)}")
+        log.info("Models: ${JsonUtil.toJson(models)}")
     }
 
     @Test
@@ -124,7 +124,7 @@ class OpenAIClientTest {
         val client = OpenAIClient(OpenAIClient.keyTxt)
         val request = OpenAIClient.EmbeddingRequest(model = OpenAIClient.Models.AdaEmbedding.modelName, input = "This is a test!")
         val embedding = client.createEmbedding(request)
-        logger.info("Embedding: ${JsonUtil.toJson(embedding)}")
+        log.info("Embedding: ${JsonUtil.toJson(embedding)}")
     }
 
 }

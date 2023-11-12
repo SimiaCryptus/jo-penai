@@ -1,5 +1,3 @@
-@file:Suppress("MemberVisibilityCanBePrivate")
-
 package com.simiacryptus.openai.proxy
 
 import com.fasterxml.jackson.module.kotlin.isKotlinClass
@@ -23,8 +21,8 @@ import kotlin.reflect.jvm.javaType
 abstract class GPTProxyBase<T : Any>(
     val clazz: Class<T>,
     var temperature: Double = 0.1,
-    var validation: Boolean = true,
-    var maxRetries: Int = 5,
+    private var validation: Boolean = true,
+    private var maxRetries: Int = 5,
 ) {
     init {
         log.info("Created ${clazz.simpleName} proxy")
@@ -35,9 +33,9 @@ abstract class GPTProxyBase<T : Any>(
             "requests" to requestCounter.get(),
             "attempts" to attemptCounter.get(),
         ) + requestCounters.mapValues { it.value.get() }.mapKeys { "requests.${it.key}" }
-    protected val requestCounter = AtomicInteger(0)
-    protected val attemptCounter = AtomicInteger(0)
-    val requestCounters = HashMap<String, AtomicInteger>()
+    private val requestCounter = AtomicInteger(0)
+    private val attemptCounter = AtomicInteger(0)
+    private val requestCounters = HashMap<String, AtomicInteger>()
 
 
     abstract fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String

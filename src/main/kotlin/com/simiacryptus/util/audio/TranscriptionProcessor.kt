@@ -1,5 +1,3 @@
-@file:Suppress("MemberVisibilityCanBePrivate")
-
 package com.simiacryptus.util.audio
 
 import com.simiacryptus.openai.OpenAIClient
@@ -7,7 +5,7 @@ import java.util.*
 
 open class TranscriptionProcessor(
     var client: OpenAIClient,
-    var audioBuffer: Deque<ByteArray>,
+    private var audioBuffer: Deque<ByteArray>,
     var continueFn: () -> Boolean,
     var prompt: String = "",
     var onText: (String) -> Unit,

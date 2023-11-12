@@ -16,7 +16,7 @@ import kotlin.reflect.KVisibility
 import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.javaType
 
-class ApiFunctionDescriber : TypeDescriber {
+open class ApiFunctionDescriber : TypeDescriber {
 
     open val includeMethods: Boolean = true
     private val truncation = "..."

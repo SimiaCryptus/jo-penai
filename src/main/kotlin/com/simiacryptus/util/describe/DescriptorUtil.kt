@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package com.simiacryptus.util.describe
 
 import java.lang.reflect.ParameterizedType
@@ -33,11 +31,6 @@ object DescriptorUtil {
             }
         }
 
-
-    fun resolveTypeParameters(concreteClass: KClass<*>, genericInterface: KClass<*>): List<KType> {
-        val type = concreteClass.supertypes.find { it.classifier == genericInterface }
-        return type?.arguments?.mapNotNull { it.type } ?: emptyList()
-    }
 
     fun resolveMethodReturnType(concreteClass: KClass<*>, methodName: String): KType {
         // Get the method from the class by name
