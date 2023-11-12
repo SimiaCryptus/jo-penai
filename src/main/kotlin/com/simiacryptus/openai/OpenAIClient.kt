@@ -26,8 +26,8 @@ open class OpenAIClient(
     key: String = keyTxt,
     private val apiBase: String = "https://api.openai.com/v1",
     logLevel: Level = Level.INFO,
-    auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
-) : APIClientBase(key, apiBase, logLevel, auxillaryLogOutputStream) {
+    logStreams: MutableList<BufferedOutputStream> = mutableListOf()
+) : APIClientBase(key, apiBase, logLevel, logStreams) {
 
     interface Model {
         val modelName: String
