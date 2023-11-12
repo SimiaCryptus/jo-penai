@@ -548,7 +548,7 @@ open class OpenAIClient(
             )
             if (response.usage != null) {
                 incrementTokens(
-                    Models.values().find { it.name.equals(editRequest.model, true) },
+                    Models.values().find { it.modelName.equals(editRequest.model, true) },
                     response.usage!!.total_tokens
                 )
             }
@@ -632,7 +632,7 @@ open class OpenAIClient(
                 )
                 if (response.usage != null) {
                     incrementTokens(
-                        Models.values().find { it.name.equals(request.model, true) },
+                        Models.values().find { it.modelName.equals(request.model, true) },
                         response.usage!!.total_tokens
                     )
                 }
