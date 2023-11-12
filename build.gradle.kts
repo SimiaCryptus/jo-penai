@@ -56,16 +56,16 @@ kotlin {
 dependencies {
     implementation(group = "org.openimaj", name = "JTransforms", version = "1.3.10")
 
-    implementation(group = "com.fasterxml.jackson.core", name = "jackson-databind", version = "2.14.2")
-    implementation(group = "com.fasterxml.jackson.core", name = "jackson-annotations", version = "2.14.2")
-    implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.14.2")
+    implementation(group = "com.fasterxml.jackson.core", name = "jackson-databind", version = "2.15.3")
+    implementation(group = "com.fasterxml.jackson.core", name = "jackson-annotations", version = "2.15.3")
+    implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = "2.15.3")
 
-    implementation(group = "com.google.guava", name = "guava", version = "31.1-jre")
+    implementation(group = "com.google.guava", name = "guava", version = "32.1.3-jre")
     implementation(group = "com.google.code.gson", name = "gson", version = "2.10.1")
 
     implementation(group = "org.apache.httpcomponents", name = "httpclient", version = "4.5.14")
     implementation(group = "org.apache.httpcomponents", name = "httpmime", version = "4.5.14")
-    implementation(group = "commons-io", name = "commons-io", version = "2.11.0")
+    implementation(group = "commons-io", name = "commons-io", version = "2.15.0")
 
     compileOnlyApi(kotlin("stdlib"))
     compileOnlyApi(kotlin("reflect"))
@@ -75,13 +75,10 @@ dependencies {
 
     implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.9")
     testImplementation(group = "org.slf4j", name = "slf4j-simple", version = "2.0.9")
-//    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = "1.4.11")
-    //testImplementation(group = "ch.qos.logback", name = "logback-core", version = "1.4.11")
 
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.9.2")
-    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = "5.9.2")
-    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.9.2")
-    //testImplementation(group = "com.amazonaws", name = "aws-java-sdk", version = "1.12.454")
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = "5.10.1")
+    testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = "5.10.1")
+    testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = "5.10.1")
 }
 
 publishing {
