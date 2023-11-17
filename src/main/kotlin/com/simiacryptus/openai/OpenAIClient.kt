@@ -11,9 +11,11 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.entity.mime.HttpMultipartMode
 import org.apache.http.entity.mime.MultipartEntityBuilder
+import org.apache.http.entity.mime.content.FileBody
 import org.slf4j.event.Level
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
+import java.io.File
 import java.io.IOException
 import java.net.URL
 import java.util.*
@@ -102,35 +104,7 @@ open class OpenAIClient(
         val stop: List<CharSequence>? = null,
         val logprobs: Int? = null,
         val echo: Boolean = false,
-    ) {
-
-        fun appendPrompt(prompt: CharSequence): CompletionRequest {
-            return copy(prompt = this.prompt + prompt)
-        }
-
-        fun addStops(vararg newStops: CharSequence): CompletionRequest {
-            val stops = ArrayList<CharSequence>()
-            for (x in newStops) {
-                if (x.isNotEmpty()) {
-                    stops.add(x)
-                }
-            }
-            if (stops.isNotEmpty()) {
-                if (null != stop) Arrays.stream(stop.toTypedArray()).forEach { e: CharSequence ->
-                    stops.add(
-                        e
-                    )
-                }
-                return copy(stop = ArrayList(stops.distinct()))
-            }
-            return this
-        }
-
-        fun setSuffix(suffix: CharSequence?): CompletionRequest {
-            return copy(suffix = suffix?.toString())
-        }
-
-    }
+    )
 
 
     data class CompletionResponse(
@@ -221,27 +195,29 @@ open class OpenAIClient(
         val no_speech_prob: Double? = 0.0,
         val transient: Boolean? = false
     ) {
-        override fun equals(other: Any?): Boolean {
-            when {
-                this === other -> return true
-                javaClass != other?.javaClass -> return false
-                else -> {
-                    other as TranscriptionPacket
-                    if (id != other.id) return false
-                    if (seek != other.seek) return false
-                    if (start != other.start) return false
-                    if (end != other.end) return false
-                    if (text != other.text) return false
-                    if (tokens != null) {
-                        if (other.tokens == null) return false
-                        if (!tokens.contentEquals(other.tokens)) return false
-                    } else if (other.tokens != null) return false
-                    if (temperature != other.temperature) return false
-                    if (avg_logprob != other.avg_logprob) return false
-                    if (compression_ratio != other.compression_ratio) return false
-                    if (no_speech_prob != other.no_speech_prob) return false
-                    if (transient != other.transient) return false
-                    return true
+        override fun equals(other: Any?) = when {
+            this === other -> true
+            javaClass != other?.javaClass -> false
+            else -> {
+                other as TranscriptionPacket
+                when {
+                    id != other.id -> false
+                    seek != other.seek -> false
+                    start != other.start -> false
+                    end != other.end -> false
+                    text != other.text -> false
+                    tokens != null -> when {
+                        other.tokens == null -> false
+                        !tokens.contentEquals(other.tokens) -> false
+                        else -> true
+                    }
+                    other.tokens != null -> false
+                    temperature != other.temperature -> false
+                    avg_logprob != other.avg_logprob -> false
+                    compression_ratio != other.compression_ratio -> false
+                    no_speech_prob != other.no_speech_prob -> false
+                    transient != other.transient -> false
+                    else -> true
                 }
             }
         }
@@ -357,49 +333,54 @@ open class OpenAIClient(
 
 
     data class ChatChoice(
-        val message: ChatMessage? = null,
+        val message: ChatMessageResponse? = null,
         val index: Int = 0,
         val finish_reason: String? = null,
     )
 
+    data class ContentPart(
+        val type: String,
+        val text: String? = null,
+        val image_url: String? = null
+    )
+
     data class ChatMessage(
+        val role: Role? = null,
+        val content: List<ContentPart>? = null,
+        val function_call: FunctionCall? = null,
+    )
+    data class ChatMessageResponse(
         val role: Role? = null,
         val content: String? = null,
         val function_call: FunctionCall? = null,
-    ) {
-        enum class Role {
-            assistant, user, system
-        }
+    )
+    enum class Role {
+        assistant, user, system
     }
-
     data class FunctionCall(
         val name: String? = null,
         val arguments: String? = null,
     )
 
     open fun chat(
-        completionRequest: ChatRequest, model: Model
+        chatRequest: ChatRequest, model: Model
     ): ChatResponse {
         try {
             return withReliability {
                 withPerformanceLogging {
                     chatCounter.incrementAndGet()
                     val reqJson =
-                        JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(completionRequest)
+                        JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
                     log(
                         msg = String.format(
                             "Chat Request\nPrefix:\n\t%s\n", reqJson.replace("\n", "\n\t")
                         )
                     )
-                    fun json() = StringUtil.restrictCharacterSet(
-                        JsonUtil.objectMapper().writeValueAsString(completionRequest), allowedCharset
-                    )
 
-                    val result = post("$apiBase/chat/completions", json())
+                    val jsonRequest = JsonUtil.objectMapper().writeValueAsString(chatRequest)
+                    val result = post("$apiBase/chat/completions", jsonRequest)
                     checkError(result)
-                    val response = JsonUtil.objectMapper().readValue(
-                        result, ChatResponse::class.java
-                    )
+                    val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
                     if (response.usage != null) {
                         incrementTokens(model, response.usage.total_tokens)
                     }
@@ -411,7 +392,7 @@ open class OpenAIClient(
             }
         } catch (e: ModelMaxException) {
             return chat(
-                completionRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
+                chatRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
                 TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1)
             )
         }
@@ -601,6 +582,122 @@ open class OpenAIClient(
                 }
                 response
             }
+        }
+    }
+
+    data class ImageGenerationRequest(
+        val prompt: String,
+        val model: String? = null,
+        val n: Int? = null,
+        val quality: String? = null,
+        val response_format: String? = null,
+        val size: String? = null,
+        val style: String? = null,
+        val user: String? = null
+    )
+
+    data class ImageObject(
+        val url: String
+    )
+
+    data class ImageGenerationResponse(
+        val created: Long,
+        val data: List<ImageObject>
+    )
+
+    open fun createImage(request: ImageGenerationRequest): ImageGenerationResponse = withReliability {
+        withPerformanceLogging {
+            val url = "$apiBase/images/generations"
+            val httpRequest = HttpPost(url)
+            httpRequest.addHeader("Accept", "application/json")
+            httpRequest.addHeader("Content-Type", "application/json")
+            authorize(httpRequest)
+
+            val requestBody = Gson().toJson(request)
+            httpRequest.entity = StringEntity(requestBody)
+
+            val response = post(httpRequest)
+            checkError(response)
+
+            JsonUtil.objectMapper().readValue(response, ImageGenerationResponse::class.java)
+        }
+    }
+
+    data class ImageEditRequest(
+        val image: File,
+        val prompt: String,
+        val mask: File? = null,
+        val model: String? = null,
+        val n: Int? = null,
+        val size: String? = null,
+        val responseFormat: String? = null,
+        val user: String? = null
+    )
+
+    data class ImageEditResponse(
+        val created: Long,
+        val data: List<ImageObject>
+    )
+
+    open fun createImageEdit(request: ImageEditRequest): ImageEditResponse = withReliability {
+        withPerformanceLogging {
+            val url = "$apiBase/images/edits"
+            val httpRequest = HttpPost(url)
+            httpRequest.addHeader("Accept", "application/json")
+            authorize(httpRequest)
+
+            val entityBuilder = MultipartEntityBuilder.create()
+            entityBuilder.addPart("image", FileBody(request.image))
+            entityBuilder.addTextBody("prompt", request.prompt)
+            request.mask?.let { entityBuilder.addPart("mask", FileBody(it)) }
+            request.model?.let { entityBuilder.addTextBody("model", it) }
+            request.n?.let { entityBuilder.addTextBody("n", it.toString()) }
+            request.size?.let { entityBuilder.addTextBody("size", it) }
+            request.responseFormat?.let { entityBuilder.addTextBody("response_format", it) }
+            request.user?.let { entityBuilder.addTextBody("user", it) }
+
+            httpRequest.entity = entityBuilder.build()
+            val response = post(httpRequest)
+            checkError(response)
+
+            JsonUtil.objectMapper().readValue(response, ImageEditResponse::class.java)
+        }
+    }
+
+    data class ImageVariationRequest(
+        val image: File,
+        //val model: String? = null,
+        val n: Int? = null,
+        val responseFormat: String? = null,
+        val size: String? = null,
+        val user: String? = null
+    )
+
+    data class ImageVariationResponse(
+        val created: Long,
+        val data: List<ImageObject>
+    )
+
+    open fun createImageVariation(request: ImageVariationRequest): ImageVariationResponse = withReliability {
+        withPerformanceLogging {
+            val url = "$apiBase/images/variations"
+            val httpRequest = HttpPost(url)
+            httpRequest.addHeader("Accept", "application/json")
+            authorize(httpRequest)
+
+            val entityBuilder = MultipartEntityBuilder.create()
+            entityBuilder.addPart("image", FileBody(request.image))
+            //request.model?.let { entityBuilder.addTextBody("model", it) }
+            request.n?.let { entityBuilder.addTextBody("n", it.toString()) }
+            request.responseFormat?.let { entityBuilder.addTextBody("response_format", it) }
+            request.size?.let { entityBuilder.addTextBody("size", it) }
+            request.user?.let { entityBuilder.addTextBody("user", it) }
+
+            httpRequest.entity = entityBuilder.build()
+            val response = post(httpRequest)
+            checkError(response)
+
+            JsonUtil.objectMapper().readValue(response, ImageVariationResponse::class.java)
         }
     }
 

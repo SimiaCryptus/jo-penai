@@ -54,5 +54,6 @@ open class OpenAIClientBase(
             set(value) {
                 _keyTxt = value
             }
+        fun String.toContentList() = this.split("\n").map { OpenAIClient.ContentPart(text = it,type = "text") }
     }
 }

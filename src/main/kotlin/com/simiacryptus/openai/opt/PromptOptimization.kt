@@ -3,6 +3,7 @@ package com.simiacryptus.openai.opt
 import com.simiacryptus.openai.Model
 import com.simiacryptus.openai.Models
 import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
 import com.simiacryptus.openai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.util.describe.Description
@@ -188,14 +189,14 @@ open class PromptOptimization(
         )
         var response = OpenAIClient.ChatResponse()
         chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
-            OpenAIClient.ChatMessage.Role.system,
-            systemPrompt
+            OpenAIClient.Role.system,
+            systemPrompt.toContentList()
         ))
         return testCase.turns.map { turn ->
             var matched: Boolean
             chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
-                OpenAIClient.ChatMessage.Role.user,
-                turn.userMessage
+                OpenAIClient.Role.user,
+                turn.userMessage.toContentList()
             ))
             val startTemp = 0.3
             chatRequest = chatRequest.copy(temperature = startTemp)
@@ -217,8 +218,8 @@ open class PromptOptimization(
                 }
             }
             chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
-                OpenAIClient.ChatMessage.Role.assistant,
-                response.choices.first().message?.content ?: ""
+                OpenAIClient.Role.assistant,
+                (response.choices.first().message?.content ?: "").toContentList()
             ))
             response to turn.expectations.map { it.score(api, response) }.average()
         }
@@ -229,3 +230,5 @@ open class PromptOptimization(
     }
 
 }
+
+
