@@ -1,5 +1,7 @@
 package com.simiacryptus.openai.proxy
 
+import com.simiacryptus.openai.Model
+import com.simiacryptus.openai.Models
 import com.simiacryptus.openai.OpenAIClient.ChatMessage
 import com.simiacryptus.openai.OpenAIClient.ChatRequest
 import com.simiacryptus.openai.OpenAIClient
@@ -9,7 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger
 open class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
-    var model: OpenAIClient.Model = OpenAIClient.Models.GPT35Turbo,
+    var model: Model = Models.GPT35Turbo,
     temperature: Double = 0.7,
     private var verbose: Boolean = false,
     private val moderated: Boolean = true,
@@ -20,7 +22,7 @@ open class ChatProxy<T : Any>(
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
         api = params["api"] as OpenAIClient? ?: OpenAIClient(),
-        model = params["model"] as OpenAIClient.Model? ?: OpenAIClient.Models.GPT35Turbo,
+        model = params["model"] as Model? ?: Models.GPT35Turbo,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,
@@ -46,7 +48,7 @@ open class ChatProxy<T : Any>(
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if (verbose) log.info(prompt.toString())
-        val request = ChatRequest()
+        var request = ChatRequest()
         totalYamlLength.addAndGet(prompt.apiYaml.length)
         val exampleMessages = examples.flatMap {
             listOf(
@@ -61,7 +63,7 @@ open class ChatProxy<T : Any>(
             )
         }
         totalExamplesLength.addAndGet(toJson(exampleMessages).length)
-        request.messages = (
+        request = request.copy(messages = ArrayList(
                 listOf(
                     ChatMessage(
                         ChatMessage.Role.system, """
@@ -83,9 +85,9 @@ open class ChatProxy<T : Any>(
                                 argsToString(prompt.argList)
                             )
                         )
-                ).toTypedArray()
-        request.model = model.modelName
-        request.temperature = temperature
+                ))
+        request = request.copy(model = model.modelName)
+        request = request.copy(temperature = temperature)
         val json = toJson(request)
         if (moderated) api.moderate(json)
         totalInputLength.addAndGet(json.length)

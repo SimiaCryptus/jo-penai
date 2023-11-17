@@ -141,7 +141,6 @@ open class HttpClientManager(
     private fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
         val threads = HashSet<Thread>()
         threads.add(Thread.currentThread())
-        val isCompleted = AtomicBoolean(false)
         val start = Date()
         val cancellationFuture = scheduledPool.scheduleAtFixedRate({
             if (cancelCheck()) {

@@ -5,6 +5,7 @@ import com.simiacryptus.openai.opt.PromptOptimization.TestCase
 import com.simiacryptus.openai.opt.PromptOptimization.Turn
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
+import kotlin.system.exitProcess
 
 object PromptOptTest {
 
@@ -60,7 +61,7 @@ object PromptOptTest {
         } catch (e: Throwable) {
             log.error("Error", e)
         } finally {
-            System.exit(0)
+            exitProcess(0)
         }
     }
 

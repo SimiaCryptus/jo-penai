@@ -1,10 +1,10 @@
 package com.simiacryptus.openai
 
 import com.simiacryptus.openai.OpenAIClient.ChatMessage
-import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.JsonUtil
-import com.simiacryptus.util.audio.TranscriptionProcessor
+import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.audio.PercentileLoudnessWindowBuffer
+import com.simiacryptus.util.audio.TranscriptionProcessor
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
@@ -21,37 +21,40 @@ class OpenAIClientTest {
 
     @Test
     fun testCompletion() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
-        val request = OpenAIClient.CompletionRequest()
-        request.prompt = "This is a test! This"
-        val completion = client.complete(request, OpenAIClient.Models.DaVinci)
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val request = OpenAIClient.CompletionRequest(prompt = "This is a test! This")
+        val completion = client.complete(request, Models.DaVinci)
         println(completion.choices.first().text)
     }
 
     @Test
     fun testEdit() {
         // Doesn't seem to work right now... Wrong model error!?!?
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
-        val request = OpenAIClient.EditRequest()
-        request.input = "This is a test!"
-        request.instruction = "Rewrite as an epic novel"
-        request.model = OpenAIClient.Models.DaVinciEdit.modelName
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val request = OpenAIClient.EditRequest(
+            input = "This is a test!",
+            instruction = "Rewrite as an epic novel",
+            model = Models.DaVinciEdit.modelName
+        )
         val completion = client.edit(request)
         println(completion.choices.first().text)
     }
 
     @Test
     fun testChat() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
-        val request = OpenAIClient.ChatRequest()
-        val model = OpenAIClient.Models.GPT35Turbo
-        request.model = model.modelName
-        request.messages = arrayOf(
-            ChatMessage(ChatMessage.Role.system, "You are a spiritual teacher"),
-            ChatMessage(ChatMessage.Role.user, "What is the meaning of life?"),
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val model = Models.GPT35Turbo
+        val request = OpenAIClient.ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ChatMessage(ChatMessage.Role.system, "You are a spiritual teacher"),
+                    ChatMessage(ChatMessage.Role.user, "What is the meaning of life?"),
+                )
+            )
         )
         val chatResponse = client.chat(request, model)
         println(chatResponse.choices.first().message?.content ?: "No response")
@@ -59,8 +62,8 @@ class OpenAIClientTest {
 
     @Test
     fun testRender() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
         val image = client.render("This is a test!").first()
         val tempFile = File.createTempFile("test", ".png")
         ImageIO.write(image, "png", tempFile)
@@ -69,10 +72,10 @@ class OpenAIClientTest {
 
     @Test
     fun testDictate() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client: OpenAIClient = OpenAIClient(OpenAIClient.keyTxt)
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client: OpenAIClient = OpenAIClient(OpenAIClientBase.keyTxt)
         val endTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
-        val continueFn : () -> Boolean = { System.currentTimeMillis() < endTime }
+        val continueFn: () -> Boolean = { System.currentTimeMillis() < endTime }
         val rawBuffer = ConcurrentLinkedDeque<ByteArray>()
         Thread({
             try {
@@ -89,7 +92,7 @@ class OpenAIClientTest {
                 e.printStackTrace()
             }
         }, "transcription-audio-processor").start()
-        val transcriptionProcessor = TranscriptionProcessor(client, wavBuffer, continueFn){ println(it) }
+        val transcriptionProcessor = TranscriptionProcessor(client, wavBuffer, continueFn) { println(it) }
         val transcriptionThread = Thread({
             try {
                 transcriptionProcessor.run()
@@ -103,8 +106,8 @@ class OpenAIClientTest {
 
     @Test
     fun testListModels() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
         val models = client.listModels()
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
@@ -112,17 +115,17 @@ class OpenAIClientTest {
 
     @Test
     fun testListEngines() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
         val models = client.listEngines()
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
 
     @Test
     fun testEmbedding() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val client = OpenAIClient(OpenAIClient.keyTxt)
-        val request = OpenAIClient.EmbeddingRequest(model = OpenAIClient.Models.AdaEmbedding.modelName, input = "This is a test!")
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val request = OpenAIClient.EmbeddingRequest(model = Models.AdaEmbedding.modelName, input = "This is a test!")
         val embedding = client.createEmbedding(request)
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
     }

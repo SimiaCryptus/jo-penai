@@ -8,8 +8,8 @@ import java.lang.reflect.Type
 import java.util.*
 
 interface TypeDescriber {
-    open val methodBlacklist: Set<String>
-    open fun describe(
+    val methodBlacklist: Set<String>
+    fun describe(
         rawType: Class<in Nothing>,
         stackMax: Int = 10,
     ): String
@@ -39,7 +39,7 @@ interface TypeDescriber {
     companion object {
 
 
-        open val primitives = setOf(
+        val primitives = setOf(
             "boolean",
             "integer",
             "number",

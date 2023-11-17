@@ -13,8 +13,8 @@ class ChatProxyTest {
 
     @Test
     fun testDemo1() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(TextSummarizer::class.java, api = OpenAIClient(OpenAIClient.keyTxt))
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val gptProxy = ChatProxy(TextSummarizer::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
         val summarizer = gptProxy.create()
         val summary = summarizer.summarize("Your long text goes here.")
         println(summary)
@@ -30,10 +30,10 @@ class ChatProxyTest {
 
     @Test
     fun testDemo2() {
-        if (OpenAIClient.keyTxt.isBlank()) return
+        if (OpenAIClientBase.keyTxt.isBlank()) return
         val gptProxy = ChatProxy(
             BlogPostGenerator::class.java, api = OpenAIClient(
-                OpenAIClient.keyTxt)
+                OpenAIClientBase.keyTxt)
         )
         val generator = gptProxy.create()
         val blogPost = generator.generateBlogPost(
@@ -62,8 +62,8 @@ class ChatProxyTest {
 
     @Test
     fun testDemo3() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(RecipeGenerator::class.java, api = OpenAIClient(OpenAIClient.keyTxt))
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val gptProxy = ChatProxy(RecipeGenerator::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
         val generator = gptProxy.create()
         val recipeInput = RecipeInput("Chocolate Cake", listOf("flour", "sugar", "cocoa powder", "eggs", "milk"), 8)
         val recipeOutput = generator.generateRecipe(recipeInput)
@@ -81,10 +81,10 @@ class ChatProxyTest {
 
     @Test
     fun testDemo4() {
-        if (OpenAIClient.keyTxt.isBlank()) return
+        if (OpenAIClientBase.keyTxt.isBlank()) return
         val gptProxy = ChatProxy(
             ShoppingListParser::class.java, api = OpenAIClient(
-                OpenAIClient.keyTxt)
+                OpenAIClientBase.keyTxt)
         )
         val parser = gptProxy.create()
         val plainTextList = "2 apples\n1 loaf of bread\n3 cans of soup\n4 bananas"
@@ -109,8 +109,8 @@ class ChatProxyTest {
 
     @Test
     fun testDemo5() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(WeatherForecast::class.java, api = OpenAIClient(OpenAIClient.keyTxt))
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val gptProxy = ChatProxy(WeatherForecast::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
         gptProxy.addExample(WeatherOutput("New York", listOf("Sunny", "Partly Cloudy", "Rainy"))) {
             it.getWeatherForecast(WeatherInput("New York", 3))
         }
@@ -140,8 +140,8 @@ class ChatProxyTest {
 
     @Test
     fun testDemo6() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(OpenAIClient.keyTxt))
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
         val mathOutput = solver.solveMathProblem(mathInput)
@@ -150,9 +150,9 @@ class ChatProxyTest {
 
     @Test
     fun testDemo7() {
-        if (OpenAIClient.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(OpenAIClient.keyTxt))
-        gptProxy.model = OpenAIClient.Models.GPT35Turbo
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
+        gptProxy.model = Models.GPT35Turbo
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
         val mathOutput = solver.solveMathProblem(mathInput)

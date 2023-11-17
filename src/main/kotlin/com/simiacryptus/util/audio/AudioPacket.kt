@@ -48,13 +48,13 @@ data class AudioPacket(
         val aWeightingFilter = FloatArray(fft.size) { 0f }
         for (i in fft.indices) {
             val frequency = i * sampleRate.toFloat() / fft.size
-            val numerator = aWeightingConstants[0] * Math.pow(frequency.toDouble(), 4.0)
-            val denominator = (Math.pow(frequency.toDouble(), 2.0) + aWeightingConstants[1]) *
-                    Math.sqrt(
-                        (Math.pow(frequency.toDouble(), 2.0) + aWeightingConstants[2]) *
-                                (Math.pow(frequency.toDouble(), 2.0) + aWeightingConstants[3])
+            val numerator = aWeightingConstants[0] * frequency.toDouble().pow(4.0)
+            val denominator = (frequency.toDouble().pow(2.0) + aWeightingConstants[1]) *
+                    sqrt(
+                        (frequency.toDouble().pow(2.0) + aWeightingConstants[2]) *
+                                (frequency.toDouble().pow(2.0) + aWeightingConstants[3])
                     ) *
-                    (Math.pow(frequency.toDouble(), 2.0) + aWeightingConstants[0])
+                    (frequency.toDouble().pow(2.0) + aWeightingConstants[0])
             val aWeight = numerator / denominator
             aWeightingFilter[i] = (fft[i] * aWeight.toFloat())
         }

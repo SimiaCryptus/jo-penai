@@ -1,15 +1,20 @@
 package com.simiacryptus.openai.opt
 
+import com.simiacryptus.openai.Model
+import com.simiacryptus.openai.Models
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.openai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.util.describe.Description
 import org.slf4j.LoggerFactory
+import kotlin.math.ceil
+import kotlin.math.ln
+import kotlin.math.max
 import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
-    val model: OpenAIClient.Models = OpenAIClient.Models.GPT35Turbo,
+    val model: Model = Models.GPT35Turbo,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,
@@ -28,9 +33,9 @@ open class PromptOptimization(
     open fun runGeneticGenerations(
         systemPrompts: List<String>,
         testCases: List<TestCase>,
-        selectionSize: Int = Math.max(Math.ceil(Math.log((systemPrompts.size + 1).toDouble()) / Math.log(2.0)), 3.0)
+        selectionSize: Int = max(ceil(ln((systemPrompts.size + 1).toDouble()) / ln(2.0)), 3.0)
             .toInt(), // apx ln(N)
-        populationSize: Int = Math.max(Math.max(selectionSize, 5), systemPrompts.size),
+        populationSize: Int = max(max(selectionSize, 5), systemPrompts.size),
         generations: Int = 3
     ): List<String> {
         var topPrompts = regenerate(systemPrompts, populationSize)
@@ -178,29 +183,29 @@ open class PromptOptimization(
         systemPrompt: String,
         testCase: TestCase
     ): List<Pair<OpenAIClient.ChatResponse, Double>> {
-        val chatRequest = OpenAIClient.ChatRequest(
+        var chatRequest = OpenAIClient.ChatRequest(
             model = model.modelName
         )
         var response = OpenAIClient.ChatResponse()
-        chatRequest.messages += OpenAIClient.ChatMessage(
+        chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
             OpenAIClient.ChatMessage.Role.system,
             systemPrompt
-        )
+        ))
         return testCase.turns.map { turn ->
-            var matched = false
-            chatRequest.messages += OpenAIClient.ChatMessage(
+            var matched: Boolean
+            chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
                 OpenAIClient.ChatMessage.Role.user,
                 turn.userMessage
-            )
+            ))
             val startTemp = 0.3
-            chatRequest.temperature = startTemp
+            chatRequest = chatRequest.copy(temperature = startTemp)
             for (retry in 0..testCase.retries) {
                 response = api.chat(chatRequest, model)
                 matched = turn.expectations.all { it.matches(api, response) }
                 if (matched) {
                     break
                 } else {
-                    chatRequest.temperature = startTemp.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
+                    chatRequest = chatRequest.copy(temperature = startTemp.coerceAtLeast(0.1).pow(1.0 / (retry + 1)))
                     log.info(
                         "Retry $retry (T=${"%.3f".format(chatRequest.temperature)}): ${
                             systemPrompt.replace(
@@ -211,10 +216,10 @@ open class PromptOptimization(
                     )
                 }
             }
-            chatRequest.messages += OpenAIClient.ChatMessage(
+            chatRequest = chatRequest.copy(messages = chatRequest.messages + OpenAIClient.ChatMessage(
                 OpenAIClient.ChatMessage.Role.assistant,
                 response.choices.first().message?.content ?: ""
-            )
+            ))
             response to turn.expectations.map { it.score(api, response) }.average()
         }
     }
