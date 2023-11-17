@@ -25,7 +25,7 @@ abstract class GPTProxyBase<T : Any>(
     private var maxRetries: Int = 5,
 ) {
     init {
-        log.info("Created ${clazz.simpleName} proxy")
+        log.debug("Created ${clazz.simpleName} proxy")
     }
 
     open val metrics: Map<String, Any>
@@ -41,7 +41,7 @@ abstract class GPTProxyBase<T : Any>(
     abstract fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String
 
     fun create(): T {
-        return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { proxy, method, args ->
+        return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { _, method, args ->
             if (method.name == "toString") return@newProxyInstance clazz.simpleName
             requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
             // If kotlin clazz, use kotlin reflection to get type

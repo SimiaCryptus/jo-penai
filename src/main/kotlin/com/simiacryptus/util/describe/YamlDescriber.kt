@@ -10,7 +10,6 @@ import java.lang.reflect.*
 import java.util.*
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
-import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
@@ -114,13 +113,13 @@ open class YamlDescriber : TypeDescriber {
 
     open val includeMethods: Boolean = true
     override val methodBlacklist = setOf("equals", "hashCode", "copy", "toString", "valueOf", "wait", "notify", "notifyAll", "getClass", "invokeMethod")
-    override fun describe(self: Method, implClass: Class<*>?, stackMax: Int): String {
+    override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
         if (stackMax <= 0) return "..."
         // If implClass is a Kotlin class, resolve the KFunction and call the other describe method
-        if (implClass != null && implClass.isKotlinClass()) {
-            val function = implClass.kotlin.functions.find { it.name == self.name }
+        if (clazz != null && clazz.isKotlinClass()) {
+            val function = clazz.kotlin.functions.find { it.name == self.name }
             if (function != null) {
-                return describe(function, implClass.kotlin, stackMax)
+                return describe(function, clazz.kotlin, stackMax)
             }
         }
         val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()

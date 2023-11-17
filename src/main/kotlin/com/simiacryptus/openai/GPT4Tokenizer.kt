@@ -3,6 +3,8 @@ package com.simiacryptus.openai
 import com.simiacryptus.openai.GPT4CodecData.bpeRegex
 import com.simiacryptus.util.JsonUtil
 import java.nio.charset.Charset
+import kotlin.math.min
+import kotlin.math.pow
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
 @Suppress("unused")
@@ -138,10 +140,10 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         val cs: MutableList<Int> = bs.toMutableList()
         var n = 0
 
-        for (b in 0 until Math.pow(2.0, 8.0).toInt()) {
+        for (b in 0 until 2.0.pow(8.0).toInt()) {
             if (!bs.contains(b)) {
                 bs.add(b)
-                cs.add(Math.pow(2.0, 8.0).toInt() + n)
+                cs.add(2.0.pow(8.0).toInt() + n)
                 n = n + 1
             }
         }
@@ -286,7 +288,7 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
         val encoded = this.encode(text)
         val chunks: MutableList<Map<String, Any>> = mutableListOf()
         for (i in encoded.indices step maxTokensPerChunk) {
-            val chunk = encoded.subList(i, Math.min(i + maxTokensPerChunk, encoded.size))
+            val chunk = encoded.subList(i, min(i + maxTokensPerChunk, encoded.size))
             chunks.add(
                 mapOf(
                     "text" to this.decode(chunk),

@@ -46,17 +46,17 @@ Maven:
 <dependency>
     <groupId>com.simiacryptus</groupId>
     <artifactId>joe-penai</artifactId>
-    <version>1.0.28</version>
+    <version>1.0.29</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.28'
+implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.29'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:joe-penai:1.0.28")
+implementation("com.simiacryptus:joe-penai:1.0.29")
 ```
 
 
@@ -106,7 +106,7 @@ Performs a text completion using the specified model.
 
 ```kotlin
 val request = OpenAIClient.CompletionRequest(prompt = "Once upon a time")
-val model = OpenAIClient.Models.GPT35Turbo
+val model = Models.GPT35Turbo
 val response = client.complete(request, model)
 ```
 
