@@ -7,12 +7,15 @@ import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.audio.PercentileLoudnessWindowBuffer
 import com.simiacryptus.util.audio.TranscriptionProcessor
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import java.awt.image.BufferedImage
 import java.io.File
 import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
@@ -235,4 +238,22 @@ class OpenAIClientTest {
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
     }
 
+
+    @Test
+    fun testCreateSpeech() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val speechRequest = OpenAIClient.SpeechRequest(
+            model = "tts-1",
+            input = "The quick brown fox jumped over the lazy dog.",
+            voice = "alloy"
+        )
+        val outputFile = "test_speech_output.mp3"
+        client.createSpeech(speechRequest, outputFile)
+        val outputFileExists = Files.exists(Paths.get(outputFile))
+        val outputFileIsNotEmpty = File(outputFile).length() > 0
+        File(outputFile).delete()
+        assertTrue(outputFileExists, "The output file should exist.")
+        assertTrue(outputFileIsNotEmpty, "The output file should not be empty.")
+    }
 }

@@ -6,16 +6,17 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.StringUtil
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.entity.ContentType
-import org.apache.http.entity.StringEntity
-import org.apache.http.entity.mime.HttpMultipartMode
-import org.apache.http.entity.mime.MultipartEntityBuilder
-import org.apache.http.entity.mime.content.FileBody
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.client5.http.entity.mime.FileBody
+import org.apache.hc.client5.http.entity.mime.HttpMultipartMode
+import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder
+import org.apache.hc.core5.http.ContentType
+import org.apache.hc.core5.http.io.entity.StringEntity
 import org.slf4j.event.Level
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
@@ -254,7 +255,7 @@ open class OpenAIClient(
             request.addHeader("Accept", "application/json")
             authorize(request)
             val entity = MultipartEntityBuilder.create()
-            entity.setMode(HttpMultipartMode.RFC6532)
+            entity.setMode(HttpMultipartMode.EXTENDED)
             entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
             entity.addTextBody("model", "whisper-1")
             entity.addTextBody("response_format", "verbose_json")
@@ -271,6 +272,34 @@ open class OpenAIClient(
                 result.text ?: ""
             } catch (e: Exception) {
                 jsonObject.get("text").asString ?: ""
+            }
+        }
+    }
+
+    data class SpeechRequest(
+        val model: String,
+        val input: String,
+        val voice: String,
+        val response_format: String? = "mp3",
+        val speed: Double? = 1.0
+    )
+
+    open fun createSpeech(request: SpeechRequest, outputFile: String) {
+        withReliability {
+            withPerformanceLogging {
+                val httpRequest = HttpPost("$apiBase/audio/speech")
+                authorize(httpRequest)
+                httpRequest.addHeader("Accept", "application/json")
+                httpRequest.addHeader("Content-Type", "application/json")
+                httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request))
+                val response = withClient { it.execute(httpRequest).entity }
+                val contentType = response.contentType
+                if(contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
+                    val responseMessage = response.content.readAllBytes().toString(Charsets.UTF_8)
+                    checkError(responseMessage)
+                } else {
+                    FileOutputStream(outputFile).use { it.write(response.content.readAllBytes()) } // <-- Error
+                }
             }
         }
     }
@@ -700,5 +729,7 @@ open class OpenAIClient(
             JsonUtil.objectMapper().readValue(response, ImageVariationResponse::class.java)
         }
     }
+
+
 
 }

@@ -2,20 +2,17 @@ package com.simiacryptus.openai
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import org.apache.http.HttpResponse
-import org.apache.http.client.methods.HttpGet
-import org.apache.http.client.methods.HttpPost
-import org.apache.http.client.methods.HttpRequestBase
-import org.apache.http.entity.StringEntity
-import org.apache.http.util.EntityUtils
+import org.apache.hc.client5.http.classic.methods.HttpGet
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.core5.http.HttpRequest
+import org.apache.hc.core5.http.io.entity.EntityUtils
+import org.apache.hc.core5.http.io.entity.StringEntity
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.BufferedOutputStream
-import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 
 open class APIClientBase(
@@ -74,7 +71,7 @@ open class APIClientBase(
     protected fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
 
     @Throws(IOException::class)
-    protected open fun authorize(request: HttpRequestBase) {
+    protected open fun authorize(request: HttpRequest) {
         request.addHeader("Authorization", "Bearer $key")
     }
 
@@ -91,9 +88,7 @@ open class APIClientBase(
         request.addHeader("Content-Type", "application/json")
         request.addHeader("Accept", "application/json")
         authorize(request)
-        val response: HttpResponse = it.execute(request)
-        val entity = response.entity
-        EntityUtils.toString(entity)
+        EntityUtils.toString(it.execute(request).entity)
     }
 
     protected fun checkError(result: String) {

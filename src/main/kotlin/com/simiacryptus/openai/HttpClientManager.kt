@@ -1,8 +1,13 @@
 package com.simiacryptus.openai
 
 import com.google.common.util.concurrent.*
-import org.apache.http.impl.client.CloseableHttpClient
-import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.hc.client5.http.config.ConnectionConfig
+import org.apache.hc.client5.http.config.RequestConfig
+import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
+import org.apache.hc.core5.util.Timeout
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.BufferedOutputStream
@@ -113,14 +118,33 @@ open class HttpClientManager(
         return null
     }
 
-    private val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
-    private fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient =
+    protected val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
+    open fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient =
         if (thread in clients) clients[thread]!!
         else synchronized(clients) {
-            val client = HttpClientBuilder.create().build()
+            val client = newClient()
             clients[thread] = client
             client
         }
+
+    open fun newClient(): CloseableHttpClient {
+        val connectionConfig = ConnectionConfig.custom()
+            .setConnectTimeout(Timeout.ofSeconds(30))
+            .build()
+        val requestConfig = RequestConfig.custom()
+            .setResponseTimeout(Timeout.ofSeconds(120))
+            .setConnectionRequestTimeout(Timeout.ofSeconds(30))
+            .build()
+        val connectionManager = PoolingHttpClientConnectionManager()
+        connectionManager.setDefaultConnectionConfig(connectionConfig)
+        connectionManager.defaultMaxPerRoute = 1
+        connectionManager.maxTotal = 1
+        return HttpClientBuilder.create()
+            .setDefaultRequestConfig(requestConfig)
+            .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
+            .setConnectionManager(connectionManager)
+            .build()
+    }
 
     private fun closeClient(thread: Thread) {
         try {
@@ -191,7 +215,7 @@ open class HttpClientManager(
             val currentThread = Thread.currentThread()
             try {
                 threads.add(currentThread)
-                log.debug("Async request started; running $fn")
+                log.debug("Async request started; running {}", fn)
                 fn()
             } finally {
                 threads.remove(currentThread)
