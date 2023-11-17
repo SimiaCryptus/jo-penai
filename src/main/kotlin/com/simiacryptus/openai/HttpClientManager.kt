@@ -1,6 +1,9 @@
 package com.simiacryptus.openai
 
-import com.google.common.util.concurrent.*
+import com.google.common.util.concurrent.ListeningExecutorService
+import com.google.common.util.concurrent.ListeningScheduledExecutorService
+import com.google.common.util.concurrent.MoreExecutors
+import com.google.common.util.concurrent.ThreadFactoryBuilder
 import org.apache.hc.client5.http.config.ConnectionConfig
 import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy
@@ -15,13 +18,12 @@ import java.io.IOException
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.HashSet
+import java.util.function.Function
 import kotlin.math.pow
 
 open class HttpClientManager(
     private val logLevel: Level = Level.INFO,
-    private val auxillaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
+    private val auxiliaryLogOutputStream: MutableList<BufferedOutputStream> = mutableListOf()
 ) {
 
     companion object {
@@ -46,13 +48,48 @@ open class HttpClientManager(
             )
         val startTime by lazy { System.currentTimeMillis() }
 
+        fun modelMaxException(e: Throwable?): ModelMaxException? {
+            if (e == null) return null
+            if (e is ModelMaxException) return e
+            if (e.cause != null && e.cause != e) return modelMaxException(e.cause)
+            return null
+        }
+
+        fun rateLimitException(e: Throwable?): RateLimitException? {
+            if (e == null) return null
+            if (e is RateLimitException) return e
+            if (e.cause != null && e.cause != e) return rateLimitException(e.cause)
+            return null
+        }
+
+        fun quotaLimitException(e: Throwable?): QuotaException? {
+            if (e == null) return null
+            if (e is QuotaException) return e
+            if (e.cause != null && e.cause != e) return quotaLimitException(e.cause)
+            return null
+        }
+
+        fun invalidModelException(e: Throwable?): InvalidModelException? {
+            if (e == null) return null
+            if (e is InvalidModelException) return e
+            if (e.cause != null && e.cause != e) return invalidModelException(e.cause)
+            return null
+        }
+
+        fun apiKeyException(e: Throwable?): IOException? {
+            if (e == null) return null
+            if (e is IOException && true == e.message?.contains("Incorrect API key")) return e
+            if (e.cause != null && e.cause != e) return apiKeyException(e.cause)
+            return null
+        }
+
     }
 
     fun <T> withPool(fn: () -> T): T = workPool.submit(Callable {
         return@Callable fn()
     }).get()
 
-    private fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
+    fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
         var lastException: Exception? = null
         var i = 0
         while (i++ < retryCount) {
@@ -65,16 +102,7 @@ open class HttpClientManager(
                 this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + e.message)
                 Thread.sleep(e.delay)
             } catch (e: Exception) {
-                val modelMaxException = modelMaxException(e)
-                if (null != modelMaxException) throw modelMaxException
-                val rateLimitException = rateLimitException(e)
-                if (null != rateLimitException) throw rateLimitException
-                val apiKeyException = apiKeyException(e)
-                if (null != apiKeyException) throw apiKeyException
-                val quotaException = quotaLimitException(e)
-                if (null != quotaException) throw quotaException
-                val invalidModelException = invalidModelException(e)
-                if (null != invalidModelException) throw invalidModelException
+                onException(e)
                 lastException = e
                 this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + e.message)
                 Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
@@ -83,165 +111,79 @@ open class HttpClientManager(
         throw lastException!!
     }
 
-    private fun modelMaxException(e: Throwable?): ModelMaxException? {
-        if (e == null) return null
-        if (e is ModelMaxException) return e
-        if (e.cause != null && e.cause != e) return modelMaxException(e.cause)
-        return null
+    protected open fun onException(e: Exception) {
+        val modelMaxException = modelMaxException(e)
+        if (null != modelMaxException) throw modelMaxException
+        val rateLimitException = rateLimitException(e)
+        if (null != rateLimitException) throw rateLimitException
+        val apiKeyException = apiKeyException(e)
+        if (null != apiKeyException) throw apiKeyException
+        val quotaException = quotaLimitException(e)
+        if (null != quotaException) throw quotaException
+        val invalidModelException = invalidModelException(e)
+        if (null != invalidModelException) throw invalidModelException
     }
 
-    private fun rateLimitException(e: Throwable?): RateLimitException? {
-        if (e == null) return null
-        if (e is RateLimitException) return e
-        if (e.cause != null && e.cause != e) return rateLimitException(e.cause)
-        return null
-    }
+    open fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient = newClient()
 
-    private fun quotaLimitException(e: Throwable?): QuotaException? {
-        if (e == null) return null
-        if (e is QuotaException) return e
-        if (e.cause != null && e.cause != e) return quotaLimitException(e.cause)
-        return null
-    }
+    open fun newClient(): CloseableHttpClient = HttpClientBuilder.create()
+        .setDefaultRequestConfig(
+            RequestConfig.custom()
+                .setResponseTimeout(Timeout.ofSeconds(0))
+                .setConnectionRequestTimeout(Timeout.ofSeconds(0))
+                .build()
+        )
+        .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
+        .setConnectionManager(with(PoolingHttpClientConnectionManager()) {
+            setDefaultConnectionConfig(
+                ConnectionConfig.custom()
+                    .setConnectTimeout(Timeout.ofSeconds(30))
+                    .build()
+            )
+            defaultMaxPerRoute = 1
+            maxTotal = 1
+            this
+        })
+        .build()
 
-    private fun invalidModelException(e: Throwable?): InvalidModelException? {
-        if (e == null) return null
-        if (e is InvalidModelException) return e
-        if (e.cause != null && e.cause != e) return invalidModelException(e.cause)
-        return null
-    }
-
-    private fun apiKeyException(e: Throwable?): IOException? {
-        if (e == null) return null
-        if (e is IOException && true == e.message?.contains("Incorrect API key")) return e
-        if (e.cause != null && e.cause != e) return apiKeyException(e.cause)
-        return null
-    }
-
-    protected val clients: MutableMap<Thread, CloseableHttpClient> = WeakHashMap()
-    open fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient =
-        if (thread in clients) clients[thread]!!
-        else synchronized(clients) {
-            val client = newClient()
-            clients[thread] = client
-            client
-        }
-
-    open fun newClient(): CloseableHttpClient {
-        val connectionConfig = ConnectionConfig.custom()
-            .setConnectTimeout(Timeout.ofSeconds(30))
-            .build()
-        val requestConfig = RequestConfig.custom()
-            .setResponseTimeout(Timeout.ofSeconds(120))
-            .setConnectionRequestTimeout(Timeout.ofSeconds(30))
-            .build()
-        val connectionManager = PoolingHttpClientConnectionManager()
-        connectionManager.setDefaultConnectionConfig(connectionConfig)
-        connectionManager.defaultMaxPerRoute = 1
-        connectionManager.maxTotal = 1
-        return HttpClientBuilder.create()
-            .setDefaultRequestConfig(requestConfig)
-            .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
-            .setConnectionManager(connectionManager)
-            .build()
-    }
-
-    private fun closeClient(thread: Thread) {
-        try {
-            synchronized(clients) {
-                clients[thread]
-            }?.close()
-            thread.interrupt()
-        } catch (e: IOException) {
-            log(Level.DEBUG, "Error closing client: " + e.message)
-        }
-    }
-
-    private fun <T> withCancellationMonitor(fn: () -> T): T {
-        val currentThread = Thread.currentThread()
-        return withCancellationMonitor(fn) { currentThread.isInterrupted }
-    }
-
-    private fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
-        val threads = HashSet<Thread>()
-        threads.add(Thread.currentThread())
+    fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
+        var thread = Thread.currentThread()
         val start = Date()
+        log(Level.DEBUG, "Request started at ${Date()}; monitoring for cancellation for thread $thread")
         val cancellationFuture = scheduledPool.scheduleAtFixedRate({
             if (cancelCheck()) {
-                log(Level.DEBUG, "Request cancelled at ${Date()} (started $start); closing client for thread $threads")
-                threads.forEach { closeClient(it) }
+                log(Level.DEBUG, "Request cancelled at ${Date()} (started $start); closing client for thread $thread")
+                thread.interrupt()
             }
-        }, 0, 10, TimeUnit.MILLISECONDS)
+        }, 0, 100, TimeUnit.MILLISECONDS)
         try {
-            return runAsync(threads, fn)
+            return withPool { fn() }
         } finally {
             cancellationFuture.cancel(false)
         }
     }
 
-    private fun <T> withTimeout(duration: Duration, fn: () -> T): T {
-        val threads = HashSet<Thread>()
-        val currentThread = Thread.currentThread()
-        threads.add(currentThread)
-        val isTimeout = AtomicBoolean(false)
+    fun <T> withTimeout(duration: Duration, fn: () -> T): T {
+        var thread = Thread.currentThread()
         val start = Date()
         val cancellationFuture = scheduledPool.schedule({
             log(
                 Level.DEBUG,
-                "Request timed out after $duration at ${Date()} (started $start); closing client for thread $threads"
+                "Request timed out after $duration at ${Date()} (started $start); closing client for thread $thread"
             )
-            isTimeout.set(true)
-            threads.forEach { closeClient(it) }
+            thread.interrupt()
         }, duration.toMillis(), TimeUnit.MILLISECONDS)
         try {
-            return fn()
-        } catch (ex: InterruptedException) {
-            if (!isTimeout.get()) throw ex
-            throw RuntimeException(ex)
+            return withPool { fn() }
         } finally {
-            threads.remove(currentThread)
             cancellationFuture.cancel(false)
         }
     }
 
+    fun <T> withReliability(requestTimeoutSeconds: Long = (5 * 60), retryCount: Int = 3, fn: () -> T): T =
+        withExpBackoffRetry(retryCount) { withTimeout(Duration.ofSeconds(requestTimeoutSeconds), fn) }
 
-    private fun <T> runAsync(
-        threads: MutableSet<Thread>,
-        fn: () -> T
-    ): T {
-        val isDone = Semaphore(0)
-        log.debug("Async request started")
-        val future = workPool.submit(Callable<T> {
-            val currentThread = Thread.currentThread()
-            try {
-                threads.add(currentThread)
-                log.debug("Async request started; running {}", fn)
-                fn()
-            } finally {
-                threads.remove(currentThread)
-                isDone.release()
-                log.debug("Async request completed; isDone ${System.identityHashCode(isDone)} released")
-            }
-        })
-        try {
-            isDone.acquire()
-            log.debug("Async request completed; getting value")
-            val get = future.get()
-            log.debug("Async request completed; got value")
-            return get
-        } finally {
-            log.debug("Async request completed")
-        }
-    }
-
-    protected fun <T> withReliability(requestTimeoutSeconds: Long = (5 * 60), retryCount: Int = 3, fn: () -> T): T =
-        withExpBackoffRetry(retryCount) {
-            withTimeout(Duration.ofSeconds(requestTimeoutSeconds)) {
-                withCancellationMonitor(fn)
-            }
-        }
-
-    protected fun <T> withPerformanceLogging(fn: () -> T): T {
+    fun <T> withPerformanceLogging(fn: () -> T): T {
         val start = Date()
         try {
             return fn()
@@ -250,21 +192,7 @@ open class HttpClientManager(
         }
     }
 
-    protected fun <T> withClient(fn: java.util.function.Function<CloseableHttpClient, T>): T {
-        val client = getClient()
-        try {
-            synchronized(clients) {
-                clients[Thread.currentThread()] = client
-            }
-            client.use { httpClient ->
-                return fn.apply(httpClient)
-            }
-        } finally {
-            synchronized(clients) {
-                clients.remove(Thread.currentThread())
-            }
-        }
-    }
+    fun <T> withClient(fn: Function<CloseableHttpClient, T>): T = getClient().use { return fn.apply(it) }
 
     protected open fun log(level: Level = logLevel, msg: String) {
         val message = msg.trim().replace("\n", "\n\t")
@@ -276,7 +204,7 @@ open class HttpClientManager(
             Level.TRACE -> log.debug(message)
             else -> log.debug(message)
         }
-        auxillaryLogOutputStream.forEach { auxillaryLogOutputStream ->
+        auxiliaryLogOutputStream.forEach { auxillaryLogOutputStream ->
             auxillaryLogOutputStream.write(
                 "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${
                     message.replace(

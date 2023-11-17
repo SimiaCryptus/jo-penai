@@ -295,10 +295,9 @@ open class OpenAIClient(
                 val response = withClient { it.execute(httpRequest).entity }
                 val contentType = response.contentType
                 if(contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
-                    val responseMessage = response.content.readAllBytes().toString(Charsets.UTF_8)
-                    checkError(responseMessage)
+                    checkError(response.content.readAllBytes().toString(Charsets.UTF_8))
                 } else {
-                    FileOutputStream(outputFile).use { it.write(response.content.readAllBytes()) } // <-- Error
+                    FileOutputStream(outputFile).use { it.write(response.content.readAllBytes()) }
                 }
             }
         }
