@@ -4,6 +4,7 @@ import com.simiacryptus.openai.models.OpenAIModel
 import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
+import com.simiacryptus.openai.models.OpenAITextModel
 import com.simiacryptus.openai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.util.describe.Description
@@ -15,7 +16,7 @@ import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
-    val model: OpenAIModel = ChatModels.GPT35Turbo,
+    val model: OpenAITextModel = ChatModels.GPT35Turbo,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,

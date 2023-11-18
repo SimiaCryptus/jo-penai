@@ -1,9 +1,10 @@
 package com.simiacryptus.openai.models
 
 @Suppress("unused")
-enum class ImageModels(
+enum class AudioModels(
     override val modelName: String,
 ) : OpenAIModel {
-    DallE2("dall-e-2"),
-    DallE3("dall-e-3");
+    Whisper("whisper-1"),
+    TTS("tts-1"),
+    TTS_HD("tts-1-hd");
 }

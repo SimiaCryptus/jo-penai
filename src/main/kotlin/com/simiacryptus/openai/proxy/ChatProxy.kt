@@ -5,13 +5,14 @@ import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.openai.OpenAIClient.*
 import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
+import com.simiacryptus.openai.models.OpenAITextModel
 import com.simiacryptus.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
 
 open class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
-    var model: OpenAIModel = ChatModels.GPT35Turbo,
+    var model: OpenAITextModel = ChatModels.GPT35Turbo,
     temperature: Double = 0.7,
     private var verbose: Boolean = false,
     private val moderated: Boolean = true,
@@ -22,7 +23,7 @@ open class ChatProxy<T : Any>(
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
         api = params["api"] as OpenAIClient? ?: OpenAIClient(),
-        model = params["model"] as OpenAIModel? ?: ChatModels.GPT35Turbo,
+        model = params["model"] as OpenAITextModel? ?: ChatModels.GPT35Turbo,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,

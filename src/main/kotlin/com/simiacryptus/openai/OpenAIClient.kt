@@ -127,8 +127,14 @@ open class OpenAIClient(
     )
 
     private class TruncatedModel(
-        override val modelName: String, override val maxTokens: Int
-    ) : OpenAITextModel
+        val parent: OpenAITextModel,
+        override val maxTokens: Int,
+        override val modelName: String = parent.modelName
+    ) : OpenAITextModel {
+        override fun pricing(usage: Usage): Double {
+            return parent.pricing(usage)
+        }
+    }
 
     private val codex = GPT4Tokenizer(false)
 
@@ -180,7 +186,7 @@ open class OpenAIClient(
                 }
             }
         } catch (e: ModelMaxException) {
-            return complete(request2, TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1))
+            return complete(request2, TruncatedModel(model, (e.modelMax - e.messages) - 1))
         }
     }
 
@@ -392,7 +398,7 @@ open class OpenAIClient(
     )
 
     open fun chat(
-        chatRequest: ChatRequest, model: OpenAIModel
+        chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         try {
             return withReliability {
@@ -422,7 +428,7 @@ open class OpenAIClient(
         } catch (e: ModelMaxException) {
             return chat(
                 chatRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
-                TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1)
+                TruncatedModel(model, (e.modelMax - e.messages) - 1)
             )
         }
     }
