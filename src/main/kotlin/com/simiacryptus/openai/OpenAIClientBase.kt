@@ -66,9 +66,9 @@ open class OpenAIClientBase(
             set(value) {
                 _keyTxt = value
             }
-        fun String.toContentList() = this.split("\n").map { OpenAIClient.ContentPart(text = it,type = "text") }
+        fun String.toContentList() = listOf(this).map { OpenAIClient.ContentPart(text = it,type = "text") }
 
-        val log = LoggerFactory.getLogger(OpenAIClientBase::class.java)
+        private val log = LoggerFactory.getLogger(OpenAIClientBase::class.java)
         val allowedCharset: Charset = Charset.forName("ASCII")
         val maxTokenErrorMessage = listOf(
             Pattern.compile(

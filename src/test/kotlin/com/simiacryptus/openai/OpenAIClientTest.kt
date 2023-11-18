@@ -28,7 +28,7 @@ import javax.imageio.ImageIO
 class OpenAIClientTest {
 
     companion object {
-        val log = LoggerFactory.getLogger(OpenAIClientTest::class.java)
+        private val log = LoggerFactory.getLogger(OpenAIClientTest::class.java)
         fun convert(imageFile: File, colorModel: Int): File {
             val originalImage: BufferedImage = ImageIO.read(imageFile)
             val rgbaImage = BufferedImage(

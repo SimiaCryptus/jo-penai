@@ -227,7 +227,7 @@ open class PromptOptimization(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(PromptOptimization::class.java)
+        private val log = LoggerFactory.getLogger(PromptOptimization::class.java)
     }
 
 }

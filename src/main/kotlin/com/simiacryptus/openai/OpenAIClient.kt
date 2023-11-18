@@ -399,38 +399,36 @@ open class OpenAIClient(
 
     open fun chat(
         chatRequest: ChatRequest, model: OpenAITextModel
-    ): ChatResponse {
-        try {
-            return withReliability {
-                withPerformanceLogging {
-                    chatCounter.incrementAndGet()
-                    val reqJson =
-                        JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-                    log(
-                        msg = String.format(
-                            "Chat Request\nPrefix:\n\t%s\n", reqJson.replace("\n", "\n\t")
-                        )
+    ): ChatResponse = try {
+        withReliability {
+            withPerformanceLogging {
+                chatCounter.incrementAndGet()
+                val reqJson =
+                    JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+                log(
+                    msg = String.format(
+                        "Chat Request\nPrefix:\n\t%s\n", reqJson.replace("\n", "\n\t")
                     )
+                )
 
-                    val jsonRequest = JsonUtil.objectMapper().writeValueAsString(chatRequest)
-                    val result = post("$apiBase/chat/completions", jsonRequest)
-                    checkError(result)
-                    val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
-                    if (response.usage != null) {
-                        incrementTokens(model, response.usage)
-                    }
-                    log(msg = String.format("Chat Completion:\n\t%s",
-                        response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
-                            ?: JsonUtil.toJson(response)))
-                    response
+                val jsonRequest = JsonUtil.objectMapper().writeValueAsString(chatRequest)
+                val result = post("$apiBase/chat/completions", jsonRequest)
+                checkError(result)
+                val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
+                if (response.usage != null) {
+                    incrementTokens(model, response.usage)
                 }
+                log(msg = String.format("Chat Completion:\n\t%s",
+                    response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
+                        ?: JsonUtil.toJson(response)))
+                response
             }
-        } catch (e: ModelMaxException) {
-            return chat(
-                chatRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
-                TruncatedModel(model, (e.modelMax - e.messages) - 1)
-            )
         }
+    } catch (e: ModelMaxException) {
+        chat(
+            chatRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
+            TruncatedModel(model, (e.modelMax - e.messages) - 1)
+        )
     }
 
     open fun moderate(text: String) = withReliability {
@@ -484,7 +482,6 @@ open class OpenAIClient(
     open fun edit(
         editRequest: EditRequest
     ): CompletionResponse = withReliability {
-
         withPerformanceLogging {
             editCounter.incrementAndGet()
             if (editRequest.input == null) {

@@ -105,7 +105,7 @@ open class ChatProxy<T : Any>(
 
     companion object {
 
-        val log = org.slf4j.LoggerFactory.getLogger(ChatProxy::class.java)
+        private val log = org.slf4j.LoggerFactory.getLogger(ChatProxy::class.java)
         private fun trimPrefix(completion: String): Pair<String, String> {
             val start = completion.indexOf('{').coerceAtMost(completion.indexOf('['))
             return if (start < 0) {

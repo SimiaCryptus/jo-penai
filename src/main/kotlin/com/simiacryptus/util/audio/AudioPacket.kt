@@ -67,7 +67,7 @@ data class AudioPacket(
 
     companion object {
         // Create a Logger instance for the AudioPump class
-        val log = LoggerFactory.getLogger(AudioPacket::class.java)
+        private val log = LoggerFactory.getLogger(AudioPacket::class.java)
 
         fun spectralEntropy(floats: FloatArray): Double {
             val fft = fft(floats)

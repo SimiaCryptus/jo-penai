@@ -65,7 +65,7 @@ class PercentileLoudnessWindowBuffer(
             quietWindow.clear()
         }
         // Log the RMS value, percentile, and quiet windows
-        AudioRecorder.log.debug(
+        log.debug(
             "Loudness: %.3f, percentile: %.3f, quiet windows=[%s] (%d samples)".format(
                 loudness,
                 percentile,
@@ -95,7 +95,7 @@ class PercentileLoudnessWindowBuffer(
 
     companion object {
         // Create a Logger instance for the AudioPump class
-        val log = LoggerFactory.getLogger(PercentileLoudnessWindowBuffer::class.java)
+        private val log = LoggerFactory.getLogger(PercentileLoudnessWindowBuffer::class.java)
     }
 
 }

@@ -158,7 +158,7 @@ abstract class GPTProxyBase<T : Any>(
     )
 
     companion object {
-        val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
+        private val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
 
 
         // If the requested `type` is a list, and jsonResult is not a list:

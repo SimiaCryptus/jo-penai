@@ -46,7 +46,7 @@ abstract class LoudnessWindowBuffer(
 
     companion object {
         // Create a Logger instance for the AudioPump class
-        val log = LoggerFactory.getLogger(LoudnessWindowBuffer::class.java)
+        private val log = LoggerFactory.getLogger(LoudnessWindowBuffer::class.java)
 
     }
 

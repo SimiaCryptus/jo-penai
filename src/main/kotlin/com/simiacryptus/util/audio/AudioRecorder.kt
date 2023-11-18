@@ -44,7 +44,7 @@ class AudioRecorder(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(AudioRecorder::class.java)
+        private val log = LoggerFactory.getLogger(AudioRecorder::class.java)
 
         val audioFormat = AudioFormat(16000f, 16, 1, true, false)
 
