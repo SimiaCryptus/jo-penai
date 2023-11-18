@@ -72,7 +72,9 @@ open class OpenAIClient(
 
 
     data class Usage(
-        val prompt_tokens: Int = 0, val completion_tokens: Int = 0, val total_tokens: Int = 0
+        val prompt_tokens: Int = 0,
+        val completion_tokens: Int = 0,
+        val total_tokens: Int = 0
     )
 
 
@@ -166,7 +168,7 @@ open class OpenAIClient(
                         result, CompletionResponse::class.java
                     )
                     if (response.usage != null) {
-                        incrementTokens(model, response.usage.total_tokens)
+                        incrementTokens(model, response.usage)
                     }
                     val completionResult =
                         StringUtil.stripPrefix(response.firstChoice.orElse("").toString().trim { it <= ' ' },
@@ -339,6 +341,7 @@ open class OpenAIClient(
         val max_tokens: Int? = null,
         val stop: List<CharSequence>? = listOf(),
         val function_call: String? = null,
+        val response_format: Map<String, Any>? = null,
         val n: Int? = null,
         val functions: List<RequestFunction>? = null,
     )
@@ -410,7 +413,7 @@ open class OpenAIClient(
                     checkError(result)
                     val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
                     if (response.usage != null) {
-                        incrementTokens(model, response.usage.total_tokens)
+                        incrementTokens(model, response.usage)
                     }
                     log(msg = String.format("Chat Completion:\n\t%s",
                         response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
@@ -505,7 +508,7 @@ open class OpenAIClient(
             )
             if (response.usage != null) {
                 incrementTokens(
-                    ChatModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage.total_tokens
+                    ChatModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage
                 )
             }
             log(msg = String.format("Chat Completion:\n\t%s",
@@ -607,7 +610,7 @@ open class OpenAIClient(
                 )
                 if (response.usage != null) {
                     incrementTokens(
-                        ChatModels.values().find { it.modelName.equals(request.model, true) }, response.usage.total_tokens
+                        ChatModels.values().find { it.modelName.equals(request.model, true) }, response.usage
                     )
                 }
                 response

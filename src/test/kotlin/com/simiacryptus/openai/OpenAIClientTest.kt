@@ -5,8 +5,8 @@ import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
 import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.models.CompletionModels
 import com.simiacryptus.openai.models.EditModels
-import com.simiacryptus.openai.models.EmbeddingModels
-import com.simiacryptus.openai.models.EmbeddingModels.*
+import com.simiacryptus.openai.models.EmbeddingModels.AdaEmbedding
+import com.simiacryptus.openai.models.ImageModels
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.audio.PercentileLoudnessWindowBuffer
@@ -43,7 +43,7 @@ class OpenAIClientTest {
         }
 
         const val imageSize = "512x512"
-        const val imageModel = "dall-e-2"
+        val imageModel = ImageModels.DallE2.modelName
     }
 
     @Test
@@ -88,6 +88,64 @@ class OpenAIClientTest {
     }
 
     @Test
+    fun testJsonChat() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val model = ChatModels.GPT4Turbo
+        val request = ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ChatMessage(
+                        Role.system,
+                        "You are a spiritual teacher that responds to all questions in JSON format".toContentList()
+                    ),
+                    ChatMessage(Role.user, "What is the meaning of life?".toContentList()),
+                )
+            ),
+            response_format = mapOf("type" to "json_object")
+        )
+        val chatResponse = client.chat(request, model)
+        println(chatResponse.choices.first().message?.content ?: "No response")
+    }
+
+    @Test
+    fun testImageChat() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val imageUrl = client.createImage(
+            ImageGenerationRequest(
+                prompt = "A cute baby sea otter",
+                model = imageModel,
+                n = 1,
+                size = imageSize
+            )
+        ).data.first().url
+        val model = ChatModels.GPT4Vision
+        val request = ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ChatMessage(
+                        Role.system,
+                        "You are an image description service".toContentList()
+                    ),
+                    ChatMessage(
+                        Role.user,
+                        listOf(
+                            ContentPart(text = "Please describe this image", type = "text"),
+                            ContentPart(image_url = imageUrl, type = "image_url")
+                        )
+                    ),
+                )
+            ),
+            stop = listOf("###")
+        )
+        val chatResponse = client.chat(request, model)
+        println(chatResponse.choices.first().message?.content ?: "No response")
+    }
+
+    @Test
     fun testRender() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
@@ -101,14 +159,14 @@ class OpenAIClientTest {
     fun testCreateImage() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val imageRequest = ImageGenerationRequest(
-            prompt = "A cute baby sea otter",
-            model = imageModel,
-            n = 1,
-            size = imageSize
-        )
-        val imageResponse = client.createImage(imageRequest)
-        val imageUrl = imageResponse.data.first().url
+        val imageUrl = client.createImage(
+            ImageGenerationRequest(
+                prompt = "A cute baby sea otter",
+                model = imageModel,
+                n = 1,
+                size = imageSize
+            )
+        ).data.first().url
         val image: BufferedImage = ImageIO.read(URL(imageUrl))
         val tempFile = File.createTempFile("test", ".png")
         ImageIO.write(image, "png", tempFile)
@@ -248,7 +306,10 @@ class OpenAIClientTest {
         assertTrue((bytes?.size ?: 0) > 0)
         val tempFile = File.createTempFile("test", ".mp3")
         Files.write(Paths.get(tempFile.toURI()), bytes!!)
-        try { Desktop.getDesktop().browse(tempFile.toURI()) } catch (e: Throwable) {/*ignore*/ }
+        try {
+            Desktop.getDesktop().browse(tempFile.toURI())
+        } catch (e: Throwable) {/*ignore*/
+        }
     }
 
 }

@@ -28,8 +28,8 @@ open class OpenAIClientBase(
 
     private val tokenCounter = AtomicInteger(0)
 
-    open fun incrementTokens(model: OpenAIModel?, tokens: Int) {
-        tokenCounter.addAndGet(tokens)
+    open fun incrementTokens(model: OpenAIModel?, tokens: OpenAIClient.Usage) {
+        tokenCounter.addAndGet(tokens.total_tokens)
     }
 
     open val metrics: Map<String, Any>
