@@ -1,5 +1,6 @@
 package com.simiacryptus.openai
 
+import com.simiacryptus.util.HttpClientManager
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.apache.hc.client5.http.classic.methods.HttpGet

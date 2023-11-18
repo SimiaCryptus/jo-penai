@@ -1,6 +1,6 @@
 package com.simiacryptus.openai.opt
 
-import com.simiacryptus.openai.Models
+import com.simiacryptus.openai.models.EmbeddingModels
 import com.simiacryptus.openai.OpenAIClient
 import org.slf4j.LoggerFactory
 
@@ -30,7 +30,7 @@ abstract class Expectation {
 
         private fun createEmbedding(api: OpenAIClient, str: String) = api.createEmbedding(
             OpenAIClient.EmbeddingRequest(
-                model = Models.AdaEmbedding.modelName, input = str
+                model = EmbeddingModels.AdaEmbedding.modelName, input = str
             )
         ).data.first().embedding!!
     }

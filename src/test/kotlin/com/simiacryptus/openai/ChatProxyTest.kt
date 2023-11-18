@@ -1,5 +1,6 @@
 package com.simiacryptus.openai
 
+import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.proxy.ChatProxy
 import com.simiacryptus.util.describe.Description
 import com.simiacryptus.openai.proxy.ValidatedObject
@@ -152,7 +153,7 @@ class ChatProxyTest {
     fun testDemo7() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(OpenAIClientBase.keyTxt))
-        gptProxy.model = Models.GPT35Turbo
+        gptProxy.model = ChatModels.GPT35Turbo
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
         val mathOutput = solver.solveMathProblem(mathInput)

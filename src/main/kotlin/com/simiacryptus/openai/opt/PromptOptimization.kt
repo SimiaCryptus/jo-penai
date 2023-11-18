@@ -1,7 +1,7 @@
 package com.simiacryptus.openai.opt
 
-import com.simiacryptus.openai.Model
-import com.simiacryptus.openai.Models
+import com.simiacryptus.openai.models.OpenAIModel
+import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.OpenAIClient
 import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
 import com.simiacryptus.openai.opt.PromptOptimization.GeneticApi.Prompt
@@ -15,7 +15,7 @@ import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
-    val model: Model = Models.GPT35Turbo,
+    val model: OpenAIModel = ChatModels.GPT35Turbo,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,

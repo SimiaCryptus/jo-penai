@@ -1,4 +1,4 @@
-package com.simiacryptus.openai
+package com.simiacryptus.openai.exceptions
 
 import java.io.IOException
 

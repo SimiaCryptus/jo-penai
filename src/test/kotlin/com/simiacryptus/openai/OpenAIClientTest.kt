@@ -1,8 +1,12 @@
 package com.simiacryptus.openai
 
-import com.simiacryptus.openai.OpenAIClient.ChatMessage
-import com.simiacryptus.openai.OpenAIClient.Role
+import com.simiacryptus.openai.OpenAIClient.*
 import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
+import com.simiacryptus.openai.models.ChatModels
+import com.simiacryptus.openai.models.CompletionModels
+import com.simiacryptus.openai.models.EditModels
+import com.simiacryptus.openai.models.EmbeddingModels
+import com.simiacryptus.openai.models.EmbeddingModels.*
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.audio.PercentileLoudnessWindowBuffer
@@ -46,8 +50,8 @@ class OpenAIClientTest {
     fun testCompletion() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.CompletionRequest(prompt = "This is a test! This")
-        val completion = client.complete(request, Models.DaVinci)
+        val request = CompletionRequest(prompt = "This is a test! This")
+        val completion = client.complete(request, CompletionModels.DaVinci)
         println(completion.choices.first().text)
     }
 
@@ -56,10 +60,10 @@ class OpenAIClientTest {
         // Doesn't seem to work right now... Wrong model error!?!?
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.EditRequest(
+        val request = EditRequest(
             input = "This is a test!",
             instruction = "Rewrite as an epic novel",
-            model = Models.DaVinciEdit.modelName
+            model = EditModels.DaVinciEdit.modelName
         )
         val completion = client.edit(request)
         println(completion.choices.first().text)
@@ -69,8 +73,8 @@ class OpenAIClientTest {
     fun testChat() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val model = Models.GPT35Turbo
-        val request = OpenAIClient.ChatRequest(
+        val model = ChatModels.GPT35Turbo
+        val request = ChatRequest(
             model = model.modelName,
             messages = ArrayList(
                 listOf(
@@ -97,7 +101,7 @@ class OpenAIClientTest {
     fun testCreateImage() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val imageRequest = OpenAIClient.ImageGenerationRequest(
+        val imageRequest = ImageGenerationRequest(
             prompt = "A cute baby sea otter",
             model = imageModel,
             n = 1,
@@ -117,7 +121,7 @@ class OpenAIClientTest {
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
 
         val imageUrl = client.createImage(
-            OpenAIClient.ImageGenerationRequest(
+            ImageGenerationRequest(
                 prompt = "A picture of a helpful robot",
                 model = imageModel,
                 n = 1,
@@ -129,7 +133,7 @@ class OpenAIClientTest {
         Desktop.getDesktop().browse(createdImage.toURI())
 
         client.createImageEdit(
-            OpenAIClient.ImageEditRequest(
+            ImageEditRequest(
                 image = convert(createdImage, BufferedImage.TYPE_INT_ARGB),
                 prompt = "Watercolor painting",
                 mask = null,
@@ -148,7 +152,7 @@ class OpenAIClientTest {
     fun testGenerateAndVaryImage() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val imageGenerationRequest = OpenAIClient.ImageGenerationRequest(
+        val imageGenerationRequest = ImageGenerationRequest(
             prompt = "A futuristic cityscape at night",
             model = imageModel,
             n = 1,
@@ -163,7 +167,7 @@ class OpenAIClientTest {
         Desktop.getDesktop().browse(generatedImageFile.toURI())
 
         // Define the image edit request
-        val imageEditRequest = OpenAIClient.ImageVariationRequest(
+        val imageEditRequest = ImageVariationRequest(
             image = convert(generatedImageFile, BufferedImage.TYPE_INT_ARGB),
             //model = "dall-e-3",
             n = 1,
@@ -230,7 +234,7 @@ class OpenAIClientTest {
     fun testEmbedding() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.EmbeddingRequest(model = Models.AdaEmbedding.modelName, input = "This is a test!")
+        val request = EmbeddingRequest(model = AdaEmbedding.modelName, input = "This is a test!")
         val embedding = client.createEmbedding(request)
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
     }
@@ -239,12 +243,12 @@ class OpenAIClientTest {
     fun testCreateSpeech() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val speechRequest = OpenAIClient.SpeechRequest("The quick brown fox jumped over the lazy dog.",)
+        val speechRequest = SpeechRequest("The quick brown fox jumped over the lazy dog.")
         val bytes = client.createSpeech(speechRequest)
         assertTrue((bytes?.size ?: 0) > 0)
         val tempFile = File.createTempFile("test", ".mp3")
         Files.write(Paths.get(tempFile.toURI()), bytes!!)
-        Desktop.getDesktop().browse(tempFile.toURI())
+        try { Desktop.getDesktop().browse(tempFile.toURI()) } catch (e: Throwable) {/*ignore*/ }
     }
 
 }

@@ -4,6 +4,11 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.simiacryptus.openai.exceptions.ModelMaxException
+import com.simiacryptus.openai.exceptions.ModerationException
+import com.simiacryptus.openai.models.ChatModels
+import com.simiacryptus.openai.models.OpenAIModel
+import com.simiacryptus.openai.models.OpenAITextModel
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpPost
@@ -16,14 +21,13 @@ import org.slf4j.event.Level
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
 import javax.imageio.ImageIO
 
 
-@Suppress("PropertyName", "SpellCheckingInspection")
+@Suppress("PropertyName", "SpellCheckingInspection", "unused")
 open class OpenAIClient(
     key: String = keyTxt,
     private val apiBase: String = "https://api.openai.com/v1",
@@ -49,14 +53,11 @@ open class OpenAIClient(
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
-
             other as LogProbs
-
             if (tokens != other.tokens) return false
             if (!token_logprobs.contentEquals(other.token_logprobs)) return false
             if (top_logprobs != other.top_logprobs) return false
             if (!text_offset.contentEquals(other.text_offset)) return false
-
             return true
         }
 
@@ -127,12 +128,12 @@ open class OpenAIClient(
 
     private class TruncatedModel(
         override val modelName: String, override val maxTokens: Int
-    ) : Model
+    ) : OpenAITextModel
 
     private val codex = GPT4Tokenizer(false)
 
     open fun complete(
-        request: CompletionRequest, model: Model
+        request: CompletionRequest, model: OpenAITextModel
     ): CompletionResponse {
         val request2 = request.copy(max_tokens = model.maxTokens - codex.estimateTokenCount(request.prompt))
         try {
@@ -390,7 +391,7 @@ open class OpenAIClient(
     )
 
     open fun chat(
-        chatRequest: ChatRequest, model: Model
+        chatRequest: ChatRequest, model: OpenAIModel
     ): ChatResponse {
         try {
             return withReliability {
@@ -454,10 +455,12 @@ open class OpenAIClient(
             val moderationResult = jsonObject.getAsJsonArray("results")[0].asJsonObject
             if (moderationResult["flagged"].asBoolean) {
                 val categoriesObj = moderationResult["categories"].asJsonObject
-                throw RuntimeException(ModerationException("Moderation flagged this request due to " + categoriesObj.keySet()
+                throw RuntimeException(
+                    ModerationException("Moderation flagged this request due to " + categoriesObj.keySet()
                     .stream().filter { c: String? ->
                         categoriesObj[c].asBoolean
-                    }.reduce { a: String, b: String -> "$a, $b" }.orElse("???")))
+                    }.reduce { a: String, b: String -> "$a, $b" }.orElse("???"))
+                )
             }
         }
     }
@@ -502,7 +505,7 @@ open class OpenAIClient(
             )
             if (response.usage != null) {
                 incrementTokens(
-                    Models.values().find { it.modelName.equals(editRequest.model, true) }, response.usage.total_tokens
+                    ChatModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage.total_tokens
                 )
             }
             log(msg = String.format("Chat Completion:\n\t%s",
@@ -604,7 +607,7 @@ open class OpenAIClient(
                 )
                 if (response.usage != null) {
                     incrementTokens(
-                        Models.values().find { it.modelName.equals(request.model, true) }, response.usage.total_tokens
+                        ChatModels.values().find { it.modelName.equals(request.model, true) }, response.usage.total_tokens
                     )
                 }
                 response
