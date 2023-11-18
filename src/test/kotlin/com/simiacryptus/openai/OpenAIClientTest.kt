@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
 
 
-
 class OpenAIClientTest {
 
     companion object {
@@ -133,13 +132,12 @@ class OpenAIClientTest {
             OpenAIClient.ImageEditRequest(
                 image = convert(createdImage, BufferedImage.TYPE_INT_ARGB),
                 prompt = "Watercolor painting",
-                mask = null as Nothing?, // Optional, can be null
+                mask = null,
                 n = 2,
                 size = imageSize
             )
         ).data.forEachIndexed { index, imageObject ->
-            val imageUrl = imageObject.url
-            val image: BufferedImage = ImageIO.read(URL(imageUrl))
+            val image: BufferedImage = ImageIO.read(URL(imageObject.url))
             val tempFile = File.createTempFile("test_edit_$index", ".png")
             ImageIO.write(image, "png", tempFile)
             Desktop.getDesktop().browse(tempFile.toURI())
@@ -220,7 +218,6 @@ class OpenAIClientTest {
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
 
-
     @Test
     fun testListEngines() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
@@ -238,22 +235,16 @@ class OpenAIClientTest {
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
     }
 
-
     @Test
     fun testCreateSpeech() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val speechRequest = OpenAIClient.SpeechRequest(
-            model = "tts-1",
-            input = "The quick brown fox jumped over the lazy dog.",
-            voice = "alloy"
-        )
-        val outputFile = "test_speech_output.mp3"
-        client.createSpeech(speechRequest, outputFile)
-        val outputFileExists = Files.exists(Paths.get(outputFile))
-        val outputFileIsNotEmpty = File(outputFile).length() > 0
-        File(outputFile).delete()
-        assertTrue(outputFileExists, "The output file should exist.")
-        assertTrue(outputFileIsNotEmpty, "The output file should not be empty.")
+        val speechRequest = OpenAIClient.SpeechRequest("The quick brown fox jumped over the lazy dog.",)
+        val bytes = client.createSpeech(speechRequest)
+        assertTrue((bytes?.size ?: 0) > 0)
+        val tempFile = File.createTempFile("test", ".mp3")
+        Files.write(Paths.get(tempFile.toURI()), bytes!!)
+        Desktop.getDesktop().browse(tempFile.toURI())
     }
+
 }

@@ -277,28 +277,27 @@ open class OpenAIClient(
     }
 
     data class SpeechRequest(
-        val model: String,
         val input: String,
-        val voice: String,
+        val model: String = "tts-1",
+        val voice: String = "alloy",
         val response_format: String? = "mp3",
         val speed: Double? = 1.0
     )
 
-    open fun createSpeech(request: SpeechRequest, outputFile: String) {
-        withReliability {
-            withPerformanceLogging {
-                val httpRequest = HttpPost("$apiBase/audio/speech")
-                authorize(httpRequest)
-                httpRequest.addHeader("Accept", "application/json")
-                httpRequest.addHeader("Content-Type", "application/json")
-                httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request))
-                val response = withClient { it.execute(httpRequest).entity }
-                val contentType = response.contentType
-                if(contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
-                    checkError(response.content.readAllBytes().toString(Charsets.UTF_8))
-                } else {
-                    FileOutputStream(outputFile).use { it.write(response.content.readAllBytes()) }
-                }
+    open fun createSpeech(request: SpeechRequest) : ByteArray? = withReliability {
+        withPerformanceLogging {
+            val httpRequest = HttpPost("$apiBase/audio/speech")
+            authorize(httpRequest)
+            httpRequest.addHeader("Accept", "application/json")
+            httpRequest.addHeader("Content-Type", "application/json")
+            httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request))
+            val response = withClient { it.execute(httpRequest).entity }
+            val contentType = response.contentType
+            if(contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
+                checkError(response.content.readAllBytes().toString(Charsets.UTF_8))
+                null
+            } else {
+                response.content.readAllBytes()
             }
         }
     }
