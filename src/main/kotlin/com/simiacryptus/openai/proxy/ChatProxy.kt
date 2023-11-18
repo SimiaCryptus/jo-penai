@@ -1,17 +1,17 @@
 package com.simiacryptus.openai.proxy
 
-import com.simiacryptus.openai.Model
-import com.simiacryptus.openai.Models
-import com.simiacryptus.openai.OpenAIClient.ChatMessage
-import com.simiacryptus.openai.OpenAIClient.ChatRequest
+import com.simiacryptus.openai.models.OpenAIModel
+import com.simiacryptus.openai.models.ChatModels
 import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.openai.OpenAIClient.*
+import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
 import com.simiacryptus.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
 
 open class ChatProxy<T : Any>(
     clazz: Class<T>,
     val api: OpenAIClient,
-    var model: Model = Models.GPT35Turbo,
+    var model: OpenAIModel = ChatModels.GPT35Turbo,
     temperature: Double = 0.7,
     private var verbose: Boolean = false,
     private val moderated: Boolean = true,
@@ -22,7 +22,7 @@ open class ChatProxy<T : Any>(
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
         api = params["api"] as OpenAIClient? ?: OpenAIClient(),
-        model = params["model"] as Model? ?: Models.GPT35Turbo,
+        model = params["model"] as OpenAIModel? ?: ChatModels.GPT35Turbo,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,
@@ -53,12 +53,12 @@ open class ChatProxy<T : Any>(
         val exampleMessages = examples.flatMap {
             listOf(
                 ChatMessage(
-                    ChatMessage.Role.user,
-                    argsToString(it.argList)
+                    Role.user,
+                    argsToString(it.argList).toContentList()
                 ),
                 ChatMessage(
-                    ChatMessage.Role.assistant,
-                    it.response
+                    Role.assistant,
+                    it.response.toContentList()
                 )
             )
         }
@@ -66,7 +66,7 @@ open class ChatProxy<T : Any>(
         request = request.copy(messages = ArrayList(
                 listOf(
                     ChatMessage(
-                        ChatMessage.Role.system, """
+                        Role.system, """
                 |You are a JSON-RPC Service
                 |Responses are in JSON format
                 |Do not include explaining text outside the JSON
@@ -75,14 +75,14 @@ open class ChatProxy<T : Any>(
                 |You will respond to the following method
                 |
                 |${prompt.apiYaml}
-                |""".trimMargin().trim()
+                |""".trimMargin().trim().toContentList()
                     )
                 ) +
                         exampleMessages +
                         listOf(
                             ChatMessage(
-                                ChatMessage.Role.user,
-                                argsToString(prompt.argList)
+                                Role.user,
+                                argsToString(prompt.argList).toContentList()
                             )
                         )
                 ))

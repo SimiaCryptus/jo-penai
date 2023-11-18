@@ -1,30 +1,57 @@
 package com.simiacryptus.openai
 
-import com.simiacryptus.openai.OpenAIClient.ChatMessage
+import com.simiacryptus.openai.OpenAIClient.*
+import com.simiacryptus.openai.OpenAIClientBase.Companion.toContentList
+import com.simiacryptus.openai.models.ChatModels
+import com.simiacryptus.openai.models.CompletionModels
+import com.simiacryptus.openai.models.EditModels
+import com.simiacryptus.openai.models.EmbeddingModels.AdaEmbedding
+import com.simiacryptus.openai.models.ImageModels
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.audio.AudioRecorder
 import com.simiacryptus.util.audio.PercentileLoudnessWindowBuffer
 import com.simiacryptus.util.audio.TranscriptionProcessor
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
+import java.awt.image.BufferedImage
 import java.io.File
+import java.net.URL
+import java.nio.file.Files
+import java.nio.file.Paths
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.TimeUnit
 import javax.imageio.ImageIO
+
 
 class OpenAIClientTest {
 
     companion object {
         val log = LoggerFactory.getLogger(OpenAIClientTest::class.java)
+        fun convert(imageFile: File, colorModel: Int): File {
+            val originalImage: BufferedImage = ImageIO.read(imageFile)
+            val rgbaImage = BufferedImage(
+                originalImage.width, originalImage.height, colorModel
+            )
+            val graphics = rgbaImage.createGraphics()
+            graphics.drawImage(originalImage, 0, 0, null)
+            graphics.dispose()
+            val rgbaFile = File.createTempFile("temp_image", ".png")
+            ImageIO.write(rgbaImage, "png", rgbaFile)
+            return rgbaFile
+        }
+
+        const val imageSize = "512x512"
+        val imageModel = ImageModels.DallE2.modelName
     }
 
     @Test
     fun testCompletion() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.CompletionRequest(prompt = "This is a test! This")
-        val completion = client.complete(request, Models.DaVinci)
+        val request = CompletionRequest(prompt = "This is a test! This")
+        val completion = client.complete(request, CompletionModels.DaVinci)
         println(completion.choices.first().text)
     }
 
@@ -33,10 +60,10 @@ class OpenAIClientTest {
         // Doesn't seem to work right now... Wrong model error!?!?
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.EditRequest(
+        val request = EditRequest(
             input = "This is a test!",
             instruction = "Rewrite as an epic novel",
-            model = Models.DaVinciEdit.modelName
+            model = EditModels.DaVinciEdit.modelName
         )
         val completion = client.edit(request)
         println(completion.choices.first().text)
@@ -46,15 +73,73 @@ class OpenAIClientTest {
     fun testChat() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val model = Models.GPT35Turbo
-        val request = OpenAIClient.ChatRequest(
+        val model = ChatModels.GPT35Turbo
+        val request = ChatRequest(
             model = model.modelName,
             messages = ArrayList(
                 listOf(
-                    ChatMessage(ChatMessage.Role.system, "You are a spiritual teacher"),
-                    ChatMessage(ChatMessage.Role.user, "What is the meaning of life?"),
+                    ChatMessage(Role.system, "You are a spiritual teacher".toContentList()),
+                    ChatMessage(Role.user, "What is the meaning of life?".toContentList()),
                 )
             )
+        )
+        val chatResponse = client.chat(request, model)
+        println(chatResponse.choices.first().message?.content ?: "No response")
+    }
+
+    @Test
+    fun testJsonChat() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val model = ChatModels.GPT4Turbo
+        val request = ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ChatMessage(
+                        Role.system,
+                        "You are a spiritual teacher that responds to all questions in JSON format".toContentList()
+                    ),
+                    ChatMessage(Role.user, "What is the meaning of life?".toContentList()),
+                )
+            ),
+            response_format = mapOf("type" to "json_object")
+        )
+        val chatResponse = client.chat(request, model)
+        println(chatResponse.choices.first().message?.content ?: "No response")
+    }
+
+    @Test
+    fun testImageChat() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val imageUrl = client.createImage(
+            ImageGenerationRequest(
+                prompt = "A cute baby sea otter",
+                model = imageModel,
+                n = 1,
+                size = imageSize
+            )
+        ).data.first().url
+        val model = ChatModels.GPT4Vision
+        val request = ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ChatMessage(
+                        Role.system,
+                        "You are an image description service".toContentList()
+                    ),
+                    ChatMessage(
+                        Role.user,
+                        listOf(
+                            ContentPart(text = "Please describe this image", type = "text"),
+                            ContentPart(image_url = imageUrl, type = "image_url")
+                        )
+                    ),
+                )
+            ),
+            stop = listOf("###")
         )
         val chatResponse = client.chat(request, model)
         println(chatResponse.choices.first().message?.content ?: "No response")
@@ -71,9 +156,92 @@ class OpenAIClientTest {
     }
 
     @Test
+    fun testCreateImage() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val imageUrl = client.createImage(
+            ImageGenerationRequest(
+                prompt = "A cute baby sea otter",
+                model = imageModel,
+                n = 1,
+                size = imageSize
+            )
+        ).data.first().url
+        val image: BufferedImage = ImageIO.read(URL(imageUrl))
+        val tempFile = File.createTempFile("test", ".png")
+        ImageIO.write(image, "png", tempFile)
+        Desktop.getDesktop().browse(tempFile.toURI())
+    }
+
+    @Test
+    fun testGenerateAndEditImage() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+
+        val imageUrl = client.createImage(
+            ImageGenerationRequest(
+                prompt = "A picture of a helpful robot",
+                model = imageModel,
+                n = 1,
+                size = imageSize
+            )
+        ).data.first().url
+        val createdImage = File.createTempFile("test", ".png")
+        ImageIO.write(ImageIO.read(URL(imageUrl)), "png", createdImage)
+        Desktop.getDesktop().browse(createdImage.toURI())
+
+        client.createImageEdit(
+            ImageEditRequest(
+                image = convert(createdImage, BufferedImage.TYPE_INT_ARGB),
+                prompt = "Watercolor painting",
+                mask = null,
+                n = 2,
+                size = imageSize
+            )
+        ).data.forEachIndexed { index, imageObject ->
+            val image: BufferedImage = ImageIO.read(URL(imageObject.url))
+            val tempFile = File.createTempFile("test_edit_$index", ".png")
+            ImageIO.write(image, "png", tempFile)
+            Desktop.getDesktop().browse(tempFile.toURI())
+        }
+    }
+
+    @Test
+    fun testGenerateAndVaryImage() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val imageGenerationRequest = ImageGenerationRequest(
+            prompt = "A futuristic cityscape at night",
+            model = imageModel,
+            n = 1,
+            size = imageSize
+        )
+
+        // Generate the image
+        val imageGenerationResponse = client.createImage(imageGenerationRequest)
+        val generatedImageUrl = imageGenerationResponse.data.first().url
+        val generatedImageFile = File.createTempFile("generated_image", ".png")
+        ImageIO.write(ImageIO.read(URL(generatedImageUrl)), "png", generatedImageFile)
+        Desktop.getDesktop().browse(generatedImageFile.toURI())
+
+        // Define the image edit request
+        val imageEditRequest = ImageVariationRequest(
+            image = convert(generatedImageFile, BufferedImage.TYPE_INT_ARGB),
+            //model = "dall-e-3",
+            n = 1,
+            size = imageSize
+        )
+
+        val editedImageUrl = client.createImageVariation(imageEditRequest).data.first().url
+        val editedImageFile = File.createTempFile("vary_image", ".png")
+        ImageIO.write(ImageIO.read(URL(editedImageUrl)), "png", editedImageFile)
+        Desktop.getDesktop().browse(editedImageFile.toURI())
+    }
+
+    @Test
     fun testDictate() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
-        val client: OpenAIClient = OpenAIClient(OpenAIClientBase.keyTxt)
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
         val endTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
         val continueFn: () -> Boolean = { System.currentTimeMillis() < endTime }
         val rawBuffer = ConcurrentLinkedDeque<ByteArray>()
@@ -112,7 +280,6 @@ class OpenAIClientTest {
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
 
-
     @Test
     fun testListEngines() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
@@ -125,9 +292,24 @@ class OpenAIClientTest {
     fun testEmbedding() {
         if (OpenAIClientBase.keyTxt.isBlank()) return
         val client = OpenAIClient(OpenAIClientBase.keyTxt)
-        val request = OpenAIClient.EmbeddingRequest(model = Models.AdaEmbedding.modelName, input = "This is a test!")
+        val request = EmbeddingRequest(model = AdaEmbedding.modelName, input = "This is a test!")
         val embedding = client.createEmbedding(request)
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
+    }
+
+    @Test
+    fun testCreateSpeech() {
+        if (OpenAIClientBase.keyTxt.isBlank()) return
+        val client = OpenAIClient(OpenAIClientBase.keyTxt)
+        val speechRequest = SpeechRequest("The quick brown fox jumped over the lazy dog.")
+        val bytes = client.createSpeech(speechRequest)
+        assertTrue((bytes?.size ?: 0) > 0)
+        val tempFile = File.createTempFile("test", ".mp3")
+        Files.write(Paths.get(tempFile.toURI()), bytes!!)
+        try {
+            Desktop.getDesktop().browse(tempFile.toURI())
+        } catch (e: Throwable) {/*ignore*/
+        }
     }
 
 }

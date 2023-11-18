@@ -1,4 +1,4 @@
-package com.simiacryptus.openai
+package com.simiacryptus.openai.exceptions
 
 class RateLimitException(
     val org: String?,
