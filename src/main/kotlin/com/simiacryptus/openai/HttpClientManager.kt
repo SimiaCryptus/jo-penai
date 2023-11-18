@@ -124,9 +124,8 @@ open class HttpClientManager(
         if (null != invalidModelException) throw invalidModelException
     }
 
-    open fun getClient(thread: Thread = Thread.currentThread()): CloseableHttpClient = newClient()
-
-    open fun newClient(): CloseableHttpClient = HttpClientBuilder.create()
+    open val client: CloseableHttpClient by lazy {
+        HttpClientBuilder.create()
         .setDefaultRequestConfig(
             RequestConfig.custom()
                 .setResponseTimeout(Timeout.ofSeconds(0))
@@ -140,11 +139,12 @@ open class HttpClientManager(
                     .setConnectTimeout(Timeout.ofSeconds(30))
                     .build()
             )
-            defaultMaxPerRoute = 1
-            maxTotal = 1
+            defaultMaxPerRoute = 10
+            maxTotal = 100
             this
         })
         .build()
+    }
 
     fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
         var thread = Thread.currentThread()
@@ -192,7 +192,10 @@ open class HttpClientManager(
         }
     }
 
-    fun <T> withClient(fn: Function<CloseableHttpClient, T>): T = getClient().use { return fn.apply(it) }
+    fun <T> withClient(fn: Function<CloseableHttpClient, T>): T {
+        Thread.currentThread()
+        return fn.apply(client)
+    }
 
     protected open fun log(level: Level = logLevel, msg: String) {
         val message = msg.trim().replace("\n", "\n\t")
