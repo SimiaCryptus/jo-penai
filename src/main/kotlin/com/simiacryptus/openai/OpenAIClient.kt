@@ -6,9 +6,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.openai.exceptions.ModelMaxException
 import com.simiacryptus.openai.exceptions.ModerationException
-import com.simiacryptus.openai.models.ChatModels
-import com.simiacryptus.openai.models.OpenAIModel
-import com.simiacryptus.openai.models.OpenAITextModel
+import com.simiacryptus.openai.models.*
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpPost
@@ -129,8 +127,14 @@ open class OpenAIClient(
     )
 
     private class TruncatedModel(
-        override val modelName: String, override val maxTokens: Int
-    ) : OpenAITextModel
+        val parent: OpenAITextModel,
+        override val maxTokens: Int,
+        override val modelName: String = parent.modelName
+    ) : OpenAITextModel {
+        override fun pricing(usage: Usage): Double {
+            return parent.pricing(usage)
+        }
+    }
 
     private val codex = GPT4Tokenizer(false)
 
@@ -182,7 +186,7 @@ open class OpenAIClient(
                 }
             }
         } catch (e: ModelMaxException) {
-            return complete(request2, TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1))
+            return complete(request2, TruncatedModel(model, (e.modelMax - e.messages) - 1))
         }
     }
 
@@ -394,7 +398,7 @@ open class OpenAIClient(
     )
 
     open fun chat(
-        chatRequest: ChatRequest, model: OpenAIModel
+        chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         try {
             return withReliability {
@@ -424,7 +428,7 @@ open class OpenAIClient(
         } catch (e: ModelMaxException) {
             return chat(
                 chatRequest.copy(max_tokens = (e.modelMax - e.messages) - 1),
-                TruncatedModel(model.modelName, (e.modelMax - e.messages) - 1)
+                TruncatedModel(model, (e.modelMax - e.messages) - 1)
             )
         }
     }
@@ -508,7 +512,7 @@ open class OpenAIClient(
             )
             if (response.usage != null) {
                 incrementTokens(
-                    ChatModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage
+                    EditModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage
                 )
             }
             log(msg = String.format("Chat Completion:\n\t%s",
@@ -610,7 +614,7 @@ open class OpenAIClient(
                 )
                 if (response.usage != null) {
                     incrementTokens(
-                        ChatModels.values().find { it.modelName.equals(request.model, true) }, response.usage
+                        EmbeddingModels.values().find { it.modelName.equals(request.model, true) }, response.usage
                     )
                 }
                 response
