@@ -31,7 +31,7 @@ open class HttpClientManager(
 ) {
 
     companion object {
-        val log = LoggerFactory.getLogger(HttpClientManager::class.java)
+        private val log = LoggerFactory.getLogger(HttpClientManager::class.java)
         val scheduledPool: ListeningScheduledExecutorService =
             MoreExecutors.listeningDecorator(
                 ScheduledThreadPoolExecutor(

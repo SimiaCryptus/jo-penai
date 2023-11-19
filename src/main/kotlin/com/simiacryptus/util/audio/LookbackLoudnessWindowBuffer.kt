@@ -75,7 +75,7 @@ class LookbackLoudnessWindowBuffer(
     }
 
     companion object {
-        val log = LoggerFactory.getLogger(LookbackLoudnessWindowBuffer::class.java)
+        private val log = LoggerFactory.getLogger(LookbackLoudnessWindowBuffer::class.java)
     }
 
 }
