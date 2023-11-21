@@ -92,15 +92,6 @@ open class OpenAIClientBase(
             """Invalid value for '(\S+)': (\S+)"""
         )
 
-        fun isSanctioned(): Boolean {
-            return false
-        }
-    }
-
-    init {
-        if (isSanctioned()) {
-            throw RuntimeException("You are not allowed to use this software.")
-        }
     }
 
     @Throws(IOException::class, InterruptedException::class)
