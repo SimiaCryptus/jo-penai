@@ -24,6 +24,7 @@ import java.net.URL
 import java.util.*
 import javax.imageio.ImageIO
 
+interface OpenAIAPI
 
 @Suppress("PropertyName", "SpellCheckingInspection", "unused")
 open class OpenAIClient(
@@ -31,7 +32,7 @@ open class OpenAIClient(
     private val apiBase: String = "https://api.openai.com/v1",
     logLevel: Level = Level.INFO,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf()
-) : OpenAIClientBase(key, apiBase, logLevel, logStreams) {
+) : OpenAIClientBase(key, apiBase, logLevel, logStreams), OpenAIAPI {
 
 
     data class ApiError(
