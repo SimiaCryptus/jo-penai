@@ -5,8 +5,8 @@ import com.simiacryptus.openai.OpenAIClient.Usage
 enum class ChatModels(
     override val modelName: String,
     override val maxTokens: Int,
-    val inputTokenPricePerK: Double,
-    val outputTokenPricePerK: Double,
+    private val inputTokenPricePerK: Double,
+    private val outputTokenPricePerK: Double,
 ) : OpenAITextModel {
     GPT35Turbo("gpt-3.5-turbo-16k", 16384, 0.001, 0.002),
     GPT4("gpt-4", 8192, 0.03, 0.06),

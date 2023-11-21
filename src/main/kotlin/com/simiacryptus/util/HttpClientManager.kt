@@ -89,11 +89,11 @@ open class HttpClientManager(
 
     }
 
-    fun <T> withPool(fn: () -> T): T = workPool.submit(Callable {
+    private fun <T> withPool(fn: () -> T): T = workPool.submit(Callable {
         return@Callable fn()
     }).get()
 
-    fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
+    private fun <T> withExpBackoffRetry(retryCount: Int = 7, sleepScale: Long = TimeUnit.SECONDS.toMillis(5), fn: () -> T): T {
         var lastException: Exception? = null
         var i = 0
         while (i++ < retryCount) {
