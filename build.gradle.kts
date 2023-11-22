@@ -6,7 +6,7 @@ group = properties("libraryGroup")
 version = properties("libraryVersion")
 
 plugins {
-    `java`
+    java
     `java-library`
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.9.20"
@@ -86,7 +86,7 @@ dependencies {
 publishing {
     publications {
         create<MavenPublication>("mavenJava") {
-            artifactId = "joe-penai"
+            artifactId = "jo-penai"
             from(components["java"])
             versionMapping {
                 usage("java-api") {
@@ -97,9 +97,9 @@ publishing {
                 }
             }
             pom {
-                name.set("Joe Penai")
+                name.set("Jo Penai")
                 description.set("A Java client for OpenAI's API")
-                url.set("https://github.com/SimiaCryptus/JoePenai")
+                url.set("https://github.com/SimiaCryptus/JoPenai")
                 licenses {
                     license {
                         name.set("The Apache License, Version 2.0")
@@ -114,9 +114,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://git@github.com/SimiaCryptus/JoePenai.git")
-                    developerConnection.set("scm:git:ssh://git@github.com/SimiaCryptus/JoePenai.git")
-                    url.set("https://github.com/SimiaCryptus/JoePenai")
+                    connection.set("scm:git:git://git@github.com/SimiaCryptus/JoPenai.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/SimiaCryptus/JoPenai.git")
+                    url.set("https://github.com/SimiaCryptus/JoPenai")
                 }
             }
         }
