@@ -301,7 +301,7 @@ class OpenAIClientTest {
     fun testCreateSpeech() {
         if (ClientUtil.keyTxt.isBlank()) return
         val client = OpenAIClient(ClientUtil.keyTxt)
-        val speechRequest = OpenAIClient.SpeechRequest("The quick brown fox jumped over the lazy dog.")
+        val speechRequest = SpeechRequest("The quick brown fox jumped over the lazy dog.")
         val bytes = client.createSpeech(speechRequest)
         assertTrue((bytes?.size ?: 0) > 0)
         val tempFile = File.createTempFile("test", ".mp3")
