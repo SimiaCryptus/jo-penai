@@ -19,11 +19,11 @@ evaluate their performance, you can be sure to get the most value out of your Op
 Here's a basic example to give you a taste of how this library works:
 
 ```kotlin
-import com.simiacryptus.openai.OpenAIClient
-import com.simiacryptus.openai.opt.Expectation
-import com.simiacryptus.openai.opt.PromptOptimization
-import com.simiacryptus.openai.opt.PromptOptimization.TestCase
-import com.simiacryptus.openai.opt.PromptOptimization.Turn
+import com.simiacryptus.jopenai.OpenAIClient
+import com.simiacryptus.jopenai.opt.Expectation
+import com.simiacryptus.jopenai.opt.PromptOptimization
+import com.simiacryptus.jopenai.opt.PromptOptimization.TestCase
+import com.simiacryptus.jopenai.opt.PromptOptimization.Turn
 
 val api = OpenAIClient("your_api_key_here")
 val optimizer = PromptOptimization(api)

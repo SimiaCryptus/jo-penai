@@ -39,24 +39,24 @@ It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be s
 
 ## To Import
 
-https://mvnrepository.com/artifact/com.simiacryptus/joe-penai
+https://mvnrepository.com/artifact/com.simiacryptus/jo-penai
 
 Maven:
 ```xml
 <dependency>
     <groupId>com.simiacryptus</groupId>
-    <artifactId>joe-penai</artifactId>
-    <version>1.0.33</version>
+    <artifactId>jo-penai</artifactId>
+    <version>1.0.34</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'joe-penai', version: '1.0.33'
+implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.0.34'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:joe-penai:1.0.33")
+implementation("com.simiacryptus:jo-penai:1.0.34")
 ```
 
 
@@ -75,7 +75,7 @@ All main features of the OpenAI API are supported, including:
 To use the `OpenAIClient`, you need to provide an API key and optionally an API base URL and log level.
 
 ```kotlin
-import com.simiacryptus.openai.OpenAIClient
+import com.simiacryptus.jopenai.OpenAIClient
 
 val apiKey = "your_api_key"
 val apiBase = "https://api.openai.com/v1"
@@ -105,7 +105,7 @@ val engineIds = client.getEngineIds()
 Performs a text completion using the specified model.
 
 ```kotlin
-val request = OpenAIClient.CompletionRequest(prompt = "Once upon a time")
+val request = com.simiacryptus.jopenai.ApiModel.CompletionRequest(prompt = "Once upon a time")
 val model = Models.GPT35Turbo
 val response = client.complete(request, model)
 ```
@@ -135,7 +135,7 @@ val images = client.render(prompt, resolution, count)
 Performs a chat completion.
 
 ```kotlin
-val chatRequest = OpenAIClient.ChatRequest(/*...*/)
+val chatRequest = com.simiacryptus.jopenai.ApiModel.ChatRequest(/*...*/)
 val chatResponse = client.chat(chatRequest)
 ```
 
@@ -153,7 +153,7 @@ client.moderate(text)
 Performs a text edit.
 
 ```kotlin
-val editRequest = OpenAIClient.EditRequest(/*...*/)
+val editRequest = com.simiacryptus.jopenai.ApiModel.EditRequest(/*...*/)
 val editResponse = client.edit(editRequest)
 ```
 
@@ -170,7 +170,7 @@ val modelListResponse = client.listModels()
 Creates an embedding for a given input.
 
 ```kotlin
-val embeddingRequest = OpenAIClient.EmbeddingRequest(/*...*/)
+val embeddingRequest = com.simiacryptus.jopenai.ApiModel.EmbeddingRequest(/*...*/)
 val embeddingResponse = client.createEmbedding(embeddingRequest)
 ```
 
