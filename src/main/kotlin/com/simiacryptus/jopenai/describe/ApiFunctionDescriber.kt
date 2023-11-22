@@ -9,11 +9,11 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Parameter
 import java.lang.reflect.Type
-import kotlin.reflect.full.memberProperties
 import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.KVisibility
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 open class ApiFunctionDescriber : TypeDescriber {

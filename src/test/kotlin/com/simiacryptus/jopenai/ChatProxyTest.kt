@@ -1,8 +1,8 @@
 package com.simiacryptus.jopenai
 
+import com.simiacryptus.jopenai.describe.Description
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.proxy.ChatProxy
-import com.simiacryptus.jopenai.describe.Description
 import com.simiacryptus.jopenai.proxy.ValidatedObject
 import org.junit.jupiter.api.Test
 

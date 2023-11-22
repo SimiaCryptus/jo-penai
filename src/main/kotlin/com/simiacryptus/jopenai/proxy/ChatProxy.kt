@@ -4,9 +4,8 @@ import com.simiacryptus.jopenai.ApiModel
 import com.simiacryptus.jopenai.ApiModel.ChatMessage
 import com.simiacryptus.jopenai.ApiModel.ChatRequest
 import com.simiacryptus.jopenai.ClientUtil.toContentList
-import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.OpenAIClient
-
+import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.models.OpenAITextModel
 import com.simiacryptus.jopenai.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
