@@ -290,6 +290,7 @@ interface ApiModel {
         val user: String? = null
     )
 
+    // https://platform.openai.com/docs/api-reference/images/create
     data class ImageGenerationRequest(
         val prompt: String,
         val model: String? = null,

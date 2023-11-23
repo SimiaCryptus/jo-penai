@@ -25,6 +25,7 @@ import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.URL
+import java.nio.charset.Charset
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
@@ -65,7 +66,7 @@ open class OpenAIClient(
         request.addHeader("Content-Type", "application/json")
         request.addHeader("Accept", "application/json")
         authorize(request)
-        request.entity = StringEntity(json)
+        request.entity = StringEntity(json, Charsets.UTF_8, false)
         return post(request)
     }
 
@@ -179,7 +180,7 @@ open class OpenAIClient(
             authorize(httpRequest)
             httpRequest.addHeader("Accept", "application/json")
             httpRequest.addHeader("Content-Type", "application/json")
-            httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request))
+            httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request), Charsets.UTF_8, false)
             val response = withClient { it.execute(httpRequest).entity }
             val contentType = response.contentType
             if(contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
@@ -204,7 +205,7 @@ open class OpenAIClient(
                 jsonObject.addProperty("prompt", prompt)
                 jsonObject.addProperty("n", count)
                 jsonObject.addProperty("size", "${resolution}x$resolution")
-                request.entity = StringEntity(jsonObject.toString())
+                request.entity = StringEntity(jsonObject.toString(), Charsets.UTF_8, false)
                 val response = post(request)
                 val jsonObject2 = Gson().fromJson(response, JsonObject::class.java)
                 if (jsonObject2.has("error")) {
@@ -373,7 +374,7 @@ open class OpenAIClient(
             authorize(httpRequest)
 
             val requestBody = Gson().toJson(request)
-            httpRequest.entity = StringEntity(requestBody)
+            httpRequest.entity = StringEntity(requestBody, Charsets.UTF_8, false)
 
             val response = post(httpRequest)
             checkError(response)
