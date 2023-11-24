@@ -8,6 +8,7 @@ import java.lang.reflect.Type
 import java.util.*
 
 interface TypeDescriber {
+    val markupLanguage: String
     val methodBlacklist: Set<String>
     fun describe(
         rawType: Class<in Nothing>,
