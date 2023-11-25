@@ -128,8 +128,8 @@ class ChatProxyTest {
     data class MathSolution(
         @Description("The solution to the math problem.") val solution: String = ""
     ) : ValidatedObject {
-        override fun validate(): Boolean {
-            if (solution.isEmpty()) return false
+        override fun validate(): String? {
+            if (solution.isEmpty()) return "Solution is empty"
             return super.validate()
         }
     }
