@@ -46,17 +46,17 @@ Maven:
 <dependency>
     <groupId>com.simiacryptus</groupId>
     <artifactId>jo-penai</artifactId>
-    <version>1.0.35</version>
+    <version>1.0.36</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.0.35'
+implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.0.36'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:jo-penai:1.0.35")
+implementation("com.simiacryptus:jo-penai:1.0.36")
 ```
 
 

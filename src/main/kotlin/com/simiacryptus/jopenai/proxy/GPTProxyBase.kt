@@ -75,9 +75,15 @@ abstract class GPTProxyBase<T : Any>(
                     var jsonResult = fixup(jsonResult0, type)
                     try {
                         val obj = fromJson<Any>(jsonResult, type)
-                        if (validation && obj is ValidatedObject && !obj.validate()) {
-                            log.warn("Invalid response: $jsonResult")
-                            continue
+                        if (validation) {
+                            if (obj is ValidatedObject) {
+                                val validate = obj.validate()
+                                if (null != validate) {
+                                    log.warn("Invalid response ($validate): $jsonResult")
+                                    lastException = RuntimeException(validate)
+                                    continue
+                                }
+                            }
                         }
                         return@newProxyInstance obj
                     } catch (e: Exception) {

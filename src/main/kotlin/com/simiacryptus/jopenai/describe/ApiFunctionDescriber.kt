@@ -17,6 +17,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 open class ApiFunctionDescriber : TypeDescriber {
+    override val markupLanguage: String get() = ""
 
     open val includeMethods: Boolean = true
     private val truncation = "..."

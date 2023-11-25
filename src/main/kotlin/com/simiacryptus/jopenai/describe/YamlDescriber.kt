@@ -14,6 +14,8 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 open class YamlDescriber : TypeDescriber {
+    override val markupLanguage: String
+        get() = "yaml"
 
     override fun describe(
         rawType: Class<in Nothing>,
