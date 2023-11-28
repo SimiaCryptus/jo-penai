@@ -1,6 +1,5 @@
 package com.simiacryptus.jopenai
 
-import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
@@ -28,9 +27,9 @@ import kotlin.math.pow
 open class HttpClientManager(
   private val logLevel: Level = Level.INFO,
   private val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
-  val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
-  val workPool: ThreadPoolExecutor = Companion.workPool,
-  val client: CloseableHttpClient = Companion.client
+  private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
+  private val workPool: ThreadPoolExecutor = Companion.workPool,
+  private val client: CloseableHttpClient = Companion.client
 ) {
 
   companion object {
