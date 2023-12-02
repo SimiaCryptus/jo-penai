@@ -108,7 +108,7 @@ abstract class GPTProxyBase<T : Any>(
                     log.info("Retry $retry of $maxRetries")
                 }
             }
-            throw RuntimeException("Failed to parse response", lastException)
+            throw lastException ?: RuntimeException("Failed to parse response")
         } finally {
             temperature = originalTemp
         }
