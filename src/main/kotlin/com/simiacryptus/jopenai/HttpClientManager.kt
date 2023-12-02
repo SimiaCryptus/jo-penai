@@ -30,7 +30,7 @@ open class HttpClientManager(
   private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
   private val workPool: ThreadPoolExecutor = Companion.workPool,
   private val client: CloseableHttpClient = Companion.client
-) {
+) : API() {
 
   companion object {
 

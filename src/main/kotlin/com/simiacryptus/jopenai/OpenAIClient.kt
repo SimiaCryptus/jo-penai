@@ -2,7 +2,6 @@ package com.simiacryptus.jopenai
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.google.common.util.concurrent.ListeningExecutorService
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -47,7 +46,7 @@ open class OpenAIClient(
   scheduledPool = scheduledPool,
   workPool = workPool,
   client = client
-), API {
+) {
 
   private val tokenCounter = AtomicInteger(0)
 
