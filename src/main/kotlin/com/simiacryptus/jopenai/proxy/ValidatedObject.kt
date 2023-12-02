@@ -5,7 +5,12 @@ import kotlin.reflect.full.memberProperties
 interface ValidatedObject {
     fun validate(): String? = validateFields(this)
 
+    class ValidationError(message: String, val obj: Any) : RuntimeException(message)
+
     companion object {
+
+
+
         fun validateFields(obj: Any): String? {
             obj.javaClass.declaredFields.forEach { field ->
                 field.isAccessible = true
