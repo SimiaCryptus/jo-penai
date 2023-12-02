@@ -14,6 +14,8 @@ import java.io.FileWriter
 import java.lang.reflect.*
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.pow
+import kotlin.reflect.KParameter
+import kotlin.reflect.full.functions
 import kotlin.reflect.jvm.javaType
 
 
@@ -39,65 +41,78 @@ abstract class GPTProxyBase<T : Any>(
 
     abstract fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String
 
-    fun create(): T {
-        return Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { _, method, args ->
-            if (method.name == "toString") return@newProxyInstance clazz.simpleName
-            requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
-            // If kotlin clazz, use kotlin reflection to get type
-            val type: Type = if (clazz.isKotlinClass()) {
-                val returnType = resolveMethodReturnType(clazz.kotlin, method.name)
-                returnType.javaType
+    fun create() = Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { _, method, args ->
+        if (method.name == "toString") return@newProxyInstance clazz.simpleName
+        requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
+        val type: Type = if (clazz.isKotlinClass()) {
+            val returnType = resolveMethodReturnType(clazz.kotlin, method.name)
+            returnType.javaType
+        } else {
+            method.genericReturnType
+        }
+        val argList = if (clazz.isKotlinClass()) {
+            val declaredMethod = clazz.kotlin.functions.find { it.name == method.name }
+            if(null != declaredMethod) {
+                (args ?: arrayOf()).zip(declaredMethod.parameters.filter { it.kind == KParameter.Kind.VALUE })
+                    .filter<Pair<Any?, KParameter>> { (arg: Any?, _) -> arg != null }
+                    .withIndex()
+                    .associate { (idx, p) ->
+                        val (arg, param) = p
+                        (param.name ?: "arg$idx") to toJson(arg!!)
+                    }
             } else {
-                method.genericReturnType
-            }
-            val typeString = describer.describe(method, clazz).trimIndent()
-            val prompt = ProxyRequest(
-                method.name,
-                typeString,
                 (args ?: arrayOf()).zip(method.parameters)
-                    .filter<Pair<Any?, Parameter>> { (arg: Any?, _) -> arg != null }.associate { (arg, param) ->
-                        param.name to toJson(arg!!)
-                    }
-            )
+                    .filter<Pair<Any?, Parameter>> { (arg: Any?, _) -> arg != null }
+                    .associate { (arg, param) -> param.name to toJson(arg!!) }
+            }
+        } else {
+            (args ?: arrayOf()).zip(method.parameters)
+                .filter<Pair<Any?, Parameter>> { (arg: Any?, _) -> arg != null }
+                .associate { (arg, param) -> param.name to toJson(arg!!) }
+        }
+        val prompt = ProxyRequest(
+            method.name,
+            describer.describe(method, clazz).trimIndent(),
+            argList
+        )
 
-            var lastException: Exception? = null
-            val originalTemp = temperature
-            try {
-                requestCounter.incrementAndGet()
-                for (retry in 0 until maxRetries) {
-                    attemptCounter.incrementAndGet()
-                    if (retry > 0) {
-                        // Increase temperature on retry; this encourages the model to return a different result
-                        temperature =
-                            if (temperature <= 0.0) 0.0 else temperature.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
-                    }
-                    var jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
-                    var jsonResult = fixup(jsonResult0, type)
-                    try {
-                        val obj = fromJson<Any>(jsonResult, type)
-                        if (validation) {
-                            if (obj is ValidatedObject) {
-                                val validate = obj.validate()
-                                if (null != validate) {
-                                    log.warn("Invalid response ($validate): $jsonResult")
-                                    lastException = RuntimeException(validate)
-                                    continue
-                                }
+        var lastException: Exception? = null
+        val originalTemp = temperature
+        try {
+            requestCounter.incrementAndGet()
+            for (retry in 0 until maxRetries) {
+                attemptCounter.incrementAndGet()
+                if (retry > 0) {
+                    // Increase temperature on retry; this encourages the model to return a different result
+                    temperature =
+                        if (temperature <= 0.0) 0.0 else temperature.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
+                }
+                var jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
+                var jsonResult = fixup(jsonResult0, type)
+                try {
+                    val obj = fromJson<Any>(jsonResult, type)
+                    if (validation) {
+                        if (obj is ValidatedObject) {
+                            val validate = obj.validate()
+                            if (null != validate) {
+                                log.warn("Invalid response ($validate): $jsonResult")
+                                lastException = RuntimeException(validate)
+                                continue
                             }
                         }
-                        return@newProxyInstance obj
-                    } catch (e: Exception) {
-                        log.warn("Failed to parse response: $jsonResult", e)
-                        lastException = e
-                        log.info("Retry $retry of $maxRetries")
                     }
+                    return@newProxyInstance obj
+                } catch (e: Exception) {
+                    log.warn("Failed to parse response: $jsonResult", e)
+                    lastException = e
+                    log.info("Retry $retry of $maxRetries")
                 }
-                throw RuntimeException("Failed to parse response", lastException)
-            } finally {
-                temperature = originalTemp
             }
-        } as T
-    }
+            throw RuntimeException("Failed to parse response", lastException)
+        } finally {
+            temperature = originalTemp
+        }
+    } as T
 
     open val describer: TypeDescriber = object : AbbrevWhitelistYamlDescriber(
         "com.simiacryptus", "com.github.simiacryptus"
