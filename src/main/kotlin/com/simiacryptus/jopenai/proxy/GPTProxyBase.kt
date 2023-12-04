@@ -87,8 +87,8 @@ abstract class GPTProxyBase<T : Any>(
                     temperature =
                         if (temperature <= 0.0) 0.0 else temperature.coerceAtLeast(0.1).pow(1.0 / (retry + 1))
                 }
-                var jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
-                var jsonResult = fixup(jsonResult0, type)
+                val jsonResult0 = complete(prompt, *examples[method.name]?.toTypedArray() ?: arrayOf())
+                val jsonResult = fixup(jsonResult0, type)
                 try {
                     val obj = fromJson<Any>(jsonResult, type)
                     if (validation) {
@@ -96,7 +96,7 @@ abstract class GPTProxyBase<T : Any>(
                             val validate = obj.validate()
                             if (null != validate) {
                                 log.warn("Invalid response ($validate): $jsonResult")
-                                lastException = RuntimeException(validate)
+                                lastException = ValidatedObject.ValidationError(validate, obj)
                                 continue
                             }
                         }
@@ -108,7 +108,7 @@ abstract class GPTProxyBase<T : Any>(
                     log.info("Retry $retry of $maxRetries")
                 }
             }
-            throw RuntimeException("Failed to parse response", lastException)
+            throw lastException ?: RuntimeException("Failed to parse response")
         } finally {
             temperature = originalTemp
         }

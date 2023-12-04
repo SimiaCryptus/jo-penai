@@ -7,8 +7,6 @@ import com.simiacryptus.jopenai.exceptions.InvalidModelException
 import com.simiacryptus.jopenai.exceptions.ModelMaxException
 import com.simiacryptus.jopenai.exceptions.QuotaException
 import com.simiacryptus.jopenai.exceptions.RateLimitException
-import org.apache.hc.client5.http.config.ConnectionConfig
-import org.apache.hc.client5.http.config.RequestConfig
 import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
@@ -30,7 +28,7 @@ open class HttpClientManager(
   private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
   private val workPool: ThreadPoolExecutor = Companion.workPool,
   private val client: CloseableHttpClient = Companion.client
-) {
+) : API() {
 
   companion object {
 
@@ -53,20 +51,9 @@ open class HttpClientManager(
       )
 
     val client: CloseableHttpClient = HttpClientBuilder.create()
-      .setDefaultRequestConfig(
-        RequestConfig.custom()
-          .setResponseTimeout(Timeout.ofSeconds(0))
-          .setConnectionRequestTimeout(Timeout.ofSeconds(0))
-          .build()
-      )
       .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
       .setConnectionManager(with(PoolingHttpClientConnectionManager()) {
-        setDefaultConnectionConfig(
-          ConnectionConfig.custom()
-            .setConnectTimeout(Timeout.ofSeconds(30))
-            .build()
-        )
-        defaultMaxPerRoute = 10
+        defaultMaxPerRoute = 100
         maxTotal = 100
         this
       }).build()
