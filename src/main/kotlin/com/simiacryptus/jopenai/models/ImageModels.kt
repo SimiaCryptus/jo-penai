@@ -3,9 +3,10 @@ package com.simiacryptus.jopenai.models
 @Suppress("unused")
 enum class ImageModels(
     override val modelName: String,
+    val maxPrompt: Int
 ) : OpenAIModel {
 
-    DallE2("dall-e-2") {
+    DallE2("dall-e-2", 1000) {
         override fun pricing(width: Int, height: Int): Double {
             return when {
                 width == 1024 && height == 1024 -> 0.02
@@ -15,7 +16,7 @@ enum class ImageModels(
             }
         }
     },
-    DallE3("dall-e-3") {
+    DallE3("dall-e-3", 1000) {
         override fun pricing(width: Int, height: Int): Double {
             return when {
                 width == 1024 && height == 1024 -> 0.04
@@ -25,7 +26,7 @@ enum class ImageModels(
             }
         }
     },
-    DallE3_HD("dall-e-3") {
+    DallE3_HD("dall-e-3", 1000) {
         override val quality: String = "hd"
         override fun pricing(width: Int, height: Int): Double {
             return when {

@@ -24,7 +24,7 @@ import kotlin.math.pow
 
 open class HttpClientManager(
   private val logLevel: Level = Level.INFO,
-  private val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
+  val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
   private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
   private val workPool: ThreadPoolExecutor = Companion.workPool,
   private val client: CloseableHttpClient = Companion.client
@@ -220,16 +220,8 @@ open class HttpClientManager(
 
   protected open fun log(level: Level = logLevel, msg: String) {
     val message = msg.trim().replace("\n", "\n\t")
-    when (level) {
-      Level.ERROR -> log.error(message)
-      Level.WARN -> log.warn(message)
-      Level.INFO -> log.info(message)
-      Level.DEBUG -> log.debug(message)
-      Level.TRACE -> log.debug(message)
-      else -> log.debug(message)
-    }
-    logStreams.forEach { auxillaryLogOutputStream ->
-      auxillaryLogOutputStream.write(
+    logStreams.forEach { stream ->
+      stream.write(
         "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${
           message.replace(
             "\n",
@@ -237,7 +229,15 @@ open class HttpClientManager(
           )
         }\n".toByteArray()
       )
-      auxillaryLogOutputStream.flush()
+      stream.flush()
+    }
+    when (level) {
+      Level.ERROR -> log.error(message)
+      Level.WARN -> log.warn(message)
+      Level.INFO -> log.info(message)
+      Level.DEBUG -> log.debug(message)
+      Level.TRACE -> log.debug(message)
+      else -> log.debug(message)
     }
   }
 

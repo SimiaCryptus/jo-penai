@@ -7,6 +7,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.jopenai.ApiModel.*
 import com.simiacryptus.jopenai.ClientUtil.allowedCharset
+import com.simiacryptus.jopenai.ClientUtil.checkError
 import com.simiacryptus.jopenai.ClientUtil.keyTxt
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
@@ -95,10 +96,6 @@ open class OpenAIClient(
     request.addHeader("Accept", "application/json")
     authorize(request)
     EntityUtils.toString(it.execute(request).entity)
-  }
-
-  private fun checkError(result: String) {
-    ClientUtil.checkError(result)
   }
 
   fun listEngines(): List<Engine> = JsonUtil.objectMapper().readValue(
@@ -336,9 +333,11 @@ open class OpenAIClient(
           EditModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage
         )
       }
-      log(msg = String.format("Chat Completion:\n\t%s",
-        response.firstChoice.orElse("").toString().trim { it <= ' ' }.toString().replace("\n", "\n\t")
-      )
+      log(
+        msg = String.format(
+          "Chat Completion:\n\t%s",
+          response.firstChoice.orElse("").toString().trim { it <= ' ' }.toString().replace("\n", "\n\t")
+        )
       )
       response
     }
