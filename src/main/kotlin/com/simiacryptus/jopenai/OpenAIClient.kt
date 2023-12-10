@@ -139,7 +139,7 @@ open class OpenAIClient(
         result, CompletionResponse::class.java
       )
       if (response.usage != null) {
-        incrementTokens(model, response.usage)
+        incrementTokens(model, response.usage.copy(cost = model.pricing(response.usage)))
       }
       val completionResult =
         StringUtil.stripPrefix(response.firstChoice.orElse("").toString().trim { it <= ' ' },
@@ -247,7 +247,7 @@ open class OpenAIClient(
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
       if (response.usage != null) {
-        incrementTokens(model, response.usage)
+        incrementTokens(model, response.usage.copy(cost = model.pricing(response.usage)))
       }
       log(
         msg = String.format(
@@ -329,8 +329,9 @@ open class OpenAIClient(
         result, CompletionResponse::class.java
       )
       if (response.usage != null) {
+        val model = EditModels.values().find { it.modelName.equals(editRequest.model, true) }
         incrementTokens(
-          EditModels.values().find { it.modelName.equals(editRequest.model, true) }, response.usage
+          model, response.usage.copy(cost = model?.pricing(response.usage))
         )
       }
       log(
@@ -373,8 +374,10 @@ open class OpenAIClient(
           result, EmbeddingResponse::class.java
         )
         if (response.usage != null) {
+          val model = EmbeddingModels.values().find { it.modelName.equals(request.model, true) }
           incrementTokens(
-            EmbeddingModels.values().find { it.modelName.equals(request.model, true) }, response.usage
+            model,
+            response.usage.copy(cost = model?.pricing(response.usage))
           )
         }
         response
@@ -395,6 +398,12 @@ open class OpenAIClient(
 
       val response = post(httpRequest)
       checkError(response)
+      val model = ImageModels.values().find { it.modelName.equals(request.model, true) }
+      val dims = request.size?.split("x")
+      incrementTokens(model, Usage(total_tokens = 0, prompt_tokens = 0, completion_tokens = 0, cost = model?.pricing(
+        width = dims?.get(0)?.toInt() ?: 0,
+        height = dims?.get(1)?.toInt() ?: 0
+      )))
 
       JsonUtil.objectMapper().readValue(response, ImageGenerationResponse::class.java)
     }
