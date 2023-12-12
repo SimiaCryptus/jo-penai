@@ -45,7 +45,8 @@ interface ApiModel {
     data class Usage(
         val prompt_tokens: Int = 0,
         val completion_tokens: Int = 0,
-        val total_tokens: Int = 0
+        val total_tokens: Int = 0,
+        val cost: Double? = null
     )
 
 
