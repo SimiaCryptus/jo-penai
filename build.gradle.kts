@@ -1,4 +1,6 @@
+
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URI
 
 fun properties(key: String) = project.findProperty(key).toString()
@@ -148,4 +150,8 @@ if (System.getenv("GPG_PRIVATE_KEY") != null && System.getenv("GPG_PASSPHRASE") 
         useInMemoryPgpKeys(System.getenv("GPG_PRIVATE_KEY"), System.getenv("GPG_PASSPHRASE"))
         sign(configurations.archives.get())
     }
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+  apiVersion = "1.8"
 }
