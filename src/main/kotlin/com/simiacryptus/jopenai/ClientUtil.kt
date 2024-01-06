@@ -25,6 +25,9 @@ object ClientUtil {
         if (errorMessage.startsWith("That model is currently overloaded with other requests.")) {
           throw RequestOverloadException(errorMessage)
         }
+        if(safetyErrorMessage.matcher(errorMessage).matches()) {
+          throw SafetyException()
+        }
         maxTokenErrorMessage.find { it.matcher(errorMessage).matches() }?.let {
           val matcher = it.matcher(errorMessage)
           if (matcher.find()) {
@@ -36,26 +39,45 @@ object ClientUtil {
           }
         }
         rateLimitErrorMessage.matcher(errorMessage).let {
-          if (it.matches()) {
+          if (it.find()) {
             val org = it.group(3)
             val limit = it.group(4).toInt()
             val delay = it.group(5).toLong()
             throw RateLimitException(org, limit, delay)
           }
         }
+        rateLimitErrorMessage2.matcher(errorMessage).let {
+          if (it.find()) {
+            val org = it.group(2)
+            val limit = it.group(3).toInt()
+            val used = it.group(4).toInt()
+            val requested = it.group(5).toInt()
+            val delay = it.group(6).toLong()
+            throw RateLimitException(org, limit, delay)
+          }
+        }
+        rateLimitErrorMessage3.matcher(errorMessage).let {
+          if (it.find()) {
+            val org = it.group(2)
+            val limit = it.group(3).toInt()
+            val divisor = it.group(4).toLong()
+            val used = it.group(5).toInt()
+            throw RateLimitException(org, limit, divisor * 60)
+          }
+        }
         quotaErrorMessage.matcher(errorMessage).let {
-          if (it.matches()) {
+          if (it.find()) {
             throw QuotaException()
           }
         }
         invalidModelException.matcher(errorMessage).let {
-          if (it.matches()) {
+          if (it.find()) {
             val model = it.group(1)
             throw InvalidModelException(model)
           }
         }
         invalidValueException.matcher(errorMessage).let {
-          if (it.matches()) {
+          if (it.find()) {
             val field = it.group(1)
             val value = it.group(2)
             throw InvalidValueException(field, value)
@@ -97,9 +119,18 @@ object ClientUtil {
       """This model's maximum context length is (\d+) tokens, however you requested (\d+) tokens \((\d+) in your prompt; (\d+) for the completion\).*"""
     )
   )
+  // Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.
+  val safetyErrorMessage = Pattern.compile("""Your request was rejected as a result of our safety system.""")
   val rateLimitErrorMessage = Pattern.compile(
     """Rate limit reached for (\d+)KTPM-(\d+)RPM in organization (\S+) on tokens per min. Limit: (\d+) / min. Please try again in (\d+)ms. Contact us through our help center at help.openai.com if you continue to have issues."""
   )
+  val rateLimitErrorMessage2 = Pattern.compile(
+    """Rate limit reached for (\S+) in organization (\S+) on requests per min \(RPM\): Limit (\d+), Used (\d+), Requested (\d+). Please try again in (\d+)s."""
+  )
+  val rateLimitErrorMessage3 = Pattern.compile(
+    """Rate limit exceeded for (\S+) per minute in organization (\S+). Limit: (\d+)/(\d+)min. Current: (\d+)/(\d+)min."""
+  )
+  //
   val quotaErrorMessage = Pattern.compile(
     """You exceeded your current quota, please check your plan and billing details."""
   )

@@ -61,39 +61,39 @@ open class HttpClientManager(
     private val log = LoggerFactory.getLogger(HttpClientManager::class.java)
     val startTime by lazy { System.currentTimeMillis() }
 
-    fun modelMaxException(e: Throwable?): ModelMaxException? {
-      if (e == null) return null
-      if (e is ModelMaxException) return e
-      if (e.cause != null && e.cause != e) return modelMaxException(e.cause)
-      return null
+    fun modelMaxException(e: Throwable?): ModelMaxException? = when {
+      e == null -> null
+      e is ModelMaxException -> e
+      e.cause != null && e.cause != e -> modelMaxException(e.cause)
+      else -> null
     }
 
-    fun rateLimitException(e: Throwable?): RateLimitException? {
-      if (e == null) return null
-      if (e is RateLimitException) return e
-      if (e.cause != null && e.cause != e) return rateLimitException(e.cause)
-      return null
+    fun rateLimitException(e: Throwable?): RateLimitException? = when {
+      e == null -> null
+      e is RateLimitException -> e
+      e.cause != null && e.cause != e -> rateLimitException(e.cause)
+      else -> null
     }
 
-    fun quotaLimitException(e: Throwable?): QuotaException? {
-      if (e == null) return null
-      if (e is QuotaException) return e
-      if (e.cause != null && e.cause != e) return quotaLimitException(e.cause)
-      return null
+    fun quotaLimitException(e: Throwable?): QuotaException? = when {
+      e == null -> null
+      e is QuotaException -> e
+      e.cause != null && e.cause != e -> quotaLimitException(e.cause)
+      else -> null
     }
 
-    fun invalidModelException(e: Throwable?): InvalidModelException? {
-      if (e == null) return null
-      if (e is InvalidModelException) return e
-      if (e.cause != null && e.cause != e) return invalidModelException(e.cause)
-      return null
+    fun invalidModelException(e: Throwable?): InvalidModelException? = when {
+      e == null -> null
+      e is InvalidModelException -> e
+      e.cause != null && e.cause != e -> invalidModelException(e.cause)
+      else -> null
     }
 
-    fun apiKeyException(e: Throwable?): IOException? {
-      if (e == null) return null
-      if (e is IOException && true == e.message?.contains("Incorrect API key")) return e
-      if (e.cause != null && e.cause != e) return apiKeyException(e.cause)
-      return null
+    fun apiKeyException(e: Throwable?): IOException? = when {
+      e == null -> null
+      e is IOException && true == e.message?.contains("Incorrect API key") -> e
+      e.cause != null && e.cause != e -> apiKeyException(e.cause)
+      else -> null
     }
 
   }
@@ -128,42 +128,49 @@ open class HttpClientManager(
   }
 
   private fun <T> withExpBackoffRetry(
-    retryCount: Int = 7,
+    retryCount: Int,
     sleepScale: Long = TimeUnit.SECONDS.toMillis(5),
     fn: () -> T
   ): T {
     var lastException: Exception? = null
     var i = 0
     while (i++ < retryCount) {
+      val sleepPeriod = sleepScale * 2.0.pow(i.toDouble()).toLong()
       try {
         return fn()
-      } catch (e: ModelMaxException) {
-        throw e
-      } catch (e: RateLimitException) {
-        i--
-        this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + e.message)
-        Thread.sleep(e.delay)
-      } catch (e: Exception) {
-        onException(e)
-        lastException = e
-        this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + (e.message ?: e.toString()))
-        Thread.sleep(sleepScale * 2.0.pow(i.toDouble()).toLong())
+      } catch (e: Throwable) {
+        when(val exception = unwrapException(e)) {
+          is ModelMaxException -> throw exception
+          is RateLimitException -> {
+            lastException = exception
+            i--
+            this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + exception.message)
+            Thread.sleep((TimeUnit.SECONDS.toMillis(exception.delay)).coerceAtLeast(sleepPeriod))
+          }
+          is Exception -> {
+            lastException = exception
+            this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + exception.message)
+            Thread.sleep(sleepPeriod)
+          }
+          else -> throw exception
+        }
       }
     }
     throw lastException!!
   }
 
-  protected open fun onException(e: Exception) {
+  protected open fun unwrapException(e: Throwable) : Throwable {
     val modelMaxException = modelMaxException(e)
-    if (null != modelMaxException) throw modelMaxException
+    if (null != modelMaxException) return modelMaxException
     val rateLimitException = rateLimitException(e)
-    if (null != rateLimitException) throw rateLimitException
+    if (null != rateLimitException) return rateLimitException
     val apiKeyException = apiKeyException(e)
-    if (null != apiKeyException) throw apiKeyException
+    if (null != apiKeyException) return apiKeyException
     val quotaException = quotaLimitException(e)
-    if (null != quotaException) throw quotaException
+    if (null != quotaException) return quotaException
     val invalidModelException = invalidModelException(e)
-    if (null != invalidModelException) throw invalidModelException
+    if (null != invalidModelException) return invalidModelException
+    return e
   }
 
 
