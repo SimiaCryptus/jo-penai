@@ -51,7 +51,7 @@ open class OpenAIClient(
 
   private val tokenCounter = AtomicInteger(0)
 
-  open fun incrementTokens(model: OpenAIModel?, tokens: Usage) {
+  open fun onUsage(model: OpenAIModel?, tokens: Usage) {
     tokenCounter.addAndGet(tokens.total_tokens)
   }
 
@@ -139,7 +139,7 @@ open class OpenAIClient(
         result, CompletionResponse::class.java
       )
       if (response.usage != null) {
-        incrementTokens(model, response.usage.copy(cost = model.pricing(response.usage)))
+        onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
       }
       val completionResult =
         StringUtil.stripPrefix(response.firstChoice.orElse("").toString().trim { it <= ' ' },
@@ -191,14 +191,22 @@ open class OpenAIClient(
       httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request), Charsets.UTF_8, false)
       val response = withClient { it.execute(httpRequest).entity }
       val contentType = response.contentType
+      val bytes = response.content.readAllBytes()
       if (contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
-        checkError(response.content.readAllBytes().toString(Charsets.UTF_8))
+        checkError(bytes.toString(Charsets.UTF_8))
         null
       } else {
-        response.content.readAllBytes()
+        val model = AudioModels.values().find { it.modelName.equals(request.model, true) }
+        onUsage(
+          model, Usage(
+          prompt_tokens = request.input.length,
+          cost = model?.pricing(request.input.length)
+        ))
+        bytes
       }
     }
   }
+
 
   open fun render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage> =
     withReliability {
@@ -247,7 +255,7 @@ open class OpenAIClient(
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
       if (response.usage != null) {
-        incrementTokens(model, response.usage.copy(cost = model.pricing(response.usage)))
+        onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
       }
       log(
         msg = String.format(
@@ -330,7 +338,7 @@ open class OpenAIClient(
       )
       if (response.usage != null) {
         val model = EditModels.values().find { it.modelName.equals(editRequest.model, true) }
-        incrementTokens(
+        onUsage(
           model, response.usage.copy(cost = model?.pricing(response.usage))
         )
       }
@@ -375,7 +383,7 @@ open class OpenAIClient(
         )
         if (response.usage != null) {
           val model = EmbeddingModels.values().find { it.modelName.equals(request.model, true) }
-          incrementTokens(
+          onUsage(
             model,
             response.usage.copy(cost = model?.pricing(response.usage))
           )
@@ -400,7 +408,7 @@ open class OpenAIClient(
       checkError(response)
       val model = ImageModels.values().find { it.modelName.equals(request.model, true) }
       val dims = request.size?.split("x")
-      incrementTokens(model, Usage(total_tokens = 0, prompt_tokens = 0, completion_tokens = 0, cost = model?.pricing(
+      onUsage(model, Usage(completion_tokens = 1, cost = model?.pricing(
         width = dims?.get(0)?.toInt() ?: 0,
         height = dims?.get(1)?.toInt() ?: 0
       )))
