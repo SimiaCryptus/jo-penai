@@ -6,9 +6,9 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.jopenai.ApiModel.*
-import com.simiacryptus.jopenai.ClientUtil.allowedCharset
-import com.simiacryptus.jopenai.ClientUtil.checkError
-import com.simiacryptus.jopenai.ClientUtil.keyTxt
+import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
+import com.simiacryptus.jopenai.util.ClientUtil.checkError
+import com.simiacryptus.jopenai.util.ClientUtil.keyTxt
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.JsonUtil

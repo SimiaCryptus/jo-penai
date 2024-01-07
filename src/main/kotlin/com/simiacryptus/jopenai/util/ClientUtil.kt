@@ -1,7 +1,9 @@
-package com.simiacryptus.jopenai
+package com.simiacryptus.jopenai.util
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import com.simiacryptus.jopenai.ApiModel
+import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
 import java.io.File
 import java.io.IOException
