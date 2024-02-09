@@ -8,9 +8,9 @@ enum class ChatModels(
     private val inputTokenPricePerK: Double,
     private val outputTokenPricePerK: Double,
 ) : OpenAITextModel {
-    GPT35Turbo("gpt-3.5-turbo-16k", 16384, 0.001, 0.002),
-    GPT4("gpt-4", 8192, 0.03, 0.06),
-    GPT4Turbo("gpt-4-1106-preview", /* 128k */ 131072, 0.01, 0.03),
+    GPT35Turbo("gpt-3.5-turbo-0125", 16384, 0.0005, 0.0015),
+    @Deprecated("Use GPT4 Turbo") GPT4("gpt-4-32k", 32768, 0.06, 0.12),
+    GPT4Turbo("gpt-4-turbo-preview", /* 128k */ 128000, 0.01, 0.03),
     GPT4Vision("gpt-4-vision-preview", 8192, 0.01, 0.03);
     override fun pricing(usage: Usage) =
         (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
