@@ -10,7 +10,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.lang.reflect.Type
 
 object JsonUtil {
-    fun objectMapper(): ObjectMapper {
+    open fun objectMapper(): ObjectMapper {
         return ObjectMapper()
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
@@ -41,15 +41,17 @@ object JsonUtil {
                 .build())
     }
 
-    fun toJson(data: Any): String {
+    open fun toJson(data: Any): String {
         return objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data)
     }
 
-    fun <T> fromJson(data: String, type: Type): T {
+    open fun <T> fromJson(data: String, type: Type): T {
         if (type is Class<*> && type.isAssignableFrom(String::class.java)) return data as T
         val objectMapper = objectMapper()
         val value = objectMapper.readValue(data, objectMapper.typeFactory.constructType(type)) as T
         //log.debug("Deserialized $data to $value")
         return value
     }
+
+//    companion object : JsonUtil()
 }
