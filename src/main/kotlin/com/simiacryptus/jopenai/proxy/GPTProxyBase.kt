@@ -20,7 +20,7 @@ import kotlin.reflect.jvm.javaType
 
 
 abstract class GPTProxyBase<T : Any>(
-    val clazz: Class<T>,
+    val clazz: Class<out T>,
     var temperature: Double = 0.1,
     private var validation: Boolean = true,
     private var maxRetries: Int = 5,
