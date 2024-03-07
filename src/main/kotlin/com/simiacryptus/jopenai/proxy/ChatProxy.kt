@@ -14,10 +14,10 @@ open class ChatProxy<T : Any>(
     clazz: Class<out T>,
     val api: OpenAIClient,
     var model: OpenAITextModel = ChatModels.GPT35Turbo,
-    temperature: Double = 0.7,
+    temperature: Double = 0.5,
     private var verbose: Boolean = false,
     private val moderated: Boolean = true,
-    val deserializerRetries: Int = 5,
+    val deserializerRetries: Int = 2,
     validation: Boolean = true
 ) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
 
