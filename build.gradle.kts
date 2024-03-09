@@ -58,7 +58,26 @@ kotlin {
 val logback_version = "1.4.11"
 val jupiter_version = "5.10.1"
 val jackson_version = "2.15.3"
+
+val swagger_annotations_version = "1.6.6"
+val jackson_databind_version = jackson_version
+val jackson_databind_nullable_version = "0.2.6"
+val jakarta_annotation_version = "1.3.5"
+val httpclient_version = "5.1.3"
+val jodatime_version = "2.9.9"
+
 dependencies {
+
+    implementation ("io.swagger:swagger-annotations:$swagger_annotations_version")
+    implementation ("com.google.code.findbugs:jsr305:3.0.2")
+    implementation ("org.apache.httpcomponents.client5:httpclient5:$httpclient_version")
+    implementation ("com.fasterxml.jackson.core:jackson-core:$jackson_version")
+    implementation ("com.fasterxml.jackson.core:jackson-annotations:$jackson_version")
+    implementation ("com.fasterxml.jackson.core:jackson-databind:$jackson_databind_version")
+    implementation ("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version")
+    implementation ("org.openapitools:jackson-databind-nullable:$jackson_databind_nullable_version")
+    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
+    implementation ("jakarta.annotation:jakarta.annotation-api:$jakarta_annotation_version")
 
     implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.9")
     implementation(group = "org.apache.httpcomponents.client5", name = "httpclient5", version = "5.2.3")
