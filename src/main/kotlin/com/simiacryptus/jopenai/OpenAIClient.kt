@@ -10,6 +10,7 @@ import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
+import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.keyTxt
 import com.simiacryptus.jopenai.util.JsonUtil
 import com.simiacryptus.jopenai.util.StringUtil
@@ -34,9 +35,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 open class OpenAIClient(
-  protected var key: String = keyTxt,
-  private val apiBase: String = "https://api.openai.com/v1",
-  val apiProvider: APIProvider = APIProvider.OpenAI,
+  protected var key: Map<APIProvider, String> = mapOf(defaultApiProvider to keyTxt),
+  private val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to it.base },
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
   scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
@@ -74,11 +74,11 @@ open class OpenAIClient(
   protected val editCounter = AtomicInteger(0)
 
   @Throws(IOException::class, InterruptedException::class)
-  protected fun post(url: String, json: String): String {
+  protected fun post(url: String, json: String, apiProvider: APIProvider): String {
     val request = HttpPost(url)
     request.addHeader("Content-Type", "application/json")
     request.addHeader("Accept", "application/json")
-    authorize(request)
+    authorize(request, apiProvider)
     request.entity = StringEntity(json, Charsets.UTF_8, false)
     return post(request)
   }
@@ -86,22 +86,22 @@ open class OpenAIClient(
   protected fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
 
   @Throws(IOException::class)
-  protected open fun authorize(request: HttpRequest) {
-    request.addHeader("Authorization", "Bearer $key")
+  protected open fun authorize(request: HttpRequest, apiProvider: APIProvider) {
+    request.addHeader("Authorization", "Bearer ${key.get(apiProvider)}")
   }
 
   @Throws(IOException::class)
-  protected operator fun get(url: String?): String = withClient {
+  protected operator fun get(url: String?, apiProvider: APIProvider): String = withClient {
     val request = HttpGet(url)
     request.addHeader("Content-Type", "application/json")
     request.addHeader("Accept", "application/json")
-    authorize(request)
+    authorize(request, apiProvider)
     EntityUtils.toString(it.execute(request).entity)
   }
 
   fun listEngines(): List<Engine> = JsonUtil.objectMapper().readValue(
     JsonUtil.objectMapper().readValue(
-      get("$apiBase/engines"), ObjectNode::class.java
+      get("$apiBase/engines", defaultApiProvider), ObjectNode::class.java
     )["data"]?.toString() ?: "{}", JsonUtil.objectMapper().typeFactory.constructCollectionType(
       List::class.java, Engine::class.java
     )
@@ -133,7 +133,7 @@ open class OpenAIClient(
         "$apiBase/engines/${model.modelName}/completions", StringUtil.restrictCharacterSet(
           JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(request),
           allowedCharset
-        )
+        ), defaultApiProvider
       )
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(
@@ -160,7 +160,7 @@ open class OpenAIClient(
       val url = "$apiBase/audio/transcriptions"
       val request = HttpPost(url)
       request.addHeader("Accept", "application/json")
-      authorize(request)
+      authorize(request, defaultApiProvider)
       val entity = MultipartEntityBuilder.create()
       entity.setMode(HttpMultipartMode.EXTENDED)
       entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
@@ -186,7 +186,7 @@ open class OpenAIClient(
   open fun createSpeech(request: SpeechRequest): ByteArray? = withReliability {
     withPerformanceLogging {
       val httpRequest = HttpPost("$apiBase/audio/speech")
-      authorize(httpRequest)
+      authorize(httpRequest, defaultApiProvider)
       httpRequest.addHeader("Accept", "application/json")
       httpRequest.addHeader("Content-Type", "application/json")
       httpRequest.entity = StringEntity(JsonUtil.objectMapper().writeValueAsString(request), Charsets.UTF_8, false)
@@ -218,7 +218,7 @@ open class OpenAIClient(
         val request = HttpPost(url)
         request.addHeader("Accept", "application/json")
         request.addHeader("Content-Type", "application/json")
-        authorize(request)
+        authorize(request, defaultApiProvider)
         val jsonObject = JsonObject()
         jsonObject.addProperty("prompt", prompt)
         jsonObject.addProperty("n", count)
@@ -240,7 +240,7 @@ open class OpenAIClient(
     }
 
   open fun chat(
-    chatRequest: ChatRequest, model: OpenAITextModel
+    chatRequest: ChatRequest, model: ChatModels
   ): ChatResponse {
     log.info("Chat request: $chatRequest", RuntimeException())
     return withReliability {
@@ -248,30 +248,30 @@ open class OpenAIClient(
         chatCounter.incrementAndGet()
 
         val result = when {
-          apiProvider == APIProvider.Perplexity -> {
+          model.provider == APIProvider.Perplexity -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json)
+            post("$apiBase/chat/completions", json, model.provider)
           }
 
-          apiProvider == APIProvider.Groq -> {
+          model.provider == APIProvider.Groq -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json)
+            post("$apiBase/chat/completions", json, model.provider)
           }
 
-          apiProvider == APIProvider.ModelsLab -> {
+          model.provider == APIProvider.ModelsLab -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            fromModelsLab(post("$apiBase/llm/chat", json))
+            fromModelsLab(post("$apiBase/llm/chat", json, model.provider))
           }
 
           else -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json)
+            post("$apiBase/chat/completions", json, model.provider)
           }
         }
         checkError(result)
@@ -323,7 +323,7 @@ open class OpenAIClient(
             "key" to key
           )
         )
-        fromModelsLab(post("$apiBase/llm/get_queued_response", postCheck))
+        fromModelsLab(post("$apiBase/llm/get_queued_response", postCheck, defaultApiProvider))
       }
       "error" -> {
         throw RuntimeException("Error in chat request: ${response.message}\n$rawResponse")
@@ -337,7 +337,7 @@ open class OpenAIClient(
 
   private fun toModelsLab(chatRequest: ApiModel.ChatRequest): ModelsLabDataModel.ChatRequest {
     val chatRequest1 = ModelsLabDataModel.ChatRequest(
-      key = key,
+      key = key.get(APIProvider.ModelsLab),
       model_id = chatRequest.model,
       system_prompt = chatRequest.messages.filter { it.role == Role.system }.joinToString("\n") {
         it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
@@ -375,8 +375,8 @@ open class OpenAIClient(
 
   open fun moderate(text: String) = withReliability {
     when {
-      apiProvider == APIProvider.Groq -> return@withReliability
-      apiProvider == APIProvider.ModelsLab -> return@withReliability
+      defaultApiProvider == APIProvider.Groq -> return@withReliability
+      defaultApiProvider == APIProvider.ModelsLab -> return@withReliability
     }
     withPerformanceLogging {
       moderationCounter.incrementAndGet()
@@ -390,7 +390,7 @@ open class OpenAIClient(
         throw RuntimeException(e)
       }
       val result: String = try {
-        this.post("$apiBase/moderations", body)
+        this.post("$apiBase/moderations", body, defaultApiProvider)
       } catch (e: IOException) {
         throw RuntimeException(e)
       } catch (e: InterruptedException) {
@@ -440,7 +440,7 @@ open class OpenAIClient(
       val request: String = StringUtil.restrictCharacterSet(
         JsonUtil.objectMapper().writeValueAsString(editRequest), allowedCharset
       )
-      val result = post("$apiBase/edits", request)
+      val result = post("$apiBase/edits", request, defaultApiProvider)
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(
         result, CompletionResponse::class.java
@@ -462,7 +462,7 @@ open class OpenAIClient(
   }
 
   open fun listModels(): ModelListResponse {
-    val result = get("$apiBase/models")
+    val result = get("$apiBase/models", defaultApiProvider)
     checkError(result)
     return JsonUtil.objectMapper().readValue(result, ModelListResponse::class.java)
   }
@@ -484,7 +484,7 @@ open class OpenAIClient(
         val result = post(
           "$apiBase/embeddings", StringUtil.restrictCharacterSet(
             JsonUtil.objectMapper().writeValueAsString(request), allowedCharset
-          )
+          ), defaultApiProvider
         )
         checkError(result)
         val response = JsonUtil.objectMapper().readValue(
@@ -508,7 +508,7 @@ open class OpenAIClient(
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
       httpRequest.addHeader("Content-Type", "application/json")
-      authorize(httpRequest)
+      authorize(httpRequest, defaultApiProvider)
 
       val requestBody = Gson().toJson(request)
       httpRequest.entity = StringEntity(requestBody, Charsets.UTF_8, false)
@@ -535,7 +535,7 @@ open class OpenAIClient(
       val url = "$apiBase/images/edits"
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
-      authorize(httpRequest)
+      authorize(httpRequest, defaultApiProvider)
 
       val entityBuilder = MultipartEntityBuilder.create()
       entityBuilder.addPart("image", FileBody(request.image))
@@ -560,7 +560,7 @@ open class OpenAIClient(
       val url = "$apiBase/images/variations"
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
-      authorize(httpRequest)
+      authorize(httpRequest, defaultApiProvider)
 
       val entityBuilder = MultipartEntityBuilder.create()
       entityBuilder.addPart("image", FileBody(request.image))
