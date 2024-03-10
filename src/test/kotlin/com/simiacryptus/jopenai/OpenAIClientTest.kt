@@ -1,16 +1,16 @@
 package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.ApiModel.*
-import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import com.simiacryptus.jopenai.audio.AudioRecorder
 import com.simiacryptus.jopenai.audio.PercentileLoudnessWindowBuffer
 import com.simiacryptus.jopenai.audio.TranscriptionProcessor
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.models.CompletionModels
 import com.simiacryptus.jopenai.models.EditModels
-import com.simiacryptus.jopenai.models.EmbeddingModels.AdaEmbedding
+import com.simiacryptus.jopenai.models.EmbeddingModels.Companion.AdaEmbedding
 import com.simiacryptus.jopenai.models.ImageModels
 import com.simiacryptus.jopenai.util.ClientUtil
+import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import com.simiacryptus.jopenai.util.JsonUtil
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
