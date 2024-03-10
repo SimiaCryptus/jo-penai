@@ -10,6 +10,7 @@ import com.simiacryptus.jopenai.models.EditModels
 import com.simiacryptus.jopenai.models.EmbeddingModels.Companion.AdaEmbedding
 import com.simiacryptus.jopenai.models.ImageModels
 import com.simiacryptus.jopenai.util.ClientUtil
+import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import com.simiacryptus.jopenai.util.JsonUtil
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -50,7 +51,9 @@ class OpenAIClientTest {
     @Test
     fun testCompletion() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val request = CompletionRequest(prompt = "This is a test! This")
         val completion = client.complete(request, CompletionModels.DaVinci)
         println(completion.choices.first().text)
@@ -60,7 +63,9 @@ class OpenAIClientTest {
     fun testEdit() {
         // Doesn't seem to work right now... Wrong model error!?!?
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val request = EditRequest(
             input = "This is a test!",
             instruction = "Rewrite as an epic novel",
@@ -73,7 +78,9 @@ class OpenAIClientTest {
     @Test
     fun testChat() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val model = ChatModels.GPT35Turbo
         val request = ChatRequest(
             model = model.modelName,
@@ -91,7 +98,9 @@ class OpenAIClientTest {
     @Test
     fun testJsonChat() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val model = ChatModels.GPT4Turbo
         val request = ChatRequest(
             model = model.modelName,
@@ -113,7 +122,9 @@ class OpenAIClientTest {
     @Test
     fun testImageChat() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val imageUrl = client.createImage(
             ImageGenerationRequest(
                 prompt = "A cute baby sea otter",
@@ -149,7 +160,9 @@ class OpenAIClientTest {
     @Test
     fun testRender() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val image = client.render("This is a test!").first()
         val tempFile = File.createTempFile("test", ".png")
         ImageIO.write(image, "png", tempFile)
@@ -159,7 +172,9 @@ class OpenAIClientTest {
     @Test
     fun testCreateImage() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val imageUrl = client.createImage(
             ImageGenerationRequest(
                 prompt = "A cute baby sea otter",
@@ -177,7 +192,9 @@ class OpenAIClientTest {
     @Test
     fun testGenerateAndEditImage() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
 
         val imageUrl = client.createImage(
             ImageGenerationRequest(
@@ -210,7 +227,9 @@ class OpenAIClientTest {
     @Test
     fun testGenerateAndVaryImage() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val imageGenerationRequest = ImageGenerationRequest(
             prompt = "A futuristic cityscape at night",
             model = imageModel,
@@ -242,7 +261,9 @@ class OpenAIClientTest {
     @Test
     fun testDictate() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val endTime = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(10)
         val continueFn: () -> Boolean = { System.currentTimeMillis() < endTime }
         val rawBuffer = ConcurrentLinkedDeque<ByteArray>()
@@ -276,7 +297,9 @@ class OpenAIClientTest {
     @Test
     fun testListModels() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val models = client.listModels()
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
@@ -284,7 +307,9 @@ class OpenAIClientTest {
     @Test
     fun testListEngines() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val models = client.listEngines()
         log.info("Models: ${JsonUtil.toJson(models)}")
     }
@@ -292,7 +317,9 @@ class OpenAIClientTest {
     @Test
     fun testEmbedding() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val request = EmbeddingRequest(model = AdaEmbedding.modelName, input = "This is a test!")
         val embedding = client.createEmbedding(request)
         log.info("Embedding: ${JsonUtil.toJson(embedding)}")
@@ -301,7 +328,9 @@ class OpenAIClientTest {
     @Test
     fun testCreateSpeech() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyTxt)
+        val client = OpenAIClient(mapOf(
+            defaultApiProvider to ClientUtil.keyTxt
+        ))
         val speechRequest = SpeechRequest("The quick brown fox jumped over the lazy dog.")
         val bytes = client.createSpeech(speechRequest)
         assertTrue((bytes?.size ?: 0) > 0)
