@@ -6,11 +6,11 @@ import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.simiacryptus.jopenai.ApiModel.*
+import com.simiacryptus.jopenai.exceptions.ModerationException
+import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.keyTxt
-import com.simiacryptus.jopenai.exceptions.ModerationException
-import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.JsonUtil
 import com.simiacryptus.jopenai.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpGet
@@ -337,7 +337,7 @@ open class OpenAIClient(
         result, CompletionResponse::class.java
       )
       if (response.usage != null) {
-        val model = EditModels.values().find { it.modelName.equals(editRequest.model, true) }
+        val model = EditModels.values().values.find { it.modelName.equals(editRequest.model, true) }
         onUsage(
           model, response.usage.copy(cost = model?.pricing(response.usage))
         )
@@ -382,7 +382,7 @@ open class OpenAIClient(
           result, EmbeddingResponse::class.java
         )
         if (response.usage != null) {
-          val model = EmbeddingModels.values().find { it.modelName.equals(request.model, true) }
+          val model = EmbeddingModels.values().values.find { it.modelName.equals(request.model, true) }
           onUsage(
             model,
             response.usage.copy(cost = model?.pricing(response.usage))

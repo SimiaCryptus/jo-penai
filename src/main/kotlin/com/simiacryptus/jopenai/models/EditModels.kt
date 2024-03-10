@@ -2,11 +2,16 @@ package com.simiacryptus.jopenai.models
 
 import com.simiacryptus.jopenai.ApiModel.Usage
 
-enum class EditModels(
-    override val modelName: String,
-    override val maxTokens: Int,
+open class EditModels(
+    modelName: String,
+    maxTokens: Int,
     private val tokenPricePerK: Double,
-) : OpenAITextModel {
-    DaVinciEdit("text-davinci-edit-001", 2049, 0.002);
+) : OpenAITextModel(modelName, maxTokens) {
     override fun pricing(usage: Usage) = usage.prompt_tokens * tokenPricePerK / 1000.0
+
+    companion object {
+        fun values() = mapOf("DaVinciEdit" to DaVinciEdit)
+
+        val DaVinciEdit = EditModels("text-davinci-edit-001", 2049, 0.002)
+    }
 }
