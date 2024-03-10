@@ -16,6 +16,7 @@ import com.simiacryptus.jopenai.models.ChatModels.Companion.values
 open class ChatModels(
   modelName: String,
   maxTokens: Int,
+  val providers: List<APIProvider>,
   private val inputTokenPricePerK: Double,
   private val outputTokenPricePerK: Double,
 ) : OpenAITextModel(modelName, maxTokens) {
@@ -23,17 +24,128 @@ open class ChatModels(
     (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
 
   companion object {
+    val GPT35Turbo = ChatModels(
+      modelName = "gpt-3.5-turbo-0125",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.OpenAI),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val GPT4 = ChatModels(
+      modelName = "gpt-4-32k",
+      maxTokens = 32768,
+      providers = listOf(APIProvider.OpenAI),
+      inputTokenPricePerK = 0.06,
+      outputTokenPricePerK = 0.12
+    )
+    val GPT4Turbo = ChatModels(
+      modelName = "gpt-4-turbo-preview",
+      maxTokens = 128000,
+      providers = listOf(APIProvider.OpenAI),
+      inputTokenPricePerK = 0.01,
+      outputTokenPricePerK = 0.03
+    )
+    val GPT4Vision = ChatModels(
+      modelName = "gpt-4-vision-preview",
+      maxTokens = 8192,
+      providers = listOf(APIProvider.OpenAI),
+      inputTokenPricePerK = 0.01,
+      outputTokenPricePerK = 0.03
+    )
+
+    val SonarSmallChat = ChatModels(
+      modelName = "sonar-small-chat",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val SonarSmallOnline = ChatModels(
+      modelName = "sonar-small-online",
+      maxTokens = 12000,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val SonarMediumChat = ChatModels(
+      modelName = "sonar-medium-chat",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val SonarMediumOnline = ChatModels(
+      modelName = "sonar-medium-online",
+      maxTokens = 12000,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val Codellama70bInstruct = ChatModels(
+      modelName = "codellama-70b-instruct",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val Mistral7bInstruct = ChatModels(
+      modelName = "mistral-7b-instruct",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val Mixtral8x7bInstruct = ChatModels(
+      modelName = "mixtral-8x7b-instruct",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.Perplexity),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val LLaMA270bChat = ChatModels(
+      modelName = "llama2-70b-4096",
+      maxTokens = 4096,
+      providers = listOf(APIProvider.Groq),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val Mixtral8x7bInstructV01 = ChatModels(
+      modelName = "mixtral-8x7b-32768",
+      maxTokens = 32768,
+      providers = listOf(APIProvider.Groq),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
+    val Gemma7bIt = ChatModels(
+      modelName = "Gemma-7b-it",
+      maxTokens = 8192,
+      providers = listOf(APIProvider.Groq),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
       "GPT4" to GPT4,
       "GPT4Turbo" to GPT4Turbo,
-      "GPT4Vision" to GPT4Vision
+      "GPT4Vision" to GPT4Vision,
+      "SonarSmallChat" to SonarSmallChat,
+      "SonarSmallOnline" to SonarSmallOnline,
+      "SonarMediumChat" to SonarMediumChat,
+      "SonarMediumOnline" to SonarMediumOnline,
+      "Codellama70bInstruct" to Codellama70bInstruct,
+      "Mistral7bInstruct" to Mistral7bInstruct,
+      "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
     )
-
-    val GPT35Turbo = ChatModels("gpt-3.5-turbo-0125", 16384, 0.0005, 0.0015)
-    val GPT4 = ChatModels("gpt-4-32k", 32768, 0.06, 0.12)
-    val GPT4Turbo = ChatModels("gpt-4-turbo-preview", 128000, 0.01, 0.03)
-    val GPT4Vision = ChatModels("gpt-4-vision-preview", 8192, 0.01, 0.03)
   }
 }
 
@@ -46,7 +158,6 @@ class ChatModelsSerializer : StdSerializer<ChatModels>(ChatModels::class.java) {
 class ChatModelsDeserializer : JsonDeserializer<ChatModels>() {
   override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModels {
     val modelName = p.readValueAs(String::class.java)
-    return ChatModels.values()[modelName]
-      ?: throw IllegalArgumentException("Unknown model name: $modelName")
+    return ChatModels.values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
   }
 }
