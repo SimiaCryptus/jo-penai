@@ -101,7 +101,7 @@ open class OpenAIClient(
 
   fun listEngines(): List<Engine> = JsonUtil.objectMapper().readValue(
     JsonUtil.objectMapper().readValue(
-      get("$apiBase/engines", defaultApiProvider), ObjectNode::class.java
+      get("${apiBase[defaultApiProvider]}/engines", defaultApiProvider), ObjectNode::class.java
     )["data"]?.toString() ?: "{}", JsonUtil.objectMapper().typeFactory.constructCollectionType(
       List::class.java, Engine::class.java
     )
@@ -130,7 +130,7 @@ open class OpenAIClient(
         )
       }
       val result = post(
-        "$apiBase/engines/${model.modelName}/completions", StringUtil.restrictCharacterSet(
+        "${apiBase[defaultApiProvider]}/engines/${model.modelName}/completions", StringUtil.restrictCharacterSet(
           JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(request),
           allowedCharset
         ), defaultApiProvider
@@ -185,7 +185,7 @@ open class OpenAIClient(
 
   open fun createSpeech(request: SpeechRequest): ByteArray? = withReliability {
     withPerformanceLogging {
-      val httpRequest = HttpPost("$apiBase/audio/speech")
+      val httpRequest = HttpPost("${apiBase[defaultApiProvider]}/audio/speech")
       authorize(httpRequest, defaultApiProvider)
       httpRequest.addHeader("Accept", "application/json")
       httpRequest.addHeader("Content-Type", "application/json")
@@ -214,7 +214,7 @@ open class OpenAIClient(
     withReliability {
       withPerformanceLogging {
         renderCounter.incrementAndGet()
-        val url = "$apiBase/images/generations"
+        val url = "${apiBase[defaultApiProvider]}/images/generations"
         val request = HttpPost(url)
         request.addHeader("Accept", "application/json")
         request.addHeader("Content-Type", "application/json")
@@ -252,26 +252,26 @@ open class OpenAIClient(
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json, model.provider)
+            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
           }
 
           model.provider == APIProvider.Groq -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json, model.provider)
+            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
           }
 
           model.provider == APIProvider.ModelsLab -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            fromModelsLab(post("$apiBase/llm/chat", json, model.provider))
+            fromModelsLab(post("${apiBase[model.provider]}/llm/chat", json, model.provider))
           }
 
           else -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("$apiBase/chat/completions", json, model.provider)
+            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
           }
         }
         checkError(result)
@@ -320,10 +320,10 @@ open class OpenAIClient(
         val postCheck = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
           mapOf(
             "chat_id" to (response.meta?.chat_id ?: response.chat_id),
-            "key" to key
+            "key" to key[APIProvider.ModelsLab]
           )
         )
-        fromModelsLab(post("$apiBase/llm/get_queued_response", postCheck, defaultApiProvider))
+        fromModelsLab(post("${apiBase[defaultApiProvider]}/llm/get_queued_response", postCheck, defaultApiProvider))
       }
       "error" -> {
         throw RuntimeException("Error in chat request: ${response.message}\n$rawResponse")
@@ -337,7 +337,7 @@ open class OpenAIClient(
 
   private fun toModelsLab(chatRequest: ApiModel.ChatRequest): ModelsLabDataModel.ChatRequest {
     val chatRequest1 = ModelsLabDataModel.ChatRequest(
-      key = key.get(APIProvider.ModelsLab),
+      key = key[APIProvider.ModelsLab],
       model_id = chatRequest.model,
       system_prompt = chatRequest.messages.filter { it.role == Role.system }.joinToString("\n") {
         it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
@@ -390,7 +390,7 @@ open class OpenAIClient(
         throw RuntimeException(e)
       }
       val result: String = try {
-        this.post("$apiBase/moderations", body, defaultApiProvider)
+        this.post("${apiBase[defaultApiProvider]}/moderations", body, defaultApiProvider)
       } catch (e: IOException) {
         throw RuntimeException(e)
       } catch (e: InterruptedException) {
@@ -440,7 +440,7 @@ open class OpenAIClient(
       val request: String = StringUtil.restrictCharacterSet(
         JsonUtil.objectMapper().writeValueAsString(editRequest), allowedCharset
       )
-      val result = post("$apiBase/edits", request, defaultApiProvider)
+      val result = post("${apiBase[defaultApiProvider]}/edits", request, defaultApiProvider)
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(
         result, CompletionResponse::class.java
@@ -462,7 +462,7 @@ open class OpenAIClient(
   }
 
   open fun listModels(): ModelListResponse {
-    val result = get("$apiBase/models", defaultApiProvider)
+    val result = get("${apiBase[defaultApiProvider]}/models", defaultApiProvider)
     checkError(result)
     return JsonUtil.objectMapper().readValue(result, ModelListResponse::class.java)
   }
@@ -482,7 +482,7 @@ open class OpenAIClient(
           )
         }
         val result = post(
-          "$apiBase/embeddings", StringUtil.restrictCharacterSet(
+          "${apiBase[defaultApiProvider]}/embeddings", StringUtil.restrictCharacterSet(
             JsonUtil.objectMapper().writeValueAsString(request), allowedCharset
           ), defaultApiProvider
         )
@@ -504,7 +504,7 @@ open class OpenAIClient(
 
   open fun createImage(request: ImageGenerationRequest): ImageGenerationResponse = withReliability {
     withPerformanceLogging {
-      val url = "$apiBase/images/generations"
+      val url = "${apiBase[defaultApiProvider]}/images/generations"
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
       httpRequest.addHeader("Content-Type", "application/json")
@@ -532,7 +532,7 @@ open class OpenAIClient(
 
   open fun createImageEdit(request: ImageEditRequest): ImageEditResponse = withReliability {
     withPerformanceLogging {
-      val url = "$apiBase/images/edits"
+      val url = "${apiBase[defaultApiProvider]}/images/edits"
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
       authorize(httpRequest, defaultApiProvider)
@@ -557,7 +557,7 @@ open class OpenAIClient(
 
   open fun createImageVariation(request: ImageVariationRequest): ImageVariationResponse = withReliability {
     withPerformanceLogging {
-      val url = "$apiBase/images/variations"
+      val url = "${apiBase[defaultApiProvider]}/images/variations"
       val httpRequest = HttpPost(url)
       httpRequest.addHeader("Accept", "application/json")
       authorize(httpRequest, defaultApiProvider)
