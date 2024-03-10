@@ -36,7 +36,7 @@ import javax.imageio.ImageIO
 
 open class OpenAIClient(
   protected var key: Map<APIProvider, String> = mapOf(defaultApiProvider to keyTxt),
-  private val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to it.base },
+  protected val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to (it.base ?: "") },
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
   scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
@@ -247,31 +247,32 @@ open class OpenAIClient(
       withPerformanceLogging {
         chatCounter.incrementAndGet()
 
+        val apiProvider = model.provider
         val result = when {
-          model.provider == APIProvider.Perplexity -> {
+          apiProvider == APIProvider.Perplexity -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
+            post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
           }
 
-          model.provider == APIProvider.Groq -> {
+          apiProvider == APIProvider.Groq -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
+            post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
           }
 
-          model.provider == APIProvider.ModelsLab -> {
+          apiProvider == APIProvider.ModelsLab -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            fromModelsLab(post("${apiBase[model.provider]}/llm/chat", json, model.provider))
+            fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
           }
 
           else -> {
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
             log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            post("${apiBase[model.provider]}/chat/completions", json, model.provider)
+            post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
           }
         }
         checkError(result)
