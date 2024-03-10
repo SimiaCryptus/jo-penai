@@ -145,6 +145,9 @@ open class ChatModels(
       "Codellama70bInstruct" to Codellama70bInstruct,
       "Mistral7bInstruct" to Mistral7bInstruct,
       "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
+      "LLaMA270bChat" to LLaMA270bChat,
+      "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
+      "Gemma7bIt" to Gemma7bIt,
     )
   }
 }

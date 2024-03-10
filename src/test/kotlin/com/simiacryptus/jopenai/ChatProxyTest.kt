@@ -153,8 +153,8 @@ class ChatProxyTest {
     @Test
     fun testDemo7() {
         if (ClientUtil.keyTxt.isBlank()) return
-        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(ClientUtil.keyTxt))
-        gptProxy.model = ChatModels.GPT35Turbo
+        val gptProxy = ChatProxy(MathSolver::class.java, api = OpenAIClient(ClientUtil.keyTxt), model = ChatModels.GPT35Turbo)
+//        gptProxy.model = ChatModels.GPT35Turbo
         val solver = gptProxy.create()
         val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
         val mathOutput = solver.solveMathProblem(mathInput)

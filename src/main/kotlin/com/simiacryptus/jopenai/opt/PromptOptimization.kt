@@ -15,7 +15,7 @@ import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
-    val model: OpenAITextModel = ChatModels.GPT35Turbo,
+    val model: OpenAITextModel,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,

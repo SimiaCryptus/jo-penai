@@ -36,6 +36,7 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
   protected var key: String = keyTxt,
   private val apiBase: String = "https://api.openai.com/v1",
+  val apiProvider : APIProvider = APIProvider.OpenAI,
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
   scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
@@ -242,16 +243,24 @@ open class OpenAIClient(
   ): ChatResponse = withReliability {
     withPerformanceLogging {
       chatCounter.incrementAndGet()
-      val reqJson =
-        JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-      log(
-        msg = String.format(
-          "Chat Request\nPrefix:\n\t%s\n", reqJson.replace("\n", "\n\t")
-        )
-      )
 
-      val jsonRequest = JsonUtil.objectMapper().writeValueAsString(chatRequest)
-      val result = post("$apiBase/chat/completions", jsonRequest)
+      val result = when {
+        apiProvider == APIProvider.Perplexity -> {
+          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
+          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+          post("$apiBase/chat/completions", json)
+        }
+        apiProvider == APIProvider.Groq -> {
+          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
+          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+          post("$apiBase/chat/completions", json)
+        }
+        else -> {
+          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+          post("$apiBase/chat/completions", json)
+        }
+      }
       checkError(result)
       val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
       if (response.usage != null) {
@@ -268,7 +277,22 @@ open class OpenAIClient(
     }
   }
 
+  private fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
+    model = chatRequest.model,
+    messages = chatRequest.messages.map { message ->
+      GroqChatMessage(
+        role = message.role,
+        content = message.content?.joinToString("\n") { it.text ?: "" } ?: "",
+      )
+    },
+    max_tokens = chatRequest.max_tokens,
+    temperature = chatRequest.temperature,
+  )
+
   open fun moderate(text: String) = withReliability {
+    when {
+      apiProvider == APIProvider.Groq -> return@withReliability
+    }
     withPerformanceLogging {
       moderationCounter.incrementAndGet()
       val body: String = try {
