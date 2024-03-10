@@ -18,7 +18,9 @@ class ChatProxyTest {
     if (ClientUtil.keyTxt.isBlank()) return
     val gptProxy = ChatProxy(
       clazz = TextSummarizer::class.java,
-      api = OpenAIClient(ClientUtil.keyTxt),
+      api = OpenAIClient(mapOf(
+        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+      )),
       model = ChatModels.GPT35Turbo
     )
     val summarizer = gptProxy.create()
@@ -40,7 +42,9 @@ class ChatProxyTest {
     val gptProxy = ChatProxy(
 
       clazz = BlogPostGenerator::class.java, api = OpenAIClient(
-        ClientUtil.keyTxt
+        mapOf(
+          ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+        )
       ),
       model = ChatModels.GPT35Turbo
     )
@@ -73,7 +77,9 @@ class ChatProxyTest {
   fun testDemo3() {
     if (ClientUtil.keyTxt.isBlank()) return
     val gptProxy = ChatProxy(
-      clazz = RecipeGenerator::class.java, api = OpenAIClient(ClientUtil.keyTxt),
+      clazz = RecipeGenerator::class.java, api = OpenAIClient(mapOf(
+        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+      )),
       model = ChatModels.GPT35Turbo
     )
     val generator = gptProxy.create()
@@ -97,7 +103,9 @@ class ChatProxyTest {
     val gptProxy = ChatProxy(
 
       clazz = ShoppingListParser::class.java, api = OpenAIClient(
-        ClientUtil.keyTxt
+        mapOf(
+          ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+        )
       ),
       model = ChatModels.GPT35Turbo
     )
@@ -126,7 +134,9 @@ class ChatProxyTest {
   fun testDemo5() {
     if (ClientUtil.keyTxt.isBlank()) return
     val gptProxy = ChatProxy(
-      clazz = WeatherForecast::class.java, api = OpenAIClient(ClientUtil.keyTxt),
+      clazz = WeatherForecast::class.java, api = OpenAIClient(mapOf(
+        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+      )),
       model = ChatModels.GPT35Turbo
     )
     gptProxy.addExample(WeatherOutput("New York", listOf("Sunny", "Partly Cloudy", "Rainy"))) {
@@ -160,7 +170,9 @@ class ChatProxyTest {
   fun testDemo6() {
     if (ClientUtil.keyTxt.isBlank()) return
     val gptProxy = ChatProxy(
-      clazz = MathSolver::class.java, api = OpenAIClient(ClientUtil.keyTxt),
+      clazz = MathSolver::class.java, api = OpenAIClient(mapOf(
+        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+      )),
       model = ChatModels.GPT35Turbo
     )
     val solver = gptProxy.create()
@@ -173,7 +185,9 @@ class ChatProxyTest {
   fun testDemo7() {
     if (ClientUtil.keyTxt.isBlank()) return
     val gptProxy =
-      ChatProxy(MathSolver::class.java, api = OpenAIClient(ClientUtil.keyTxt), model = ChatModels.GPT35Turbo)
+      ChatProxy(MathSolver::class.java, api = OpenAIClient(mapOf(
+        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+      )), model = ChatModels.GPT35Turbo)
 //        gptProxy.model = ChatModels.GPT35Turbo
     val solver = gptProxy.create()
     val mathInput = MathProblem("twelve pigs plus six cows minus four pigs")
