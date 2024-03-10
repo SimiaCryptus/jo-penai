@@ -133,6 +133,119 @@ open class ChatModels(
       outputTokenPricePerK = 0.0015
     )
 
+    val Zephyr7bBeta = ChatModels(
+      modelName = "zephyr-7b-beta",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val DialoGPTLarge = ChatModels(
+      modelName = "DialoGPT-large",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val YarnMistral7b128k = ChatModels(
+      modelName = "Yarn-Mistral-7b-128k",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val PygmalionAI = ChatModels(
+      modelName = "PygmalionAI",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Pygmalion13b = ChatModels(
+      modelName = "pygmalion-1.3b",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Opt67b = ChatModels(
+      modelName = "opt-6.7b",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val MistralLite = ChatModels(
+      modelName = "MistralLite",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Openchat35 = ChatModels(
+      modelName = "openchat_3.5",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val NeuralChat7bV3 = ChatModels(
+      modelName = "neural-chat-7b-v3",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val OpenHermes25Mistral7B = ChatModels(
+      modelName = "OpenHermes-2.5-Mistral-7B",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Dolphin221Mistral7b = ChatModels(
+      modelName = "dolphin-2.2.1-mistral-7b",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Mistral7BOpenOrca = ChatModels(
+      modelName = "Mistral-7B-OpenOrca",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val CodeLlama7bHf = ChatModels(
+      modelName = "CodeLlama-7b-hf",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val DeepseekCoder67bInstruct = ChatModels(
+      modelName = "deepseek-coder-6.7b-instruct",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Phi15 = ChatModels(
+      modelName = "phi-1_5",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Zephyr7bAlpha = ChatModels(
+      modelName = "zephyr-7b-alpha",
+      maxTokens = 16384,
+      providers = listOf(APIProvider.ModelsLab),
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
       "GPT4" to GPT4,
@@ -148,6 +261,22 @@ open class ChatModels(
       "LLaMA270bChat" to LLaMA270bChat,
       "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
       "Gemma7bIt" to Gemma7bIt,
+      "Zephyr7bBeta" to Zephyr7bBeta,
+      "DialoGPTLarge" to DialoGPTLarge,
+      "YarnMistral7b128k" to YarnMistral7b128k,
+      "PygmalionAI" to PygmalionAI,
+      "Pygmalion13b" to Pygmalion13b,
+      "Opt67b" to Opt67b,
+      "MistralLite" to MistralLite,
+      "Openchat35" to Openchat35,
+      "NeuralChat7bV3" to NeuralChat7bV3,
+      "OpenHermes25Mistral7B" to OpenHermes25Mistral7B,
+      "Dolphin221Mistral7b" to Dolphin221Mistral7b,
+      "Mistral7BOpenOrca" to Mistral7BOpenOrca,
+      "CodeLlama7bHf" to CodeLlama7bHf,
+      "DeepseekCoder67bInstruct" to DeepseekCoder67bInstruct,
+      "Phi15" to Phi15,
+      "Zephyr7bAlpha" to Zephyr7bAlpha,
     )
   }
 }

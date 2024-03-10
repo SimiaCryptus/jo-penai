@@ -36,7 +36,7 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
   protected var key: String = keyTxt,
   private val apiBase: String = "https://api.openai.com/v1",
-  val apiProvider : APIProvider = APIProvider.OpenAI,
+  val apiProvider: APIProvider = APIProvider.OpenAI,
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
   scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
@@ -200,9 +200,10 @@ open class OpenAIClient(
         val model = AudioModels.values().find { it.modelName.equals(request.model, true) }
         onUsage(
           model, Usage(
-          prompt_tokens = request.input.length,
-          cost = model?.pricing(request.input.length)
-        ))
+            prompt_tokens = request.input.length,
+            cost = model?.pricing(request.input.length)
+          )
+        )
         bytes
       }
     }
@@ -240,45 +241,128 @@ open class OpenAIClient(
 
   open fun chat(
     chatRequest: ChatRequest, model: OpenAITextModel
-  ): ChatResponse = withReliability {
-    withPerformanceLogging {
-      chatCounter.incrementAndGet()
+  ): ChatResponse {
+    log.info("Chat request: $chatRequest", RuntimeException())
+    return withReliability {
+      withPerformanceLogging {
+        chatCounter.incrementAndGet()
 
-      val result = when {
-        apiProvider == APIProvider.Perplexity -> {
-          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
-          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-          post("$apiBase/chat/completions", json)
+        val result = when {
+          apiProvider == APIProvider.Perplexity -> {
+            val json =
+              JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            post("$apiBase/chat/completions", json)
+          }
+
+          apiProvider == APIProvider.Groq -> {
+            val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            post("$apiBase/chat/completions", json)
+          }
+
+          apiProvider == APIProvider.ModelsLab -> {
+            val json =
+              JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            fromModelsLab(post("$apiBase/llm/chat", json))
+          }
+
+          else -> {
+            val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            post("$apiBase/chat/completions", json)
+          }
         }
-        apiProvider == APIProvider.Groq -> {
-          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
-          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-          post("$apiBase/chat/completions", json)
+        checkError(result)
+        val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
+        if (response.usage != null) {
+          onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
         }
-        else -> {
-          val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-          log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-          post("$apiBase/chat/completions", json)
-        }
-      }
-      checkError(result)
-      val response = JsonUtil.objectMapper().readValue(result, ChatResponse::class.java)
-      if (response.usage != null) {
-        onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
-      }
-      log(
-        msg = String.format(
-          "Chat Completion:\n\t%s",
-          response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
-            ?: JsonUtil.toJson(response)
+        log(
+          msg = String.format(
+            "Chat Completion:\n\t%s",
+            response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
+              ?: JsonUtil.toJson(response)
+          )
         )
-      )
-      response
+        response
+      }
     }
   }
 
+  private fun fromModelsLab(rawResponse: String): String {
+    log.info("Received response from ModelsLab: $rawResponse", RuntimeException())
+    val response = JsonUtil.objectMapper().readValue(rawResponse, ModelsLabDataModel.ChatResponse::class.java)
+    return when(response.status) {
+      "success" -> {
+        JsonUtil.toJson(ChatResponse(
+          id = response.chat_id,
+          choices = listOf(
+            ChatChoice(
+              message = ChatMessageResponse(content = response.message),
+              index = 0
+            )
+          ),
+          usage = response.meta?.let {
+            Usage(
+              prompt_tokens = it.max_new_tokens ?: 0,
+              completion_tokens = 0, // Assuming no direct mapping; adjust as needed.
+              total_tokens = it.max_new_tokens ?: 0
+            )
+          }
+        ))
+      }
+      "processing" -> {
+        val seconds = response?.eta ?: 1
+        log.info("Chat response is still processing; waiting ${seconds}s and trying again.")
+        Thread.sleep(seconds * 1000L)
+        val postCheck = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(
+          mapOf(
+            "chat_id" to (response.meta?.chat_id ?: response.chat_id),
+            "key" to key
+          )
+        )
+        fromModelsLab(post("$apiBase/llm/get_queued_response", postCheck))
+      }
+      "error" -> {
+        throw RuntimeException("Error in chat request: ${response.message}\n$rawResponse")
+      }
+      "failed" -> {
+        throw RuntimeException("Chat request failed: ${response.message}\n$rawResponse")
+      }
+      else -> throw RuntimeException("Unknown status: ${response.status}\n${response.message}\n$rawResponse")
+    }
+  }
+
+  private fun toModelsLab(chatRequest: ApiModel.ChatRequest): ModelsLabDataModel.ChatRequest {
+    val chatRequest1 = ModelsLabDataModel.ChatRequest(
+      key = key,
+      model_id = chatRequest.model,
+      system_prompt = chatRequest.messages.filter { it.role == Role.system }.joinToString("\n") {
+        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
+      prompt = chatRequest.messages.filter { it.role != Role.system }.joinToString("\n") {
+        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
+      max_new_tokens = 512,
+      temperature = chatRequest.temperature,
+//      do_sample = true,
+//      top_k = 50,
+//      top_p = 10.0,
+      no_repeat_ngram_size = 5,
+//      seed = 1235,
+//      temp = false,
+    )
+    log.info("Converted chat request ${
+      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+    } to ModelsLab format: ${
+      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest1)
+    }")
+/*
+*/
+    return chatRequest1
+  }
+
   private fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
-    model = chatRequest.model,
     messages = chatRequest.messages.map { message ->
       GroqChatMessage(
         role = message.role,
@@ -292,6 +376,7 @@ open class OpenAIClient(
   open fun moderate(text: String) = withReliability {
     when {
       apiProvider == APIProvider.Groq -> return@withReliability
+      apiProvider == APIProvider.ModelsLab -> return@withReliability
     }
     withPerformanceLogging {
       moderationCounter.incrementAndGet()
@@ -432,10 +517,14 @@ open class OpenAIClient(
       checkError(response)
       val model = ImageModels.values().find { it.modelName.equals(request.model, true) }
       val dims = request.size?.split("x")
-      onUsage(model, Usage(completion_tokens = 1, cost = model?.pricing(
-        width = dims?.get(0)?.toInt() ?: 0,
-        height = dims?.get(1)?.toInt() ?: 0
-      )))
+      onUsage(
+        model, Usage(
+          completion_tokens = 1, cost = model?.pricing(
+            width = dims?.get(0)?.toInt() ?: 0,
+            height = dims?.get(1)?.toInt() ?: 0
+          )
+        )
+      )
 
       JsonUtil.objectMapper().readValue(response, ImageGenerationResponse::class.java)
     }
