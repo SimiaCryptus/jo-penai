@@ -5,7 +5,6 @@ import com.simiacryptus.jopenai.ApiModel.ChatMessage
 import com.simiacryptus.jopenai.ApiModel.ChatRequest
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.models.ChatModels
-import com.simiacryptus.jopenai.models.OpenAITextModel
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import com.simiacryptus.jopenai.util.JsonUtil.toJson
 import java.util.concurrent.atomic.AtomicInteger
@@ -13,18 +12,18 @@ import java.util.concurrent.atomic.AtomicInteger
 open class ChatProxy<T : Any>(
     clazz: Class<out T>,
     val api: OpenAIClient,
-    var model: OpenAITextModel = ChatModels.GPT35Turbo,
-    temperature: Double = 0.7,
+    var model: ChatModels,
+    temperature: Double = 0.5,
     private var verbose: Boolean = false,
     private val moderated: Boolean = true,
-    val deserializerRetries: Int = 5,
+    val deserializerRetries: Int = 2,
     validation: Boolean = true
 ) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {
 
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
         api = params["api"] as OpenAIClient? ?: OpenAIClient(),
-        model = params["model"] as OpenAITextModel? ?: ChatModels.GPT35Turbo,
+        model = (params["model"] as ChatModels?)!!,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,

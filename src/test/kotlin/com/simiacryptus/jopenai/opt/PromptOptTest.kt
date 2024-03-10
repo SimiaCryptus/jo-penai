@@ -1,6 +1,7 @@
 package com.simiacryptus.jopenai.opt
 
 import com.simiacryptus.jopenai.OpenAIClient
+import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.opt.PromptOptimization.TestCase
 import com.simiacryptus.jopenai.opt.PromptOptimization.Turn
 import org.slf4j.LoggerFactory
@@ -16,8 +17,9 @@ object PromptOptTest {
         try {
             PromptOptimization(
                 OpenAIClient(
-                    logLevel = Level.DEBUG
-                )
+                    logLevel = Level.DEBUG,
+                ),
+                model = ChatModels.GPT35Turbo,
             ).runGeneticGenerations(
                 populationSize = 7,
                 generations = 5,

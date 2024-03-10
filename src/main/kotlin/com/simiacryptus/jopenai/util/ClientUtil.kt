@@ -5,6 +5,7 @@ import com.google.gson.JsonObject
 import com.simiacryptus.jopenai.ApiModel
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
+import com.simiacryptus.jopenai.models.APIProvider
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
@@ -93,6 +94,7 @@ object ClientUtil {
   }
 
   private var _keyTxt: String? = null
+  val defaultApiProvider: APIProvider = APIProvider.OpenAI
   var keyTxt: String
     get() {
       if (null != _keyTxt) return _keyTxt!!

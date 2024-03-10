@@ -173,6 +173,17 @@ interface ApiModel {
         val functions: List<RequestFunction>? = null,
     )
 
+    data class GroqChatRequest(
+        val messages: List<GroqChatMessage> = listOf(),
+        val model: String? = null,
+        val temperature: Double = 0.0,
+        val max_tokens: Int? = null,
+        val stop: List<CharSequence>? = listOf(),
+        val function_call: String? = null,
+        val n: Int? = null,
+        val functions: List<RequestFunction>? = null,
+    )
+
     data class RequestFunction(
         val name: String = "",
         val description: String = "",
@@ -219,6 +230,16 @@ interface ApiModel {
         val name: String? = null,
         val arguments: String? = null,
     )
+
+    data class GroqChatMessage(
+        val role: Role? = null,
+        // Changed from List<ContentPart> to List<String> to meet the requirement.
+        val content: String? = null,
+        val function_call: FunctionCall? = null,
+    )
+
+    // Any container classes or functions that should support GroqChatMessage should be adjusted here.
+    // For example, if there's a function that takes ChatMessage as an argument, consider overloading it or making it generic to support GroqChatMessage as well.
 
     data class EditRequest(
         val model: String = "",
