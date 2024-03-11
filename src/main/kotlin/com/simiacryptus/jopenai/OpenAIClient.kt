@@ -370,6 +370,7 @@ open class OpenAIClient(
         content = message.content?.joinToString("\n") { it.text ?: "" } ?: "",
       )
     },
+    model = chatRequest.model,
     max_tokens = chatRequest.max_tokens,
     temperature = chatRequest.temperature,
   )
