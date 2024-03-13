@@ -5,6 +5,7 @@ import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
 import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveGenericType
+import org.slf4j.LoggerFactory
 import java.lang.reflect.*
 import java.util.*
 import kotlin.reflect.*
@@ -13,13 +14,19 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 open class YamlDescriber : TypeDescriber() {
+  companion object {
+    val log = LoggerFactory.getLogger(YamlDescriber::class.java)
+  }
   override val markupLanguage: String
     get() = "yaml"
 
   override fun describe(
     rawType: Class<in Nothing>,
     stackMax: Int,
+    describedTypes: MutableSet<String>
   ): String {
+    if (describedTypes.contains(rawType.name)) return "..."
+    describedTypes.add(rawType.name)
     if (isAbbreviated(rawType) || stackMax <= 0) return """
             |type: object
             |class: ${rawType.name}
@@ -32,12 +39,12 @@ open class YamlDescriber : TypeDescriber() {
           """
                     |${it.name}:
                     |  description: ${description.value.trim()}
-                    |  ${toYaml(it.returnType.javaType, stackMax - 1).replace("\n", "\n  ")}
+                    |  ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
         } else {
           """
                     |${it.name}:
-                    |  ${toYaml(it.returnType.javaType, stackMax - 1).replace("\n", "\n  ")}
+                    |  ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
         }
       }.toTypedArray()
@@ -48,12 +55,12 @@ open class YamlDescriber : TypeDescriber() {
         return@map if (description != null) """
                 |${it.name}:
                 |  description: ${description.value.trim()}
-                |  ${toYaml(it.genericType, stackMax - 1).replace("\n", "\n  ")}
+                |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                 """.trimIndent()
         else
           """
                 |${it.name}:
-                |  ${toYaml(it.genericType, stackMax - 1).replace("\n", "\n  ")}
+                |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                 """.trimMargin().trim()
       }.toTypedArray()
     }
@@ -65,7 +72,7 @@ open class YamlDescriber : TypeDescriber() {
       }.map {
         """
             |${it.name}:
-            |  ${describe(it, rawType.kotlin, stackMax - 1, false).replace("\n", "\n  ")}
+            |  ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
             """.trimMargin().trim()
       }.toTypedArray()
     } else {
@@ -134,11 +141,11 @@ open class YamlDescriber : TypeDescriber() {
     if (clazz != null && clazz.isKotlinClass()) {
       val function = clazz.kotlin.functions.find { it.name == self.name }
       if (function != null) {
-        return describe(function, clazz.kotlin, stackMax)
+        return describe(function, clazz.kotlin, stackMax, true, mutableSetOf())
       }
     }
     val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
-    val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1).trim()
+    val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
     val description = self.annotations.find { x -> x is Description } as? Description
     val responseYaml = """
         |responses:
@@ -165,7 +172,7 @@ open class YamlDescriber : TypeDescriber() {
     return """
         |- name: ${self.name}
         |  ${description}
-        |  ${toYaml(self.parameterizedType, stackMax - 1).replace("\n", "\n  ")}
+        |  ${toYaml(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
         |""".trimMargin().trim().filterEmptyLines()
   }
 
@@ -173,12 +180,16 @@ open class YamlDescriber : TypeDescriber() {
     self: KFunction<*>,
     concreteClass: KClass<*>,
     stackMax: Int,
-    includeOperationID: Boolean = true
+    includeOperationID: Boolean = true,
+    describedTypes: MutableSet<String>
   ): String {
+   val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
+   if (describedTypes.contains(functionTypeRepresentation)) return "..."
+   describedTypes.add(functionTypeRepresentation)
     if (stackMax <= 0) return "..."
     if (!coverMethods) return ""
     val parameterYaml = self.parameters.filter { it.name != null }
-      .map { toYaml(it, concreteClass, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
+      .map { toYaml(it, concreteClass, stackMax - 1, describedTypes) }.toTypedArray().joinToString("\n").trim()
     val returnTypeYaml = toYaml(self.returnType, stackMax - 1).trim()
     val description = (self.annotations.find { x -> x is Description } as? Description)
       ?.let { "description: ${it.value.trim().replace("\n", "\\n")}" } ?: ""
@@ -195,7 +206,15 @@ open class YamlDescriber : TypeDescriber() {
       """.trimMargin().filterEmptyLines()
   }
 
-  private fun toYaml(self: KParameter, concreteClass: KClass<*>, stackMax: Int): String {
+  private fun toYaml(
+    self: KParameter,
+    concreteClass: KClass<*>,
+    stackMax: Int,
+    describedTypes: MutableSet<String>
+  ): String {
+   val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
+   if (describedTypes.contains(parameterTypeRepresentation)) return "..."
+   describedTypes.add(parameterTypeRepresentation)
     if (stackMax <= 0) return "..."
     val kType = resolveGenericType(concreteClass, self.type)
     val description = (self.annotations.find { it is Description } as? Description)?.value?.trim()
@@ -209,7 +228,10 @@ open class YamlDescriber : TypeDescriber() {
       |""".trimMargin().trim().filterEmptyLines()
   }
 
-  private fun toYaml(self: Type, stackMax: Int): String {
+
+  private fun toYaml(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
+    if (describedTypes.contains(self.toString())) return "..."
+    describedTypes.add(self.toString())
     if (isAbbreviated(self) || stackMax <= 0) return """
       |type: object
       |class: ${self.typeName}
@@ -221,21 +243,21 @@ open class YamlDescriber : TypeDescriber() {
       """
       |type: array
       |items:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
       """
       |type: map
       |keys:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
       |values:
-      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, describedTypes).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else if (self.isArray) {
       """
       |type: array
       |items:
-      |  ${toYaml(self.componentType!!, stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else {
       describe(TypeToken.of(self).rawType, stackMax)
@@ -254,21 +276,21 @@ open class YamlDescriber : TypeDescriber() {
       """
       |type: array
       |items:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
       """
       |type: map
       |keys:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
       |values:
-      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else if (self.javaType.isArray) {
       """
       |type: array
       |items:
-      |  ${toYaml(self.javaType.componentType!!, stackMax - 1).replace("\n", "\n  ")}
+      |  ${toYaml(self.javaType.componentType!!, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else {
       describe(TypeToken.of(self.javaType).rawType, stackMax)

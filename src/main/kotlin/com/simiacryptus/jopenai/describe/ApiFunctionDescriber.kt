@@ -30,7 +30,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
         return "${self.name}(\n$parameters\n)"
     }
 
-    override fun describe(rawType: Class<in Nothing>, stackMax: Int): String {
+    override fun describe(rawType: Class<in Nothing>, stackMax: Int, describedTypes: MutableSet<String>): String {
         if (isAbbreviated(rawType)) return rawType.simpleName
         if (stackMax <= 0) return truncation
         return if (!rawType.isKotlinClass()) {
