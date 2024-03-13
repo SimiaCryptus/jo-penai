@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
-import com.simiacryptus.jopenai.describe.TypeDescriber.Companion.primitives
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Parameter
@@ -16,7 +15,7 @@ import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
-open class ApiFunctionDescriber : TypeDescriber {
+open class ApiFunctionDescriber : TypeDescriber() {
     override val markupLanguage: String get() = ""
 
     open val includeMethods: Boolean = true

@@ -7,16 +7,17 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.util.*
 
-interface TypeDescriber {
-    val markupLanguage: String
-    val methodBlacklist: Set<String>
-    fun describe(
+abstract class TypeDescriber {
+    abstract val markupLanguage: String
+    abstract val methodBlacklist: Set<String>
+    var coverMethods = true
+    abstract fun describe(
         rawType: Class<in Nothing>,
         stackMax: Int = 10,
     ): String
 
-    fun describe(self: Method, clazz: Class<*>? = null, stackMax: Int = 5): String
-    fun isAbbreviated(self: Type): Boolean {
+    abstract fun describe(self: Method, clazz: Class<*>? = null, stackMax: Int = 5): String
+    open fun isAbbreviated(self: Type): Boolean {
         val name = self.typeName
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         if (typeName in primitives) {
@@ -38,8 +39,6 @@ interface TypeDescriber {
     }
 
     companion object {
-
-
         val primitives = setOf(
             "boolean",
             "integer",

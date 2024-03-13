@@ -242,7 +242,7 @@ open class OpenAIClient(
   open fun chat(
     chatRequest: ChatRequest, model: ChatModels
   ): ChatResponse {
-    log.info("Chat request: $chatRequest", RuntimeException())
+    //log.info("Chat request: $chatRequest", RuntimeException())
     return withReliability {
       withPerformanceLogging {
         chatCounter.incrementAndGet()
@@ -293,7 +293,7 @@ open class OpenAIClient(
   }
 
   private fun fromModelsLab(rawResponse: String): String {
-    log.info("Received response from ModelsLab: $rawResponse", RuntimeException())
+    //log.info("Received response from ModelsLab: $rawResponse", RuntimeException())
     val response = JsonUtil.objectMapper().readValue(rawResponse, ModelsLabDataModel.ChatResponse::class.java)
     return when(response.status) {
       "success" -> {

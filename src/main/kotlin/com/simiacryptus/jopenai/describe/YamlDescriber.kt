@@ -5,7 +5,6 @@ import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
 import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveGenericType
-import com.simiacryptus.jopenai.describe.TypeDescriber.Companion.primitives
 import java.lang.reflect.*
 import java.util.*
 import kotlin.reflect.*
@@ -13,7 +12,7 @@ import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
-open class YamlDescriber : TypeDescriber {
+open class YamlDescriber : TypeDescriber() {
   override val markupLanguage: String
     get() = "yaml"
 
@@ -58,7 +57,7 @@ open class YamlDescriber : TypeDescriber {
                 """.trimMargin().trim()
       }.toTypedArray()
     }
-    val methodsYaml = if (rawType.isKotlinClass()) {
+    val methodsYaml = (if (rawType.isKotlinClass()) {
       rawType.kotlin.functions.filter {
         it.visibility == KVisibility.PUBLIC
             && !methodBlacklist.contains(it.name)
@@ -86,7 +85,8 @@ open class YamlDescriber : TypeDescriber {
       } else {
         arrayOf()
       }
-    }
+    }).toMutableList()
+    if (!coverMethods) methodsYaml.clear()
     if (propertiesYaml.isEmpty() && methodsYaml.isEmpty()) return """
             |type: object
             |class: ${rawType.name}
@@ -129,6 +129,7 @@ open class YamlDescriber : TypeDescriber {
 
   override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
     if (stackMax <= 0) return "..."
+    if (!coverMethods) return ""
     // If implClass is a Kotlin class, resolve the KFunction and call the other describe method
     if (clazz != null && clazz.isKotlinClass()) {
       val function = clazz.kotlin.functions.find { it.name == self.name }
@@ -168,8 +169,14 @@ open class YamlDescriber : TypeDescriber {
         |""".trimMargin().trim().filterEmptyLines()
   }
 
-  private fun describe(self: KFunction<*>, concreteClass: KClass<*>, stackMax: Int, includeOperationID : Boolean = true): String {
+  private fun describe(
+    self: KFunction<*>,
+    concreteClass: KClass<*>,
+    stackMax: Int,
+    includeOperationID: Boolean = true
+  ): String {
     if (stackMax <= 0) return "..."
+    if (!coverMethods) return ""
     val parameterYaml = self.parameters.filter { it.name != null }
       .map { toYaml(it, concreteClass, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
     val returnTypeYaml = toYaml(self.returnType, stackMax - 1).trim()
