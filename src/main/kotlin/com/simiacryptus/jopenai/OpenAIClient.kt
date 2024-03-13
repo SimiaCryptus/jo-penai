@@ -346,12 +346,7 @@ open class OpenAIClient(
         it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
       max_new_tokens = 512,
       temperature = chatRequest.temperature,
-//      do_sample = true,
-//      top_k = 50,
-//      top_p = 10.0,
       no_repeat_ngram_size = 5,
-//      seed = 1235,
-//      temp = false,
     )
     log.info("Converted chat request ${
       JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)

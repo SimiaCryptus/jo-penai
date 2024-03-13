@@ -100,7 +100,6 @@ dependencies {
     testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = jupiter_version)
     testImplementation(group = "ch.qos.logback", name = "logback-classic", version = logback_version)
     testImplementation(group = "ch.qos.logback", name = "logback-core", version = logback_version)
-    testImplementation(group = "com.squareup.okhttp3", name = "mockwebserver", version = "4.12.0")
 
 }
 

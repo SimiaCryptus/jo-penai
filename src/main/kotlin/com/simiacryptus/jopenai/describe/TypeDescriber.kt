@@ -42,6 +42,7 @@ abstract class TypeDescriber {
     companion object {
         val primitives = setOf(
             "boolean",
+            "int",
             "integer",
             "number",
             "string",

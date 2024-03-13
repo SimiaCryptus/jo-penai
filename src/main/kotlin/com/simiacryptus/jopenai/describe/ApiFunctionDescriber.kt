@@ -42,16 +42,16 @@ open class ApiFunctionDescriber : TypeDescriber() {
 
     fun describe(self: Parameter, stackMax: Int): String {
         if (stackMax <= 0) return truncation
-        return "${self.name}: ${toApiFunctionFormat(self.parameterizedType, stackMax - 1)}"
+        return "${self.name}: ${toApiFunctionFormat(self.parameterizedType, stackMax - 1, mutableSetOf())}"
     }
 
-    private fun toApiFunctionFormat(self: Type, stackMax: Int = 10): String {
+    private fun toApiFunctionFormat(self: Type, stackMax: Int = 10, describedTypes: MutableSet<String>): String {
         if (stackMax <= 0) return truncation
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return when {
             typeName in primitives -> typeName
-            self.isArray -> "${toApiFunctionFormat(self.componentType!!, stackMax - 1)}[]"
-            else -> describe(TypeToken.of(self).rawType, stackMax - 1)
+            self.isArray -> "${toApiFunctionFormat(self.componentType!!, stackMax - 1, mutableSetOf())}[]"
+            else -> describe(TypeToken.of(self).rawType, stackMax - 1, describedTypes)
         }
     }
 
@@ -62,7 +62,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
             kClass.memberProperties.filter { it.visibility == KVisibility.PUBLIC }
                 .joinToString("\n") {
                     "  val ${it.name}: ${
-                        toApiFunctionFormat(it.returnType.javaType, stackMax - 1).replace(
+                        toApiFunctionFormat(it.returnType.javaType, stackMax - 1, mutableSetOf()).replace(
                             "\n",
                             "\n  "
                         )
@@ -84,7 +84,8 @@ open class ApiFunctionDescriber : TypeDescriber() {
                         "    ${it.name}: ${
                             toApiFunctionFormat(
                                 it.type.javaType,
-                                stackMax - 1
+                                stackMax - 1,
+ mutableSetOf()
                             ).replace("\n", "\n    ")
                         }"
                     }

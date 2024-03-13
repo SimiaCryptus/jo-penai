@@ -1,15 +1,21 @@
 package com.simiacryptus.util
 
-import kotlin.reflect.full.createType
 import com.simiacryptus.jopenai.TypeDescriberTestBase
+import com.simiacryptus.jopenai.describe.JsonDescriber
 import com.simiacryptus.jopenai.describe.TypeDescriber
-import com.simiacryptus.jopenai.describe.YamlDescriber
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class YamlDescriberTest : TypeDescriberTestBase() {
+class JsonDescriberTest : TypeDescriberTestBase() {
+  @Test
   override fun testDescribeType() {
     super.testDescribeType()
+  }
+
+  @Test
+  override fun testDescribeOpenAIClient() {
+    super.testDescribeOpenAIClient()
   }
 
   @Test
@@ -17,49 +23,43 @@ class YamlDescriberTest : TypeDescriberTestBase() {
     super.testDescribeMethod()
   }
 
-  override val typeDescriber: TypeDescriber get() = YamlDescriber()
+  override val typeDescriber: TypeDescriber get() = JsonDescriber()
   override val classDescription: String
+    @Language("TEXT")
     get() =
-      //language=yaml
-      """
-            |type: object
-            |class: com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}DataClassExample
-            |properties:
-            |  a:
-            |    description: This is an integer
-            |    type: int
-            |  b:
-            |    type: string
-            |  c:
-            |    type: array
-            |    items:
-         |      ...
-            |  d:
-            |    type: map
-            |    keys:
-         |      ...
-            |    values:
-            |      type: integer
-            """.trimMargin()
+      """{
+                 "type": "object",
+                 "class": "com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}DataClassExample",
+                 "allowed": false
+               }"""
 
   override val methodDescription
     get() =
-      //language=yaml
+      //language=json
       """
-            |operationId: methodExample
-            |description: This is a method
-            |parameters:
-            |  - name: p1
-            |    description: This is a parameter
-            |    type: int
-            |  - name: p2
-            |    type: string
-            |responses:
-            |  application/json:
-            |    schema:
-            |      type: string
-            |
-            """.trimMargin()
+            {
+              "operationId": "methodExample",
+              "description": "This is a method",
+              "parameters": [
+                {
+                  "name": "p1",
+                  "description": "This is a parameter",
+                  "type": "int"
+                },
+                {
+                  "name": "p2",
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "application/json": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+            """.trimIndent()
 
   @Test
   override fun testDescribeRecursiveType() {
@@ -68,7 +68,7 @@ class YamlDescriberTest : TypeDescriberTestBase() {
 
   @Test
   fun testDescribedTypesPreventRecursion() {
-    val describer = YamlDescriber()
+    val describer = JsonDescriber()
     val describedTypes = mutableSetOf<String>()
     val description = describer.describe(RecursiveType::class.java, 10, describedTypes)
     assertTrue(description.contains("..."), "Description should contain recursion prevention marker")
@@ -77,7 +77,7 @@ class YamlDescriberTest : TypeDescriberTestBase() {
 
   @Test
   fun testDescribedTypesTrackMultipleTypes() {
-    val describer = YamlDescriber()
+    val describer = JsonDescriber()
     val describedTypes = mutableSetOf<String>()
     describer.describe(FirstType::class.java, 10, describedTypes)
     describer.describe(SecondType::class.java, 10, describedTypes)

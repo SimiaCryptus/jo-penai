@@ -17,6 +17,7 @@ open class YamlDescriber : TypeDescriber() {
   companion object {
     val log = LoggerFactory.getLogger(YamlDescriber::class.java)
   }
+
   override val markupLanguage: String
     get() = "yaml"
 
@@ -25,8 +26,11 @@ open class YamlDescriber : TypeDescriber() {
     stackMax: Int,
     describedTypes: MutableSet<String>
   ): String {
-    if (describedTypes.contains(rawType.name)) return "..."
-    describedTypes.add(rawType.name)
+    if (!describedTypes.add(rawType.name) && rawType.name !in primitives) {
+      log.debug("Preventing recursion for type: ${rawType.name}")
+      return "..."
+    }
+    log.debug("Describing type: ${rawType.name} with stackMax: $stackMax")
     if (isAbbreviated(rawType) || stackMax <= 0) return """
             |type: object
             |class: ${rawType.name}
@@ -183,9 +187,9 @@ open class YamlDescriber : TypeDescriber() {
     includeOperationID: Boolean = true,
     describedTypes: MutableSet<String>
   ): String {
-   val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
-   if (describedTypes.contains(functionTypeRepresentation)) return "..."
-   describedTypes.add(functionTypeRepresentation)
+    val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
+    if (describedTypes.contains(functionTypeRepresentation) && functionTypeRepresentation !in primitives) return "..."
+    describedTypes.add(functionTypeRepresentation)
     if (stackMax <= 0) return "..."
     if (!coverMethods) return ""
     val parameterYaml = self.parameters.filter { it.name != null }
@@ -212,9 +216,9 @@ open class YamlDescriber : TypeDescriber() {
     stackMax: Int,
     describedTypes: MutableSet<String>
   ): String {
-   val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
-   if (describedTypes.contains(parameterTypeRepresentation)) return "..."
-   describedTypes.add(parameterTypeRepresentation)
+    val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
+    if (describedTypes.contains(parameterTypeRepresentation) && parameterTypeRepresentation !in primitives) return "..."
+    describedTypes.add(parameterTypeRepresentation)
     if (stackMax <= 0) return "..."
     val kType = resolveGenericType(concreteClass, self.type)
     val description = (self.annotations.find { it is Description } as? Description)?.value?.trim()
@@ -232,11 +236,11 @@ open class YamlDescriber : TypeDescriber() {
   private fun toYaml(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
     if (describedTypes.contains(self.toString())) return "..."
     describedTypes.add(self.toString())
-    if (isAbbreviated(self) || stackMax <= 0) return """
+     val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
+     if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) return """
       |type: object
       |class: ${self.typeName}
       """.trimMargin().filterEmptyLines()
-    val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
     return if (typeName in primitives) {
       "type: $typeName"
     } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
@@ -260,7 +264,7 @@ open class YamlDescriber : TypeDescriber() {
       |  ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
     } else {
-      describe(TypeToken.of(self).rawType, stackMax)
+      describe(TypeToken.of(self).rawType, stackMax, describedTypes)
     }
   }
 
