@@ -4,6 +4,7 @@ import com.simiacryptus.jopenai.TypeDescriberTestBase
 import com.simiacryptus.jopenai.describe.JsonDescriber
 import com.simiacryptus.jopenai.describe.TypeDescriber
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -63,7 +64,14 @@ class JsonDescriberTest : TypeDescriberTestBase() {
 
   @Test
   override fun testDescribeRecursiveType() {
-    super.testDescribeRecursiveType()
+    val expectedDescription = // Expected YAML description for RecursiveDataClass
+      """{
+                 "type": "object",
+                 "class": "com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}RecursiveDataClass",
+                 "allowed": false
+               }"""
+    val actualDescription = typeDescriber.describe(RecursiveDataClass::class.java)
+    Assertions.assertEquals(expectedDescription, actualDescription)
   }
 
   @Test

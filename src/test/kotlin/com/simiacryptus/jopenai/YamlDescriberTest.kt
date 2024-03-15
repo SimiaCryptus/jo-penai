@@ -1,9 +1,9 @@
 package com.simiacryptus.util
 
-import kotlin.reflect.full.createType
 import com.simiacryptus.jopenai.TypeDescriberTestBase
 import com.simiacryptus.jopenai.describe.TypeDescriber
 import com.simiacryptus.jopenai.describe.YamlDescriber
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -63,7 +63,17 @@ class YamlDescriberTest : TypeDescriberTestBase() {
 
   @Test
   override fun testDescribeRecursiveType() {
-    super.testDescribeRecursiveType()
+    val expectedDescription = // Expected YAML description for RecursiveDataClass
+      """type: object
+class: com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}RecursiveDataClass
+properties:
+  name:
+    type: string
+  parent:
+    description: Recursive reference
+    ..."""
+    val actualDescription = typeDescriber.describe(RecursiveDataClass::class.java)
+    Assertions.assertEquals(expectedDescription, actualDescription)
   }
 
   @Test
