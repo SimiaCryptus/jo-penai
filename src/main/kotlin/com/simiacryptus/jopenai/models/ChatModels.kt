@@ -277,6 +277,65 @@ open class ChatModels(
       outputTokenPricePerK = 0.0015
     )
 
+
+
+    val AWSLLaMA270bChat = ChatModels(
+      name = "AWSLLaMA270bChat",
+      modelName = "meta.llama2-70b-chat-v1",
+      maxTokens = 4096,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AWSLLaMA213bChat = ChatModels(
+      name = "AWSLLaMA213bChat",
+      modelName = "meta.llama2-13b-chat-v1",
+      maxTokens = 4096,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Mistral7bInstructV02 = ChatModels(
+      name = "Mistral7bInstructV02",
+      modelName = "mistral.mistral-7b-instruct-v0:2",
+      maxTokens = 16384,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Mixtral8x7bInstructV01AWS = ChatModels(
+      name = "Mixtral8x7bInstructV01AWS",
+      modelName = "mistral.mixtral-8x7b-instruct-v0:1",
+      maxTokens = 16384,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AmazonTitanEmbedTextV1 = ChatModels(
+      name = "AmazonTitanEmbedTextV1",
+      modelName = "amazon.titan-embed-text-v1",
+      maxTokens = 16384,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AmazonTitanTextLiteV1 = ChatModels(
+      name = "AmazonTitanTextLiteV1",
+      modelName = "amazon.titan-text-lite-v1",
+      maxTokens = 16384,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AmazonTitanTextExpressV1 = ChatModels(
+      name = "AmazonTitanTextExpressV1",
+      modelName = "amazon.titan-text-express-v1",
+      maxTokens = 16384,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
       "GPT4" to GPT4,
@@ -308,6 +367,13 @@ open class ChatModels(
       "DeepseekCoder67bInstruct" to DeepseekCoder67bInstruct,
       "Phi15" to Phi15,
       "Zephyr7bAlpha" to Zephyr7bAlpha,
+      "AWSLLaMA270bChat" to AWSLLaMA270bChat,
+      "AWSLLaMA213bChat" to AWSLLaMA213bChat,
+      "Mistral7bInstructV02" to Mistral7bInstructV02,
+      "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
+      "AmazonTitanEmbedTextV1" to AmazonTitanEmbedTextV1,
+      "AmazonTitanTextLiteV1" to AmazonTitanTextLiteV1,
+      "AmazonTitanTextExpressV1" to AmazonTitanTextExpressV1,
     )
   }
 }

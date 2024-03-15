@@ -25,11 +25,17 @@ import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import org.slf4j.event.Level
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+import software.amazon.awssdk.core.SdkBytes
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
+import java.util.concurrent.Semaphore
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
@@ -263,10 +269,25 @@ open class OpenAIClient(
           }
 
           apiProvider == APIProvider.ModelsLab -> {
-            val json =
-              JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
-            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
+            modelsLabThrottle.runWithPermit {
+              val json =
+                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
+              log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+              fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
+            }
+          }
+
+          apiProvider == APIProvider.AWS -> {
+            val awsAuth = JsonUtil.fromJson<AWSAuth>(key[apiProvider]!!, AWSAuth::class.java)
+            val invokeModelRequest = toAWS(model.modelName, chatRequest)
+            val bedrockRuntimeClient = BedrockRuntimeClient.builder()
+              .credentialsProvider(ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build())
+              .region(Region.of(awsAuth.region))
+              .build()
+            val invokeModelResponse = bedrockRuntimeClient
+              .invokeModel(invokeModelRequest)
+            val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
+            fromAWS(responseBody, model.modelName)
           }
 
           else -> {
@@ -292,10 +313,142 @@ open class OpenAIClient(
     }
   }
 
-  private fun fromModelsLab(rawResponse: String): String {
-    //log.info("Received response from ModelsLab: $rawResponse", RuntimeException())
+  data class AWSAuth(
+    val profile: String = "default",
+    val region: String = Region.US_WEST_2.id(),
+  )
+  private fun toAWS(model: String, chatRequest: ChatRequest): InvokeModelRequest? {
+    val body = when {
+      model.contains("llama2") -> {
+        mapOf(
+          "prompt" to chatRequest.messages.joinToString("\n\n") {
+            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
+          },
+          "max_gen_len" to 512,
+          "temperature" to 0.3,
+          "top_p" to 0.9,
+        )
+      }
+      //mistral
+      model.contains("mistral") -> {
+        mapOf(
+          "prompt" to chatRequest.messages.joinToString("\n\n") {
+            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
+          },
+          "max_tokens" to 200,
+          "temperature" to 0.3,
+          "top_p" to 0.9,
+          "top_k" to 50,
+        )
+      }
+      model.contains("titan") -> {
+        mapOf(
+          "inputText" to chatRequest.messages.joinToString("\n\n") {
+            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
+          },
+          "textGenerationConfig" to mapOf(
+            "maxTokenCount" to 4096,
+            "stopSequences" to emptyList<String>(),
+            "temperature" to 0.3,
+            "topP" to 0.9,
+          )
+        )
+      }
+      else -> throw RuntimeException("Unsupported model: $model")
+    }
+    return InvokeModelRequest.builder()
+      .modelId(model)
+      .accept("application/json")
+      .contentType("application/json")
+      .body(SdkBytes.fromString(JsonUtil.toJson(body), Charsets.UTF_8))
+      .build()
+  }
+
+  private fun fromAWS(responseBody: String, model: String): String {
+    return when {
+      model.contains("llama2") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseLlama2>(responseBody, AwsResponseLlama2::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.generation ?: ""
+                ),
+                index = 0
+              )
+            ),
+            usage = Usage(
+              prompt_tokens = fromJson.prompt_token_count ?: 0,
+              completion_tokens = fromJson.generation_token_count ?: 0,
+              total_tokens = (fromJson.prompt_token_count ?: 0) + (fromJson.generation_token_count ?: 0)
+            )
+          )
+        )
+      }
+      model.contains("mistral") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseMistral>(responseBody, AwsResponseMistral::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.outputs.first().text ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+      model.contains("titan") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseTitan>(responseBody, AwsResponseTitan::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.results.first().outputText ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+      else -> throw RuntimeException("Unsupported model: $model")
+    }
+  }
+  data class AwsResponseMistral(
+    val outputs: List<AwsResponseMistralOutput>
+  )
+  data class AwsResponseMistralOutput(
+    val text: String? = null,
+    val stop_reason: String? = null
+  )
+
+  // AWS Titan
+  // {"inputTextTokenCount":31,"results":[{"tokenCount":201,"outputText":"Bot: A coconut (Cocos nucifera) is a drupe, not a nut, classified as a member of the palm family (Arecaceae). Coconuts are ubiquitous in tropical regions, with significant cultural and economic importance. They are known for their unique shape, elongated form, and hard, fibrous shell. Inside the shell, there is a white flesh containing a liquid, known as coconut water, and a large, edible seed, known as a coconut kernel. Coconuts have various uses, including food, beverages, cosmetics, and traditional medicine. They are a rich source of nutrients, including dietary fiber, vitamins, and minerals. Coconut water is renowned for its hydrating properties and is often consumed as a natural electrolyte replacement. Coconut kernels can be processed into coconut oil, which is widely used in cooking, baking, and skincare. Additionally, coconut shells can be used for various purposes, such as construction, handicrafts, and as a source of charcoal.","completionReason":"FINISH"}]}
+  data class AwsResponseTitan(
+    val inputTextTokenCount: Int? = null,
+    val results: List<AwsResponseTitanResult>
+  )
+  data class AwsResponseTitanResult(
+    val tokenCount: Int? = null,
+    val outputText: String? = null,
+    val completionReason: String? = null
+  )
+
+  data class AwsResponseLlama2(
+    val generation: String? = null,
+    val prompt_token_count: Int? = null,
+    val generation_token_count: Int? = null,
+    val stop_reason: String? = null
+  )
+
+  open fun fromModelsLab(rawResponse: String): String {
     val response = JsonUtil.objectMapper().readValue(rawResponse, ModelsLabDataModel.ChatResponse::class.java)
-    return when(response.status) {
+    return when (response.status) {
       "success" -> {
         JsonUtil.toJson(ChatResponse(
           id = response.chat_id,
@@ -314,6 +467,7 @@ open class OpenAIClient(
           }
         ))
       }
+
       "processing" -> {
         val seconds = response?.eta ?: 1
         log.info("Chat response is still processing; waiting ${seconds}s and trying again.")
@@ -326,39 +480,33 @@ open class OpenAIClient(
         )
         fromModelsLab(post("${apiBase[defaultApiProvider]}/llm/get_queued_response", postCheck, defaultApiProvider))
       }
+
       "error" -> {
         throw RuntimeException("Error in chat request: ${response.message}\n$rawResponse")
       }
+
       "failed" -> {
         throw RuntimeException("Chat request failed: ${response.message}\n$rawResponse")
       }
+
       else -> throw RuntimeException("Unknown status: ${response.status}\n${response.message}\n$rawResponse")
     }
   }
 
-  private fun toModelsLab(chatRequest: ApiModel.ChatRequest): ModelsLabDataModel.ChatRequest {
-    val chatRequest1 = ModelsLabDataModel.ChatRequest(
+  open fun toModelsLab(chatRequest: ApiModel.ChatRequest) =
+    modelslab_chatRequest_prototype.copy(
       key = key[APIProvider.ModelsLab],
       model_id = chatRequest.model,
       system_prompt = chatRequest.messages.filter { it.role == Role.system }.joinToString("\n") {
-        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
+        it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+      },
       prompt = chatRequest.messages.filter { it.role != Role.system }.joinToString("\n") {
-        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
-      max_new_tokens = 512,
+        it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+      },
       temperature = chatRequest.temperature,
-      no_repeat_ngram_size = 5,
     )
-    log.info("Converted chat request ${
-      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-    } to ModelsLab format: ${
-      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest1)
-    }")
-/*
-*/
-    return chatRequest1
-  }
 
-  private fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
+  open fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
     messages = chatRequest.messages.map { message ->
       GroqChatMessage(
         role = message.role,
@@ -577,6 +725,20 @@ open class OpenAIClient(
 
   companion object {
     private val log = org.slf4j.LoggerFactory.getLogger(OpenAIClient::class.java)
+    var modelsLabThrottle = Semaphore(1)
+    var modelslab_chatRequest_prototype = ModelsLabDataModel.ChatRequest(
+      max_new_tokens = 1000,
+      no_repeat_ngram_size = 5,
+    )
   }
 
+}
+
+fun Semaphore.runWithPermit(function: () -> String): String {
+  this.acquire()
+  try {
+    return function()
+  } finally {
+    this.release()
+  }
 }

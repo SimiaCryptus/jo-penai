@@ -68,6 +68,11 @@ val jodatime_version = "2.9.9"
 
 dependencies {
 
+    compileOnly("software.amazon.awssdk:bedrock:2.25.7")
+    compileOnly("software.amazon.awssdk:bedrockagent:2.25.7")
+    compileOnly("software.amazon.awssdk:bedrockagentruntime:2.25.7")
+    compileOnly("software.amazon.awssdk:bedrockruntime:2.25.7")
+
     implementation ("io.swagger:swagger-annotations:$swagger_annotations_version")
     implementation ("com.google.code.findbugs:jsr305:3.0.2")
     implementation ("org.apache.httpcomponents.client5:httpclient5:$httpclient_version")
