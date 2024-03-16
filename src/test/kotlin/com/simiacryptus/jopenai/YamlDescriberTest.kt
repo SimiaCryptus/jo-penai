@@ -98,4 +98,23 @@ properties:
   data class RecursiveType(val self: RecursiveType?)
   data class FirstType(val name: String)
   data class SecondType(val id: Int)
+
+  enum class TestEnum {
+    FIRST_OPTION,
+    SECOND_OPTION,
+    THIRD_OPTION
+  }
+
+  @Test
+  fun testDescribeEnumType() {
+    val expectedDescription = """
+     |type: enum
+     |values:
+     |  - FIRST_OPTION
+     |  - SECOND_OPTION
+     |  - THIRD_OPTION
+     """.trimMargin()
+    val actualDescription = typeDescriber.describe(TestEnum::class.java)
+    Assertions.assertEquals(expectedDescription, actualDescription)
+  }
 }

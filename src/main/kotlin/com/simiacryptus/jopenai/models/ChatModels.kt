@@ -288,32 +288,32 @@ private val DeepseekCoder67bInstruct = ChatModels(
       modelName = "meta.llama2-70b-chat-v1",
       maxTokens = 2048,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.00195,
+      outputTokenPricePerK = 0.00256
     )
     private val AWSLLaMA213bChat = ChatModels(
       name = "AWSLLaMA213bChat",
       modelName = "meta.llama2-13b-chat-v1",
       maxTokens = 2048,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.00075,
+      outputTokenPricePerK = 0.001
     )
     private val Mistral7bInstructV02 = ChatModels(
       name = "Mistral7bInstructV02",
       modelName = "mistral.mistral-7b-instruct-v0:2",
       maxTokens = 2 * 1024,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.00015,
+      outputTokenPricePerK = 0.0002
     )
     private val Mixtral8x7bInstructV01AWS = ChatModels(
       name = "Mixtral8x7bInstructV01AWS",
       modelName = "mistral.mixtral-8x7b-instruct-v0:1",
       maxTokens = 2 * 1024,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.00045,
+      outputTokenPricePerK = 0.0007
     )
 //    val AmazonTitanEmbedTextV1 = ChatModels(
 //      name = "AmazonTitanEmbedTextV1",
@@ -328,80 +328,80 @@ private val AmazonTitanTextLiteV1 = ChatModels(
       modelName = "amazon.titan-text-lite-v1",
       maxTokens = 4096,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0003,
+      outputTokenPricePerK = 0.0004
     )
     private val AmazonTitanTextExpressV1 = ChatModels(
       name = "AmazonTitanTextExpressV1",
       modelName = "amazon.titan-text-express-v1",
       maxTokens = 8192,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0008,
+      outputTokenPricePerK = 0.0016
     )
     private val CohereCommandTextV14 = ChatModels(
       name = "CohereCommandTextV14",
       modelName = "cohere.command-text-v14",
       maxTokens = 4000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0015,
+      outputTokenPricePerK = 0.002
     )
     private val AI21J2UltraV1 = ChatModels(
       name = "AI21J2UltraV1",
       modelName = "ai21.j2-ultra-v1",
       maxTokens = 8191,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0125,
+      outputTokenPricePerK = 0.0125
     )
     private val AI21J2MidV1 = ChatModels(
       name = "AI21J2MidV1",
       modelName = "ai21.j2-mid-v1",
       maxTokens = 8191,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0188,
+      outputTokenPricePerK = 0.0188
     )
     private val Claude3Sonnet = ChatModels(
       name = "Claude3Sonnet",
       modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
       maxTokens = 200000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.003,
+      outputTokenPricePerK = 0.015
     )
     private val Claude3Haiku = ChatModels(
       name = "Claude3Haiku",
       modelName = "anthropic.claude-3-haiku-20240307-v1:0",
       maxTokens = 200000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.00025,
+      outputTokenPricePerK = 0.000125
     )
     private val ClaudeV2_1 = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-v2:1",
       maxTokens = 100000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.008,
+      outputTokenPricePerK = 0.024
     )
     private val ClaudeV2 = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-v2",
       maxTokens = 100000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.008,
+      outputTokenPricePerK = 0.024
     )
     private val ClaudeV2Instant = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-instant-v1",
       maxTokens = 100000,
       provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
+      inputTokenPricePerK = 0.0008,
+      outputTokenPricePerK = 0.0024
     )
 
     fun values() = mapOf(
