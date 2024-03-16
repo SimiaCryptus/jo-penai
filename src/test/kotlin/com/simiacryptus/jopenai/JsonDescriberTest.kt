@@ -92,7 +92,4 @@ class JsonDescriberTest : TypeDescriberTestBase() {
 //    assertTrue(describedTypes.contains(SecondType::class.java.name), "Described types should contain SecondType")
 //  }
 
-  data class RecursiveType(val self: RecursiveType?)
-  data class FirstType(val name: String)
-  data class SecondType(val id: Int)
 }

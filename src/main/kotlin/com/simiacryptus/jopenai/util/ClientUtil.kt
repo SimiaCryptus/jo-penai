@@ -13,8 +13,6 @@ import java.util.regex.Pattern
 
 object ClientUtil {
 
-  var auxiliaryLog: File? = null
-
   fun checkError(result: String) {
     try {
       val jsonObject = Gson().fromJson(
@@ -125,7 +123,7 @@ object ClientUtil {
     ApiModel.ChatMessage(role = role, content = toContentList())
 
   val allowedCharset: Charset = Charset.forName("ASCII")
-  val maxTokenErrorMessage = listOf(
+  private val maxTokenErrorMessage = listOf(
     Pattern.compile(
       """This model's maximum context length is (\d+) tokens. However, you requested (\d+) tokens \((\d+) in the messages, (\d+) in the completion\).*"""
     ),
@@ -135,24 +133,24 @@ object ClientUtil {
     )
   )
   // Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.
-  val safetyErrorMessage = Pattern.compile("""Your request was rejected as a result of our safety system.""")
-  val rateLimitErrorMessage = Pattern.compile(
+  private val safetyErrorMessage = Pattern.compile("""Your request was rejected as a result of our safety system.""")
+  private val rateLimitErrorMessage = Pattern.compile(
     """Rate limit reached for (\d+)KTPM-(\d+)RPM in organization (\S+) on tokens per min. Limit: (\d+) / min. Please try again in (\d+)ms. Contact us through our help center at help.openai.com if you continue to have issues."""
   )
-  val rateLimitErrorMessage2 = Pattern.compile(
+  private val rateLimitErrorMessage2 = Pattern.compile(
     """Rate limit reached for (\S+) in organization (\S+) on requests per min \(RPM\): Limit (\d+), Used (\d+), Requested (\d+). Please try again in (\d+)s."""
   )
-  val rateLimitErrorMessage3 = Pattern.compile(
+  private val rateLimitErrorMessage3 = Pattern.compile(
     """Rate limit exceeded for (\S+) per minute in organization (\S+). Limit: (\d+)/(\d+)min. Current: (\d+)/(\d+)min."""
   )
   //
-  val quotaErrorMessage = Pattern.compile(
+  private val quotaErrorMessage = Pattern.compile(
     """You exceeded your current quota, please check your plan and billing details."""
   )
-  val invalidModelException = Pattern.compile(
+  private val invalidModelException = Pattern.compile(
     """The model `(\S+)` does not exist or you do not have access to it."""
   )
-  val invalidValueException = Pattern.compile(
+  private val invalidValueException = Pattern.compile(
     """Invalid value for '(\S+)': (\S+)"""
   )
 

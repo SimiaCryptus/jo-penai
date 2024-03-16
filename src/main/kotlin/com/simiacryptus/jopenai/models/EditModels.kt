@@ -12,6 +12,6 @@ open class EditModels(
     companion object {
         fun values() = mapOf("DaVinciEdit" to DaVinciEdit)
 
-        val DaVinciEdit = EditModels("text-davinci-edit-001", 2049, 0.002)
+        private val DaVinciEdit = EditModels("text-davinci-edit-001", 2049, 0.002)
     }
 }

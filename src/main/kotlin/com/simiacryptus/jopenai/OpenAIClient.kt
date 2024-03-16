@@ -72,12 +72,12 @@ open class OpenAIClient(
       "transcriptions" to transcriptionCounter.get(),
       "edits" to editCounter.get(),
     )
-  protected val chatCounter = AtomicInteger(0)
-  protected val completionCounter = AtomicInteger(0)
-  protected val moderationCounter = AtomicInteger(0)
-  protected val renderCounter = AtomicInteger(0)
-  protected val transcriptionCounter = AtomicInteger(0)
-  protected val editCounter = AtomicInteger(0)
+  private val chatCounter = AtomicInteger(0)
+  private val completionCounter = AtomicInteger(0)
+  private val moderationCounter = AtomicInteger(0)
+  private val renderCounter = AtomicInteger(0)
+  private val transcriptionCounter = AtomicInteger(0)
+  private val editCounter = AtomicInteger(0)
 
   @Throws(IOException::class, InterruptedException::class)
   protected fun post(url: String, json: String, apiProvider: APIProvider): String {

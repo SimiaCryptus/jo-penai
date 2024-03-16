@@ -10,7 +10,7 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaMethod
 
 open class JsonDescriber(
-  val whitelist: MutableSet<String> = setOf(
+  private val whitelist: MutableSet<String> = setOf(
     "com.simiacryptus",
     "com.github.simiacryptus"
   ).toMutableSet()
