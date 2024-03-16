@@ -50,7 +50,7 @@ class OpenAIClientTest {
 
   @Test
   fun testChat() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -73,7 +73,7 @@ class OpenAIClientTest {
 
   @Test
   fun testJsonChat() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -100,7 +100,7 @@ class OpenAIClientTest {
 
   @Test
   fun testImageChat() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -141,7 +141,7 @@ class OpenAIClientTest {
 
   @Test
   fun testRender() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -156,7 +156,7 @@ class OpenAIClientTest {
 
   @Test
   fun testCreateImage() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })
     val imageUrl = client.createImage(
@@ -175,7 +175,7 @@ class OpenAIClientTest {
 
   @Test
   fun testGenerateAndEditImage() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -213,7 +213,7 @@ class OpenAIClientTest {
 
   @Test
   fun testGenerateAndVaryImage() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -250,7 +250,7 @@ class OpenAIClientTest {
 
   @Test
   fun testDictate() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -289,7 +289,7 @@ class OpenAIClientTest {
 
   @Test
   fun testListModels() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -302,7 +302,7 @@ class OpenAIClientTest {
 
   @Test
   fun testListEngines() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -315,7 +315,7 @@ class OpenAIClientTest {
 
   @Test
   fun testEmbedding() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
@@ -329,7 +329,7 @@ class OpenAIClientTest {
 
   @Test
   fun testCreateSpeech() {
-    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
     if (prov?.isBlank() == true) return
     val client = OpenAIClient(
       mapOf(
