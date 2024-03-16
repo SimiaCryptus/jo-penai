@@ -12,6 +12,6 @@ open class CompletionModels(
     companion object {
         fun values() = mapOf("DaVinci" to DaVinci)
 
-        val DaVinci = CompletionModels("text-davinci-003", 2049, 0.002)
+        private val DaVinci = CompletionModels("text-davinci-003", 2049, 0.002)
     }
 }

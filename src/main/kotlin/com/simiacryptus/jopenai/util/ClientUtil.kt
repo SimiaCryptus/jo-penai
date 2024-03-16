@@ -13,8 +13,6 @@ import java.util.regex.Pattern
 
 object ClientUtil {
 
-  var auxiliaryLog: File? = null
-
   fun checkError(result: String) {
     try {
       val jsonObject = Gson().fromJson(
@@ -98,9 +96,9 @@ object ClientUtil {
   var keyTxt: String
     get() {
       if (null != _keyTxt) return _keyTxt!!
-      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key")
+      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key.json")
       if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
-      val keyFile = File(File(System.getProperty("user.home")), "openai.key")
+      val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
       if (keyFile.exists()) return keyFile.readText().trim()
       if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
       return ""
@@ -109,12 +107,23 @@ object ClientUtil {
       _keyTxt = value
     }
 
+  val keyMap: MutableMap<String, String>
+    get() {
+      val _keyTxt1 = _keyTxt
+      if (null != _keyTxt1) return JsonUtil.fromJson(_keyTxt1, Map::class.java)!!
+      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key.json")
+      if (null != resourceAsStream) return JsonUtil.fromJson(resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim(), Map::class.java)
+      val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
+      if (!keyFile.exists()) return mutableMapOf()
+      return JsonUtil.fromJson(keyFile.readText().trim(), Map::class.java)
+    }
+
   fun String.toContentList() = listOf(this).map { ApiModel.ContentPart(text = it, type = "text") }
   fun String.toChatMessage(role: ApiModel.Role = ApiModel.Role.user) =
     ApiModel.ChatMessage(role = role, content = toContentList())
 
   val allowedCharset: Charset = Charset.forName("ASCII")
-  val maxTokenErrorMessage = listOf(
+  private val maxTokenErrorMessage = listOf(
     Pattern.compile(
       """This model's maximum context length is (\d+) tokens. However, you requested (\d+) tokens \((\d+) in the messages, (\d+) in the completion\).*"""
     ),
@@ -124,24 +133,24 @@ object ClientUtil {
     )
   )
   // Your request was rejected as a result of our safety system. Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.
-  val safetyErrorMessage = Pattern.compile("""Your request was rejected as a result of our safety system.""")
-  val rateLimitErrorMessage = Pattern.compile(
+  private val safetyErrorMessage = Pattern.compile("""Your request was rejected as a result of our safety system.""")
+  private val rateLimitErrorMessage = Pattern.compile(
     """Rate limit reached for (\d+)KTPM-(\d+)RPM in organization (\S+) on tokens per min. Limit: (\d+) / min. Please try again in (\d+)ms. Contact us through our help center at help.openai.com if you continue to have issues."""
   )
-  val rateLimitErrorMessage2 = Pattern.compile(
+  private val rateLimitErrorMessage2 = Pattern.compile(
     """Rate limit reached for (\S+) in organization (\S+) on requests per min \(RPM\): Limit (\d+), Used (\d+), Requested (\d+). Please try again in (\d+)s."""
   )
-  val rateLimitErrorMessage3 = Pattern.compile(
+  private val rateLimitErrorMessage3 = Pattern.compile(
     """Rate limit exceeded for (\S+) per minute in organization (\S+). Limit: (\d+)/(\d+)min. Current: (\d+)/(\d+)min."""
   )
   //
-  val quotaErrorMessage = Pattern.compile(
+  private val quotaErrorMessage = Pattern.compile(
     """You exceeded your current quota, please check your plan and billing details."""
   )
-  val invalidModelException = Pattern.compile(
+  private val invalidModelException = Pattern.compile(
     """The model `(\S+)` does not exist or you do not have access to it."""
   )
-  val invalidValueException = Pattern.compile(
+  private val invalidValueException = Pattern.compile(
     """Invalid value for '(\S+)': (\S+)"""
   )
 

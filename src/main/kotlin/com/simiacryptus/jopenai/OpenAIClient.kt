@@ -11,7 +11,7 @@ import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
-import com.simiacryptus.jopenai.util.ClientUtil.keyTxt
+import com.simiacryptus.jopenai.util.ClientUtil.keyMap
 import com.simiacryptus.jopenai.util.JsonUtil
 import com.simiacryptus.jopenai.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpGet
@@ -25,17 +25,23 @@ import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import org.slf4j.event.Level
+import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
+import software.amazon.awssdk.core.SdkBytes
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
+import java.util.concurrent.Semaphore
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 open class OpenAIClient(
-  protected var key: Map<APIProvider, String> = mapOf(defaultApiProvider to keyTxt),
+  protected var key: Map<APIProvider, String> = keyMap.mapKeys { APIProvider.valueOf(it.key) },
   protected val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to (it.base ?: "") },
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
@@ -66,12 +72,12 @@ open class OpenAIClient(
       "transcriptions" to transcriptionCounter.get(),
       "edits" to editCounter.get(),
     )
-  protected val chatCounter = AtomicInteger(0)
-  protected val completionCounter = AtomicInteger(0)
-  protected val moderationCounter = AtomicInteger(0)
-  protected val renderCounter = AtomicInteger(0)
-  protected val transcriptionCounter = AtomicInteger(0)
-  protected val editCounter = AtomicInteger(0)
+  private val chatCounter = AtomicInteger(0)
+  private val completionCounter = AtomicInteger(0)
+  private val moderationCounter = AtomicInteger(0)
+  private val renderCounter = AtomicInteger(0)
+  private val transcriptionCounter = AtomicInteger(0)
+  private val editCounter = AtomicInteger(0)
 
   @Throws(IOException::class, InterruptedException::class)
   protected fun post(url: String, json: String, apiProvider: APIProvider): String {
@@ -242,7 +248,7 @@ open class OpenAIClient(
   open fun chat(
     chatRequest: ChatRequest, model: ChatModels
   ): ChatResponse {
-    log.info("Chat request: $chatRequest", RuntimeException())
+    //log.info("Chat request: $chatRequest", RuntimeException())
     return withReliability {
       withPerformanceLogging {
         chatCounter.incrementAndGet()
@@ -263,10 +269,25 @@ open class OpenAIClient(
           }
 
           apiProvider == APIProvider.ModelsLab -> {
-            val json =
-              JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
-            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
-            fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
+            modelsLabThrottle.runWithPermit {
+              val json =
+                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
+              log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+              fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
+            }
+          }
+
+          apiProvider == APIProvider.AWS -> {
+            val awsAuth = JsonUtil.fromJson<AWSAuth>(key[apiProvider]!!, AWSAuth::class.java)
+            val invokeModelRequest = toAWS(model, chatRequest)
+            val bedrockRuntimeClient = BedrockRuntimeClient.builder()
+              .credentialsProvider(ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build())
+              .region(Region.of(awsAuth.region))
+              .build()
+            val invokeModelResponse = bedrockRuntimeClient
+              .invokeModel(invokeModelRequest)
+            val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
+            fromAWS(responseBody, model.modelName)
           }
 
           else -> {
@@ -292,10 +313,369 @@ open class OpenAIClient(
     }
   }
 
-  private fun fromModelsLab(rawResponse: String): String {
-    log.info("Received response from ModelsLab: $rawResponse", RuntimeException())
+  data class AWSAuth(
+    val profile: String = "default",
+    val region: String = Region.US_WEST_2.id(),
+  )
+
+  open fun toAWS(model: ChatModels, chatRequest: ChatRequest) = InvokeModelRequest.builder()
+    .modelId(model.modelName)
+    .accept("application/json")
+    .contentType("application/json")
+    .body(SdkBytes.fromString(JsonUtil.toJson(awsBody(model, chatRequest)), Charsets.UTF_8))
+    .build()
+
+  open fun awsBody(
+    model: ChatModels,
+    chatRequest: ChatRequest
+  ) = when {
+    model.modelName.contains("llama2") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_gen_len" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "top_p" to 0.9,
+      )
+    }
+    //mistral
+    model.modelName.contains("mistral") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "top_p" to 0.9,
+//        "top_k" to 50,
+      )
+    }
+
+    model.modelName.contains("titan") -> {
+      mapOf(
+        "inputText" to toSimplePrompt(chatRequest),
+        "textGenerationConfig" to mapOf(
+          "maxTokenCount" to model.maxTokens,
+          "stopSequences" to emptyList<String>(),
+          "temperature" to chatRequest.temperature,
+//          "topP" to 0.9,
+        )
+      )
+    }
+
+    model.modelName.contains("cohere") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "p" to 1,
+//        "k" to 0,
+      )
+    }
+
+    model.modelName.contains("ai21") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "maxTokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "topP" to 0.9,
+        "stopSequences" to emptyList<String>(),
+        "countPenalty" to mapOf("scale" to 0),
+        "presencePenalty" to mapOf("scale" to 0),
+        "frequencyPenalty" to mapOf("scale" to 0),
+      )
+    }
+
+    model.modelName.contains("anthropic") -> {
+      val alternatingMessages = alternateMessagesRoles(chatRequest.messages)
+      mapOf(
+        "anthropic_version" to anthropic_version(model),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+        "messages" to alternatingMessages.filter {
+          when (it.role) {
+            Role.system -> false
+            else -> true
+          }
+        }.map {
+          mapOf(
+            "role" to it.role.toString(),
+            "content" to it.content?.map {
+              mapOf(
+                "type" to "text",
+                "text" to it.text
+              )
+            }
+          )
+        },
+        "system" to toSimplePrompt(chatRequest) { it.role == Role.system },
+      ).filterValues { it != null }
+    }
+
+
+    else -> throw RuntimeException("Unsupported model: $model")
+  }
+
+  open fun anthropic_version(model: ChatModels) = when {
+    else -> "bedrock-2023-05-31"
+//    else -> null
+  }
+
+  private fun alternateMessagesRoles(messages: List<ChatMessage>): List<ChatMessage> {
+    val alternatingMessages = mutableListOf<ChatMessage>()
+    val messagesCopy = messages.toMutableList()
+    while (messagesCopy.isNotEmpty()) {
+      val thisRole = messagesCopy.firstOrNull()?.role
+      val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
+      messagesCopy.removeAll(toConsolidate)
+      val consolidatedMessage = toConsolidate.reduce { acc, chatMessage ->
+        ChatMessage(
+          role = acc.role,
+          content = listOf(
+            ContentPart(
+              type = "text",
+              text = (acc.content?.plus(chatMessage.content ?: emptyList())
+                ?: chatMessage.content)?.joinToString("\n") { it.text ?: "" }
+            )
+          )
+        )
+      }
+      alternatingMessages.add(consolidatedMessage)
+    }
+    return alternatingMessages
+  }
+
+  open fun toSimplePrompt(
+    chatRequest: ChatRequest,
+    filterFn: (ChatMessage) -> Boolean = { true }
+  ) = if (chatRequest.messages.filter(filterFn).map { it.role }.distinct().size <= 1) {
+    chatRequest.messages.filter(filterFn).joinToString("\n\n") {
+      it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+    }
+  } else {
+    chatRequest.messages.filter(filterFn).joinToString("\n\n") {
+      "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
+    }
+  }
+
+  private fun fromAWS(responseBody: String, model: String): String {
+    return when {
+      model.contains("llama2") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseLlama2>(responseBody, AwsResponseLlama2::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.generation ?: ""
+                ),
+                index = 0
+              )
+            ),
+            usage = Usage(
+              prompt_tokens = fromJson.prompt_token_count ?: 0,
+              completion_tokens = fromJson.generation_token_count ?: 0,
+              total_tokens = (fromJson.prompt_token_count ?: 0) + (fromJson.generation_token_count ?: 0)
+            )
+          )
+        )
+      }
+
+      model.contains("mistral") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseMistral>(responseBody, AwsResponseMistral::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.outputs.first().text ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+
+      model.contains("titan") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseTitan>(responseBody, AwsResponseTitan::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.results.first().outputText ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+
+      model.contains("cohere") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseCohere>(responseBody, AwsResponseCohere::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.generations.first().text ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+
+      model.contains("ai21") -> {
+        val fromJson = JsonUtil.objectMapper().readValue(responseBody, Ai21ChatResponse::class.java)
+        return JsonUtil.toJson(
+          ChatResponse(
+            choices = fromJson.completions?.mapIndexed { index, completion ->
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = completion.data?.text ?: ""
+                ),
+                index = index
+              )
+            } ?: emptyList(),
+          )
+        )
+      }
+
+      model.contains("anthropic") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseAnthropic>(responseBody, AwsResponseAnthropic::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.content?.first()?.text ?: ""
+                ),
+                index = 0
+              )
+            ),
+            usage = Usage(
+              prompt_tokens = fromJson.usage?.input_tokens ?: 0,
+              completion_tokens = fromJson.usage?.output_tokens ?: 0,
+              total_tokens = (fromJson.usage?.input_tokens ?: 0) + (fromJson.usage?.output_tokens ?: 0)
+            )
+          )
+        )
+      }
+
+      else -> throw RuntimeException("Unsupported model: $model")
+    }
+  }
+
+  data class AwsResponseAnthropic(
+    val id: String? = null,
+    val type: String? = null,
+    val role: String? = null,
+    val content: List<AwsResponseAnthropicContent>? = null,
+    val model: String? = null,
+    val stop_reason: String? = null,
+    val stop_sequence: String? = null,
+    val usage: AwsResponseAnthropicUsage? = null
+  )
+
+  data class AwsResponseAnthropicContent(
+    val type: String? = null,
+    val text: String? = null
+  )
+
+  data class AwsResponseAnthropicUsage(
+    val input_tokens: Int? = null,
+    val output_tokens: Int? = null
+  )
+
+  data class Ai21ChatResponse(
+    val id: Int? = null,
+    val prompt: Ai21Prompt? = null,
+    val completions: List<Ai21Completion>? = null
+  )
+
+  data class Ai21Completion(
+    val data: Ai21Data? = null,
+    val finishReason: Ai21FinishReason? = null
+  )
+
+  data class Ai21FinishReason(
+    val reason: String? = null
+  )
+
+  data class Ai21Data(
+    val text: String? = null,
+    val tokens: List<Ai21Token>? = null
+  )
+
+  data class Ai21Prompt(
+    val text: String? = null,
+    val tokens: List<Ai21Token>? = null
+  )
+
+  data class Ai21Token(
+    val generatedToken: Ai21GeneratedToken? = null,
+    val topTokens: List<Ai21TopToken>? = null,
+    val textRange: Ai21TextRange? = null
+  )
+
+  data class Ai21GeneratedToken(
+    val token: String? = null,
+    val logprob: Double? = null,
+    val raw_logprob: Double? = null
+  )
+
+  data class Ai21TopToken(
+    val token: String? = null,
+    val logprob: Double? = null,
+    val raw_logprob: Double? = null
+  )
+
+  data class Ai21TextRange(
+    val start: Int? = null,
+    val end: Int? = null
+  )
+
+  data class AwsResponseCohere(
+    val generations: List<AwsResponseCohereGeneration>
+  )
+
+  data class AwsResponseCohereGeneration(
+    val text: String? = null
+  )
+
+  data class AwsResponseMistral(
+    val outputs: List<AwsResponseMistralOutput>
+  )
+
+  data class AwsResponseMistralOutput(
+    val text: String? = null,
+    val stop_reason: String? = null
+  )
+
+  // AWS Titan
+  // {"inputTextTokenCount":31,"results":[{"tokenCount":201,"outputText":"Bot: A coconut (Cocos nucifera) is a drupe, not a nut, classified as a member of the palm family (Arecaceae). Coconuts are ubiquitous in tropical regions, with significant cultural and economic importance. They are known for their unique shape, elongated form, and hard, fibrous shell. Inside the shell, there is a white flesh containing a liquid, known as coconut water, and a large, edible seed, known as a coconut kernel. Coconuts have various uses, including food, beverages, cosmetics, and traditional medicine. They are a rich source of nutrients, including dietary fiber, vitamins, and minerals. Coconut water is renowned for its hydrating properties and is often consumed as a natural electrolyte replacement. Coconut kernels can be processed into coconut oil, which is widely used in cooking, baking, and skincare. Additionally, coconut shells can be used for various purposes, such as construction, handicrafts, and as a source of charcoal.","completionReason":"FINISH"}]}
+  data class AwsResponseTitan(
+    val inputTextTokenCount: Int? = null,
+    val results: List<AwsResponseTitanResult>
+  )
+
+  data class AwsResponseTitanResult(
+    val tokenCount: Int? = null,
+    val outputText: String? = null,
+    val completionReason: String? = null
+  )
+
+  data class AwsResponseLlama2(
+    val generation: String? = null,
+    val prompt_token_count: Int? = null,
+    val generation_token_count: Int? = null,
+    val stop_reason: String? = null
+  )
+
+  open fun fromModelsLab(rawResponse: String): String {
     val response = JsonUtil.objectMapper().readValue(rawResponse, ModelsLabDataModel.ChatResponse::class.java)
-    return when(response.status) {
+    return when (response.status) {
       "success" -> {
         JsonUtil.toJson(ChatResponse(
           id = response.chat_id,
@@ -314,6 +694,7 @@ open class OpenAIClient(
           }
         ))
       }
+
       "processing" -> {
         val seconds = response?.eta ?: 1
         log.info("Chat response is still processing; waiting ${seconds}s and trying again.")
@@ -326,44 +707,33 @@ open class OpenAIClient(
         )
         fromModelsLab(post("${apiBase[defaultApiProvider]}/llm/get_queued_response", postCheck, defaultApiProvider))
       }
+
       "error" -> {
         throw RuntimeException("Error in chat request: ${response.message}\n$rawResponse")
       }
+
       "failed" -> {
         throw RuntimeException("Chat request failed: ${response.message}\n$rawResponse")
       }
+
       else -> throw RuntimeException("Unknown status: ${response.status}\n${response.message}\n$rawResponse")
     }
   }
 
-  private fun toModelsLab(chatRequest: ApiModel.ChatRequest): ModelsLabDataModel.ChatRequest {
-    val chatRequest1 = ModelsLabDataModel.ChatRequest(
+  open fun toModelsLab(chatRequest: ApiModel.ChatRequest) =
+    modelslab_chatRequest_prototype.copy(
       key = key[APIProvider.ModelsLab],
       model_id = chatRequest.model,
       system_prompt = chatRequest.messages.filter { it.role == Role.system }.joinToString("\n") {
-        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
+        it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+      },
       prompt = chatRequest.messages.filter { it.role != Role.system }.joinToString("\n") {
-        it.content?.joinToString("\n") { it.text ?: "" } ?: "" },
-      max_new_tokens = 512,
+        it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+      },
       temperature = chatRequest.temperature,
-//      do_sample = true,
-//      top_k = 50,
-//      top_p = 10.0,
-      no_repeat_ngram_size = 5,
-//      seed = 1235,
-//      temp = false,
     )
-    log.info("Converted chat request ${
-      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-    } to ModelsLab format: ${
-      JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest1)
-    }")
-/*
-*/
-    return chatRequest1
-  }
 
-  private fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
+  open fun toGroq(chatRequest: ChatRequest): GroqChatRequest = GroqChatRequest(
     messages = chatRequest.messages.map { message ->
       GroqChatMessage(
         role = message.role,
@@ -582,6 +952,20 @@ open class OpenAIClient(
 
   companion object {
     private val log = org.slf4j.LoggerFactory.getLogger(OpenAIClient::class.java)
+    var modelsLabThrottle = Semaphore(1)
+    var modelslab_chatRequest_prototype = ModelsLabDataModel.ChatRequest(
+      max_new_tokens = 1000,
+      no_repeat_ngram_size = 5,
+    )
   }
 
+}
+
+fun Semaphore.runWithPermit(function: () -> String): String {
+  this.acquire()
+  try {
+    return function()
+  } finally {
+    this.release()
+  }
 }

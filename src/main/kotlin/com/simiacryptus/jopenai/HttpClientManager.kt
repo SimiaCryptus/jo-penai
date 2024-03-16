@@ -191,7 +191,7 @@ open class HttpClientManager(
     }
   }
 
-  fun <T> withTimeout(duration: Duration, fn: () -> T): T {
+  private fun <T> withTimeout(duration: Duration, fn: () -> T): T {
     var thread = Thread.currentThread()
     val start = Date()
     val cancellationFuture = scheduledPool.schedule({

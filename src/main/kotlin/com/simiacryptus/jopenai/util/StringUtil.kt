@@ -11,35 +11,6 @@ import kotlin.math.abs
 object StringUtil {
 
     @JvmStatic
-    fun stripUnbalancedTerminators(input: CharSequence): CharSequence {
-        var openCount = 0
-        var inQuotes = false
-        val output = StringBuilder()
-        var i = 0
-        while (i < input.length) {
-            val c = input[i]
-            if (c == '"' || c == '\'') {
-                inQuotes = !inQuotes
-            } else if (inQuotes && c == '\\') {
-                // Skip the next character
-                i++
-            } else if (!inQuotes) {
-                when (c) {
-                    '{', '[', '(' -> openCount++
-                    '}', ']', ')' -> openCount--
-                }
-            }
-            if (openCount >= 0) {
-                output.append(c)
-            } else {
-                openCount++ // Dropping character, undo counting close bracket
-            }
-            i++
-        }
-        return output.toString()
-    }
-
-    @JvmStatic
     fun stripPrefix(text: CharSequence, prefix: CharSequence): CharSequence {
         val startsWith = text.toString().startsWith(prefix.toString())
         return if (startsWith) {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
-import com.simiacryptus.jopenai.describe.TypeDescriber.Companion.primitives
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.lang.reflect.Parameter
@@ -16,7 +15,7 @@ import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
-open class ApiFunctionDescriber : TypeDescriber {
+open class ApiFunctionDescriber : TypeDescriber() {
     override val markupLanguage: String get() = ""
 
     open val includeMethods: Boolean = true
@@ -31,7 +30,7 @@ open class ApiFunctionDescriber : TypeDescriber {
         return "${self.name}(\n$parameters\n)"
     }
 
-    override fun describe(rawType: Class<in Nothing>, stackMax: Int): String {
+    override fun describe(rawType: Class<in Nothing>, stackMax: Int, describedTypes: MutableSet<String>): String {
         if (isAbbreviated(rawType)) return rawType.simpleName
         if (stackMax <= 0) return truncation
         return if (!rawType.isKotlinClass()) {
@@ -43,16 +42,16 @@ open class ApiFunctionDescriber : TypeDescriber {
 
     fun describe(self: Parameter, stackMax: Int): String {
         if (stackMax <= 0) return truncation
-        return "${self.name}: ${toApiFunctionFormat(self.parameterizedType, stackMax - 1)}"
+        return "${self.name}: ${toApiFunctionFormat(self.parameterizedType, stackMax - 1, mutableSetOf())}"
     }
 
-    private fun toApiFunctionFormat(self: Type, stackMax: Int = 10): String {
+    private fun toApiFunctionFormat(self: Type, stackMax: Int = 10, describedTypes: MutableSet<String>): String {
         if (stackMax <= 0) return truncation
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return when {
             typeName in primitives -> typeName
-            self.isArray -> "${toApiFunctionFormat(self.componentType!!, stackMax - 1)}[]"
-            else -> describe(TypeToken.of(self).rawType, stackMax - 1)
+            self.isArray -> "${toApiFunctionFormat(self.componentType!!, stackMax - 1, mutableSetOf())}[]"
+            else -> describe(TypeToken.of(self).rawType, stackMax - 1, describedTypes)
         }
     }
 
@@ -63,7 +62,7 @@ open class ApiFunctionDescriber : TypeDescriber {
             kClass.memberProperties.filter { it.visibility == KVisibility.PUBLIC }
                 .joinToString("\n") {
                     "  val ${it.name}: ${
-                        toApiFunctionFormat(it.returnType.javaType, stackMax - 1).replace(
+                        toApiFunctionFormat(it.returnType.javaType, stackMax - 1, mutableSetOf()).replace(
                             "\n",
                             "\n  "
                         )
@@ -85,7 +84,8 @@ open class ApiFunctionDescriber : TypeDescriber {
                         "    ${it.name}: ${
                             toApiFunctionFormat(
                                 it.type.javaType,
-                                stackMax - 1
+                                stackMax - 1,
+ mutableSetOf()
                             ).replace("\n", "\n    ")
                         }"
                     }

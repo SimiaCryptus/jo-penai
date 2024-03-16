@@ -52,6 +52,5 @@ object JsonUtil {
         //log.debug("Deserialized $data to $value")
         return value
     }
-
 //    companion object : JsonUtil()
 }

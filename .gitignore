@@ -7,3 +7,4 @@ buildOutputCleanup/
 reports/
 openai.key
 *.key
+openai.key.json
