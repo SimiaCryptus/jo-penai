@@ -33,6 +33,7 @@ open class ChatModels(
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
+/*
     val GPT4 = ChatModels(
       name = "GPT4",
       modelName = "gpt-4-32k",
@@ -41,6 +42,7 @@ open class ChatModels(
       inputTokenPricePerK = 0.06,
       outputTokenPricePerK = 0.12
     )
+*/
     val GPT4Turbo = ChatModels(
       name = "GPT4Turbo",
       modelName = "gpt-4-turbo-preview",
@@ -139,6 +141,7 @@ open class ChatModels(
       outputTokenPricePerK = 0.0015
     )
 
+/*
     val Gemma7bIt = ChatModels(
       name = "Gemma7bIt",
       modelName = "Gemma-7b-it",
@@ -147,6 +150,7 @@ open class ChatModels(
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
+*/
 
     val Zephyr7bBeta = ChatModels(
       name = "Zephyr7bBeta",
@@ -172,6 +176,7 @@ open class ChatModels(
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
+/*
     val PygmalionAI = ChatModels(
       name = "PygmalionAI",
       modelName = "PygmalionAI",
@@ -180,6 +185,7 @@ open class ChatModels(
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
+*/
     val Pygmalion13b = ChatModels(
       name = "Pygmalion13b",
       modelName = "pygmalion-1.3b",
@@ -244,14 +250,14 @@ open class ChatModels(
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-    val CodeLlama7bHf = ChatModels(
-      name = "CodeLlama7bHf",
-      modelName = "CodeLlama-7b-hf",
-      maxTokens = 16384,
-      provider = APIProvider.ModelsLab,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
-    )
+//    val CodeLlama7bHf = ChatModels(
+//      name = "CodeLlama7bHf",
+//      modelName = "CodeLlama-7b-hf",
+//      maxTokens = 16384,
+//      provider = APIProvider.ModelsLab,
+//      inputTokenPricePerK = 0.0005,
+//      outputTokenPricePerK = 0.0015
+//    )
     val DeepseekCoder67bInstruct = ChatModels(
       name = "DeepseekCoder67bInstruct",
       modelName = "deepseek-coder-6.7b-instruct",
@@ -277,12 +283,10 @@ open class ChatModels(
       outputTokenPricePerK = 0.0015
     )
 
-
-
     val AWSLLaMA270bChat = ChatModels(
       name = "AWSLLaMA270bChat",
       modelName = "meta.llama2-70b-chat-v1",
-      maxTokens = 4096,
+      maxTokens = 2048,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -290,7 +294,7 @@ open class ChatModels(
     val AWSLLaMA213bChat = ChatModels(
       name = "AWSLLaMA213bChat",
       modelName = "meta.llama2-13b-chat-v1",
-      maxTokens = 4096,
+      maxTokens = 2048,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -298,7 +302,7 @@ open class ChatModels(
     val Mistral7bInstructV02 = ChatModels(
       name = "Mistral7bInstructV02",
       modelName = "mistral.mistral-7b-instruct-v0:2",
-      maxTokens = 16384,
+      maxTokens = 2 * 1024,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -306,23 +310,23 @@ open class ChatModels(
     val Mixtral8x7bInstructV01AWS = ChatModels(
       name = "Mixtral8x7bInstructV01AWS",
       modelName = "mistral.mixtral-8x7b-instruct-v0:1",
-      maxTokens = 16384,
+      maxTokens = 2 * 1024,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-    val AmazonTitanEmbedTextV1 = ChatModels(
-      name = "AmazonTitanEmbedTextV1",
-      modelName = "amazon.titan-embed-text-v1",
-      maxTokens = 16384,
-      provider = APIProvider.AWS,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
-    )
+//    val AmazonTitanEmbedTextV1 = ChatModels(
+//      name = "AmazonTitanEmbedTextV1",
+//      modelName = "amazon.titan-embed-text-v1",
+//      maxTokens = 16384,
+//      provider = APIProvider.AWS,
+//      inputTokenPricePerK = 0.0005,
+//      outputTokenPricePerK = 0.0015
+//    )
     val AmazonTitanTextLiteV1 = ChatModels(
       name = "AmazonTitanTextLiteV1",
       modelName = "amazon.titan-text-lite-v1",
-      maxTokens = 16384,
+      maxTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -330,7 +334,79 @@ open class ChatModels(
     val AmazonTitanTextExpressV1 = ChatModels(
       name = "AmazonTitanTextExpressV1",
       modelName = "amazon.titan-text-express-v1",
-      maxTokens = 16384,
+      maxTokens = 8192,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val CohereCommandTextV14 = ChatModels(
+      name = "CohereCommandTextV14",
+      modelName = "cohere.command-text-v14",
+      maxTokens = 4000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val CohereCommandLightTextV14 = ChatModels(
+      name = "CohereCommandLightTextV14",
+      modelName = "cohere.command-light-text-v14",
+      maxTokens = 4000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AI21J2UltraV1 = ChatModels(
+      name = "AI21J2UltraV1",
+      modelName = "ai21.j2-ultra-v1",
+      maxTokens = 8191,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val AI21J2MidV1 = ChatModels(
+      name = "AI21J2MidV1",
+      modelName = "ai21.j2-mid-v1",
+      maxTokens = 8191,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Claude3Sonnet = ChatModels(
+      name = "Claude3Sonnet",
+      modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
+      maxTokens = 200000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val Claude3Haiku = ChatModels(
+      name = "Claude3Haiku",
+      modelName = "anthropic.claude-3-haiku-20240307-v1:0",
+      maxTokens = 200000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val ClaudeV2_1 = ChatModels(
+      name = "ClaudeV2",
+      modelName = "anthropic.claude-v2:1",
+      maxTokens = 100000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val ClaudeV2 = ChatModels(
+      name = "ClaudeV2",
+      modelName = "anthropic.claude-v2",
+      maxTokens = 100000,
+      provider = APIProvider.AWS,
+      inputTokenPricePerK = 0.0005,
+      outputTokenPricePerK = 0.0015
+    )
+    val ClaudeV2Instant = ChatModels(
+      name = "ClaudeV2",
+      modelName = "anthropic.claude-instant-v1",
+      maxTokens = 100000,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -338,7 +414,7 @@ open class ChatModels(
 
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
-      "GPT4" to GPT4,
+//      "GPT4" to GPT4,
       "GPT4Turbo" to GPT4Turbo,
       "GPT4Vision" to GPT4Vision,
       "SonarSmallChat" to SonarSmallChat,
@@ -350,11 +426,11 @@ open class ChatModels(
       "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
       "LLaMA270bChat" to LLaMA270bChat,
       "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
-      "Gemma7bIt" to Gemma7bIt,
+//      "Gemma7bIt" to Gemma7bIt,
       "Zephyr7bBeta" to Zephyr7bBeta,
       "DialoGPTLarge" to DialoGPTLarge,
       "YarnMistral7b128k" to YarnMistral7b128k,
-      "PygmalionAI" to PygmalionAI,
+//      "PygmalionAI" to PygmalionAI,
       "Pygmalion13b" to Pygmalion13b,
       "Opt67b" to Opt67b,
       "MistralLite" to MistralLite,
@@ -363,7 +439,7 @@ open class ChatModels(
       "OpenHermes25Mistral7B" to OpenHermes25Mistral7B,
       "Dolphin221Mistral7b" to Dolphin221Mistral7b,
       "Mistral7BOpenOrca" to Mistral7BOpenOrca,
-      "CodeLlama7bHf" to CodeLlama7bHf,
+//      "CodeLlama7bHf" to CodeLlama7bHf,
       "DeepseekCoder67bInstruct" to DeepseekCoder67bInstruct,
       "Phi15" to Phi15,
       "Zephyr7bAlpha" to Zephyr7bAlpha,
@@ -371,9 +447,17 @@ open class ChatModels(
       "AWSLLaMA213bChat" to AWSLLaMA213bChat,
       "Mistral7bInstructV02" to Mistral7bInstructV02,
       "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
-      "AmazonTitanEmbedTextV1" to AmazonTitanEmbedTextV1,
+//      "AmazonTitanEmbedTextV1" to AmazonTitanEmbedTextV1,
       "AmazonTitanTextLiteV1" to AmazonTitanTextLiteV1,
       "AmazonTitanTextExpressV1" to AmazonTitanTextExpressV1,
+      "CohereCommandTextV14" to CohereCommandTextV14,
+      "AI21J2UltraV1" to AI21J2UltraV1,
+      "AI21J2MidV1" to AI21J2MidV1,
+      "Claude3Sonnet" to Claude3Sonnet,
+      "Claude3Haiku" to Claude3Haiku,
+      "ClaudeV2_1" to ClaudeV2_1,
+      "ClaudeV2" to ClaudeV2,
+      "ClaudeV2Instant" to ClaudeV2Instant,
     )
   }
 }

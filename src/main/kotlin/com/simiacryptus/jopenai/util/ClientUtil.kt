@@ -98,15 +98,26 @@ object ClientUtil {
   var keyTxt: String
     get() {
       if (null != _keyTxt) return _keyTxt!!
-      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key")
+      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key.json")
       if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
-      val keyFile = File(File(System.getProperty("user.home")), "openai.key")
+      val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
       if (keyFile.exists()) return keyFile.readText().trim()
       if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
       return ""
     }
     set(value) {
       _keyTxt = value
+    }
+
+  val keyMap: MutableMap<String, String>
+    get() {
+      val _keyTxt1 = _keyTxt
+      if (null != _keyTxt1) return JsonUtil.fromJson(_keyTxt1, Map::class.java)!!
+      val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key.json")
+      if (null != resourceAsStream) return JsonUtil.fromJson(resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim(), Map::class.java)
+      val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
+      if (!keyFile.exists()) return mutableMapOf()
+      return JsonUtil.fromJson(keyFile.readText().trim(), Map::class.java)
     }
 
   fun String.toContentList() = listOf(this).map { ApiModel.ContentPart(text = it, type = "text") }

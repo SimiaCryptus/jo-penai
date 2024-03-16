@@ -1,6 +1,7 @@
 package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.describe.Description
+import com.simiacryptus.jopenai.models.APIProvider
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.proxy.ChatProxy
 import com.simiacryptus.jopenai.proxy.ValidatedObject
@@ -15,11 +16,12 @@ class ChatProxyTest {
 
   @Test
   fun testDemo1() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
       clazz = TextSummarizer::class.java,
       api = OpenAIClient(mapOf(
-        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+        ClientUtil.defaultApiProvider to prov
       )),
       model = ChatModels.GPT35Turbo
     )
@@ -38,14 +40,11 @@ class ChatProxyTest {
 
   @Test
   fun testDemo2() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
 
-      clazz = BlogPostGenerator::class.java, api = OpenAIClient(
-        mapOf(
-          ClientUtil.defaultApiProvider to ClientUtil.keyTxt
-        )
-      ),
+      clazz = BlogPostGenerator::class.java, api = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }),
       model = ChatModels.GPT35Turbo
     )
     val generator = gptProxy.create()
@@ -75,11 +74,10 @@ class ChatProxyTest {
 
   @Test
   fun testDemo3() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
-      clazz = RecipeGenerator::class.java, api = OpenAIClient(mapOf(
-        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
-      )),
+      clazz = RecipeGenerator::class.java, api = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }),
       model = ChatModels.GPT35Turbo
     )
     val generator = gptProxy.create()
@@ -99,14 +97,11 @@ class ChatProxyTest {
 
   @Test
   fun testDemo4() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
 
-      clazz = ShoppingListParser::class.java, api = OpenAIClient(
-        mapOf(
-          ClientUtil.defaultApiProvider to ClientUtil.keyTxt
-        )
-      ),
+      clazz = ShoppingListParser::class.java, api = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }),
       model = ChatModels.GPT35Turbo
     )
     val parser = gptProxy.create()
@@ -132,11 +127,10 @@ class ChatProxyTest {
 
   @Test
   fun testDemo5() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
-      clazz = WeatherForecast::class.java, api = OpenAIClient(mapOf(
-        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
-      )),
+      clazz = WeatherForecast::class.java, api = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }),
       model = ChatModels.GPT35Turbo
     )
     gptProxy.addExample(WeatherOutput("New York", listOf("Sunny", "Partly Cloudy", "Rainy"))) {
@@ -168,11 +162,10 @@ class ChatProxyTest {
 
   @Test
   fun testDemo6() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    if (prov?.isBlank() == true) return
     val gptProxy = ChatProxy(
-      clazz = MathSolver::class.java, api = OpenAIClient(mapOf(
-        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
-      )),
+      clazz = MathSolver::class.java, api = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }),
       model = ChatModels.GPT35Turbo
     )
     val solver = gptProxy.create()
@@ -183,10 +176,11 @@ class ChatProxyTest {
 
   @Test
   fun testDemo7() {
-    if (ClientUtil.keyTxt.isBlank()) return
+    val prov = ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) }[ClientUtil.defaultApiProvider]!!
+    if (prov?.isBlank() == true) return
     val gptProxy =
       ChatProxy(MathSolver::class.java, api = OpenAIClient(mapOf(
-        ClientUtil.defaultApiProvider to ClientUtil.keyTxt
+        ClientUtil.defaultApiProvider to prov
       )), model = ChatModels.GPT35Turbo)
 //        gptProxy.model = ChatModels.GPT35Turbo
     val solver = gptProxy.create()

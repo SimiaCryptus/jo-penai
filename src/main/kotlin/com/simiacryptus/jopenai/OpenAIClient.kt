@@ -11,7 +11,7 @@ import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
-import com.simiacryptus.jopenai.util.ClientUtil.keyTxt
+import com.simiacryptus.jopenai.util.ClientUtil.keyMap
 import com.simiacryptus.jopenai.util.JsonUtil
 import com.simiacryptus.jopenai.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpGet
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
 open class OpenAIClient(
-  protected var key: Map<APIProvider, String> = mapOf(defaultApiProvider to keyTxt),
+  protected var key: Map<APIProvider, String> = keyMap.mapKeys { APIProvider.valueOf(it.key) },
   protected val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to (it.base ?: "") },
   logLevel: Level = Level.INFO,
   logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
@@ -279,7 +279,7 @@ open class OpenAIClient(
 
           apiProvider == APIProvider.AWS -> {
             val awsAuth = JsonUtil.fromJson<AWSAuth>(key[apiProvider]!!, AWSAuth::class.java)
-            val invokeModelRequest = toAWS(model.modelName, chatRequest)
+            val invokeModelRequest = toAWS(model, chatRequest)
             val bedrockRuntimeClient = BedrockRuntimeClient.builder()
               .credentialsProvider(ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build())
               .region(Region.of(awsAuth.region))
@@ -317,51 +317,142 @@ open class OpenAIClient(
     val profile: String = "default",
     val region: String = Region.US_WEST_2.id(),
   )
-  private fun toAWS(model: String, chatRequest: ChatRequest): InvokeModelRequest? {
-    val body = when {
-      model.contains("llama2") -> {
-        mapOf(
-          "prompt" to chatRequest.messages.joinToString("\n\n") {
-            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
-          },
-          "max_gen_len" to 512,
-          "temperature" to 0.3,
-          "top_p" to 0.9,
+
+  open fun toAWS(model: ChatModels, chatRequest: ChatRequest) = InvokeModelRequest.builder()
+    .modelId(model.modelName)
+    .accept("application/json")
+    .contentType("application/json")
+    .body(SdkBytes.fromString(JsonUtil.toJson(awsBody(model, chatRequest)), Charsets.UTF_8))
+    .build()
+
+  open fun awsBody(
+    model: ChatModels,
+    chatRequest: ChatRequest
+  ) = when {
+    model.modelName.contains("llama2") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_gen_len" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "top_p" to 0.9,
+      )
+    }
+    //mistral
+    model.modelName.contains("mistral") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "top_p" to 0.9,
+//        "top_k" to 50,
+      )
+    }
+
+    model.modelName.contains("titan") -> {
+      mapOf(
+        "inputText" to toSimplePrompt(chatRequest),
+        "textGenerationConfig" to mapOf(
+          "maxTokenCount" to model.maxTokens,
+          "stopSequences" to emptyList<String>(),
+          "temperature" to chatRequest.temperature,
+//          "topP" to 0.9,
         )
-      }
-      //mistral
-      model.contains("mistral") -> {
-        mapOf(
-          "prompt" to chatRequest.messages.joinToString("\n\n") {
-            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
-          },
-          "max_tokens" to 200,
-          "temperature" to 0.3,
-          "top_p" to 0.9,
-          "top_k" to 50,
-        )
-      }
-      model.contains("titan") -> {
-        mapOf(
-          "inputText" to chatRequest.messages.joinToString("\n\n") {
-            "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
-          },
-          "textGenerationConfig" to mapOf(
-            "maxTokenCount" to 4096,
-            "stopSequences" to emptyList<String>(),
-            "temperature" to 0.3,
-            "topP" to 0.9,
+      )
+    }
+
+    model.modelName.contains("cohere") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "p" to 1,
+//        "k" to 0,
+      )
+    }
+
+    model.modelName.contains("ai21") -> {
+      mapOf(
+        "prompt" to toSimplePrompt(chatRequest),
+        "maxTokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+//        "topP" to 0.9,
+        "stopSequences" to emptyList<String>(),
+        "countPenalty" to mapOf("scale" to 0),
+        "presencePenalty" to mapOf("scale" to 0),
+        "frequencyPenalty" to mapOf("scale" to 0),
+      )
+    }
+
+    model.modelName.contains("anthropic") -> {
+      val alternatingMessages = alternateMessagesRoles(chatRequest.messages)
+      mapOf(
+        "anthropic_version" to anthropic_version(model),
+        "max_tokens" to model.maxTokens,
+        "temperature" to chatRequest.temperature,
+        "messages" to alternatingMessages.filter {
+          when (it.role) {
+            Role.system -> false
+            else -> true
+          }
+        }.map {
+          mapOf(
+            "role" to it.role.toString(),
+            "content" to it.content?.map {
+              mapOf(
+                "type" to "text",
+                "text" to it.text
+              )
+            }
+          )
+        },
+        "system" to toSimplePrompt(chatRequest) { it.role == Role.system },
+      ).filterValues { it != null }
+    }
+
+
+    else -> throw RuntimeException("Unsupported model: $model")
+  }
+
+  open fun anthropic_version(model: ChatModels) = when {
+    else -> "bedrock-2023-05-31"
+//    else -> null
+  }
+
+  private fun alternateMessagesRoles(messages: List<ChatMessage>): List<ChatMessage> {
+    val alternatingMessages = mutableListOf<ChatMessage>()
+    val messagesCopy = messages.toMutableList()
+    while (messagesCopy.isNotEmpty()) {
+      val thisRole = messagesCopy.firstOrNull()?.role
+      val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
+      messagesCopy.removeAll(toConsolidate)
+      val consolidatedMessage = toConsolidate.reduce { acc, chatMessage ->
+        ChatMessage(
+          role = acc.role,
+          content = listOf(
+            ContentPart(
+              type = "text",
+              text = (acc.content?.plus(chatMessage.content ?: emptyList())
+                ?: chatMessage.content)?.joinToString("\n") { it.text ?: "" }
+            )
           )
         )
       }
-      else -> throw RuntimeException("Unsupported model: $model")
+      alternatingMessages.add(consolidatedMessage)
     }
-    return InvokeModelRequest.builder()
-      .modelId(model)
-      .accept("application/json")
-      .contentType("application/json")
-      .body(SdkBytes.fromString(JsonUtil.toJson(body), Charsets.UTF_8))
-      .build()
+    return alternatingMessages
+  }
+
+  open fun toSimplePrompt(
+    chatRequest: ChatRequest,
+    filterFn: (ChatMessage) -> Boolean = { true }
+  ) = if (chatRequest.messages.filter(filterFn).map { it.role }.distinct().size <= 1) {
+    chatRequest.messages.filter(filterFn).joinToString("\n\n") {
+      it.content?.joinToString("\n") { it.text ?: "" } ?: ""
+    }
+  } else {
+    chatRequest.messages.filter(filterFn).joinToString("\n\n") {
+      "${it.role}: \n" + it.content?.joinToString("\n") { "\t" + (it.text ?: "") }
+    }
   }
 
   private fun fromAWS(responseBody: String, model: String): String {
@@ -386,6 +477,7 @@ open class OpenAIClient(
           )
         )
       }
+
       model.contains("mistral") -> {
         val fromJson = JsonUtil.fromJson<AwsResponseMistral>(responseBody, AwsResponseMistral::class.java)
         JsonUtil.toJson(
@@ -401,6 +493,7 @@ open class OpenAIClient(
           )
         )
       }
+
       model.contains("titan") -> {
         val fromJson = JsonUtil.fromJson<AwsResponseTitan>(responseBody, AwsResponseTitan::class.java)
         JsonUtil.toJson(
@@ -416,12 +509,145 @@ open class OpenAIClient(
           )
         )
       }
+
+      model.contains("cohere") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseCohere>(responseBody, AwsResponseCohere::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.generations.first().text ?: ""
+                ),
+                index = 0
+              )
+            )
+          )
+        )
+      }
+
+      model.contains("ai21") -> {
+        val fromJson = JsonUtil.objectMapper().readValue(responseBody, Ai21ChatResponse::class.java)
+        return JsonUtil.toJson(
+          ChatResponse(
+            choices = fromJson.completions?.mapIndexed { index, completion ->
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = completion.data?.text ?: ""
+                ),
+                index = index
+              )
+            } ?: emptyList(),
+          )
+        )
+      }
+
+      model.contains("anthropic") -> {
+        val fromJson = JsonUtil.fromJson<AwsResponseAnthropic>(responseBody, AwsResponseAnthropic::class.java)
+        JsonUtil.toJson(
+          ChatResponse(
+            choices = listOf(
+              ChatChoice(
+                message = ChatMessageResponse(
+                  content = fromJson.content?.first()?.text ?: ""
+                ),
+                index = 0
+              )
+            ),
+            usage = Usage(
+              prompt_tokens = fromJson.usage?.input_tokens ?: 0,
+              completion_tokens = fromJson.usage?.output_tokens ?: 0,
+              total_tokens = (fromJson.usage?.input_tokens ?: 0) + (fromJson.usage?.output_tokens ?: 0)
+            )
+          )
+        )
+      }
+
       else -> throw RuntimeException("Unsupported model: $model")
     }
   }
+
+  data class AwsResponseAnthropic(
+    val id: String? = null,
+    val type: String? = null,
+    val role: String? = null,
+    val content: List<AwsResponseAnthropicContent>? = null,
+    val model: String? = null,
+    val stop_reason: String? = null,
+    val stop_sequence: String? = null,
+    val usage: AwsResponseAnthropicUsage? = null
+  )
+
+  data class AwsResponseAnthropicContent(
+    val type: String? = null,
+    val text: String? = null
+  )
+
+  data class AwsResponseAnthropicUsage(
+    val input_tokens: Int? = null,
+    val output_tokens: Int? = null
+  )
+
+  data class Ai21ChatResponse(
+    val id: Int? = null,
+    val prompt: Ai21Prompt? = null,
+    val completions: List<Ai21Completion>? = null
+  )
+
+  data class Ai21Completion(
+    val data: Ai21Data? = null,
+    val finishReason: Ai21FinishReason? = null
+  )
+
+  data class Ai21FinishReason(
+    val reason: String? = null
+  )
+
+  data class Ai21Data(
+    val text: String? = null,
+    val tokens: List<Ai21Token>? = null
+  )
+
+  data class Ai21Prompt(
+    val text: String? = null,
+    val tokens: List<Ai21Token>? = null
+  )
+
+  data class Ai21Token(
+    val generatedToken: Ai21GeneratedToken? = null,
+    val topTokens: List<Ai21TopToken>? = null,
+    val textRange: Ai21TextRange? = null
+  )
+
+  data class Ai21GeneratedToken(
+    val token: String? = null,
+    val logprob: Double? = null,
+    val raw_logprob: Double? = null
+  )
+
+  data class Ai21TopToken(
+    val token: String? = null,
+    val logprob: Double? = null,
+    val raw_logprob: Double? = null
+  )
+
+  data class Ai21TextRange(
+    val start: Int? = null,
+    val end: Int? = null
+  )
+
+  data class AwsResponseCohere(
+    val generations: List<AwsResponseCohereGeneration>
+  )
+
+  data class AwsResponseCohereGeneration(
+    val text: String? = null
+  )
+
   data class AwsResponseMistral(
     val outputs: List<AwsResponseMistralOutput>
   )
+
   data class AwsResponseMistralOutput(
     val text: String? = null,
     val stop_reason: String? = null
@@ -433,6 +659,7 @@ open class OpenAIClient(
     val inputTextTokenCount: Int? = null,
     val results: List<AwsResponseTitanResult>
   )
+
   data class AwsResponseTitanResult(
     val tokenCount: Int? = null,
     val outputText: String? = null,
