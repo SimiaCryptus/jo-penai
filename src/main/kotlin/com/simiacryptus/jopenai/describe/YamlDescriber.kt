@@ -10,6 +10,7 @@ import java.lang.reflect.*
 import java.util.*
 import kotlin.reflect.*
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
@@ -26,15 +27,24 @@ open class YamlDescriber : TypeDescriber() {
     stackMax: Int,
     describedTypes: MutableSet<String>
   ): String {
-    if (!describedTypes.add(rawType.name) && rawType.name !in primitives) {
+    if (!describedTypes.add(rawType.name) && rawType.simpleName.lowercase() !in primitives) {
       log.debug("Preventing recursion for type: ${rawType.name}")
       return "..."
+    } else if(rawType.simpleName.lowercase() in primitives) {
+      return "type: ${rawType.simpleName.lowercase()}"
     }
     log.debug("Describing type: ${rawType.name} with stackMax: $stackMax")
     if (isAbbreviated(rawType) || stackMax <= 0) return """
             |type: object
             |class: ${rawType.name}
             """.trimMargin()
+    if (rawType.isEnum) {
+      return """
+        |type: enum
+        |values:
+        |${rawType.enumConstants.joinToString("\n") { "  - $it" }}
+        """.trimMargin()
+    }
     val propertiesYaml = if (rawType.isKotlinClass()) {
       rawType.kotlin.memberProperties.filter { it.visibility == KVisibility.PUBLIC }.map {
         val description =
@@ -236,13 +246,27 @@ open class YamlDescriber : TypeDescriber() {
   private fun toYaml(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
     if (describedTypes.contains(self.toString())) return "..."
     describedTypes.add(self.toString())
-     val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
-     if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) return """
+    val typeName = self.typeName.substringAfterLast('.').replace('$', '.')
+    return if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) """
       |type: object
       |class: ${self.typeName}
       """.trimMargin().filterEmptyLines()
-    return if (typeName in primitives) {
+    else if (self is Class<*> && self.isEnum) {
+      val enumConstants = self.enumConstants.joinToString("\n") { "  - $it" }
+      """
+      |type: enum
+      |values:
+      |$enumConstants
+      """.trimMargin().filterEmptyLines()
+    } else if (typeName in primitives) {
       "type: $typeName"
+    } else if (self is Class<*> && self.isEnum) {
+      val enumConstants = self.enumConstants.joinToString("\n") { "  - $it" }
+      """
+     |type: enum
+     |values:
+     |$enumConstants
+     """.trimMargin().filterEmptyLines()
     } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
       """
       |type: array
@@ -290,6 +314,13 @@ open class YamlDescriber : TypeDescriber() {
       |values:
       |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
       |""".trimMargin().filterEmptyLines()
+    } else if (self.classifier is KClass<*> && (self.classifier as KClass<*>).isSubclassOf(Enum::class)) {
+      val enumConstants = (self.classifier as KClass<*>).java.enumConstants.joinToString("\n") { "  - $it" }
+      """
+      |type: enum
+      |values:
+      |$enumConstants
+      """.trimMargin().filterEmptyLines()
     } else if (self.javaType.isArray) {
       """
       |type: array
