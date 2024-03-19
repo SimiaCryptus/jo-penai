@@ -332,7 +332,7 @@ open class OpenAIClient(
     model.modelName.contains("llama2") -> {
       mapOf(
         "prompt" to toSimplePrompt(chatRequest),
-        "max_gen_len" to model.maxTokens,
+        "max_gen_len" to model.maxTotalTokens,
         "temperature" to chatRequest.temperature,
 //        "top_p" to 0.9,
       )
@@ -341,7 +341,7 @@ open class OpenAIClient(
     model.modelName.contains("mistral") -> {
       mapOf(
         "prompt" to toSimplePrompt(chatRequest),
-        "max_tokens" to model.maxTokens,
+        "max_tokens" to model.maxTotalTokens,
         "temperature" to chatRequest.temperature,
 //        "top_p" to 0.9,
 //        "top_k" to 50,
@@ -352,7 +352,7 @@ open class OpenAIClient(
       mapOf(
         "inputText" to toSimplePrompt(chatRequest),
         "textGenerationConfig" to mapOf(
-          "maxTokenCount" to model.maxTokens,
+          "maxTokenCount" to model.maxTotalTokens,
           "stopSequences" to emptyList<String>(),
           "temperature" to chatRequest.temperature,
 //          "topP" to 0.9,
@@ -363,7 +363,7 @@ open class OpenAIClient(
     model.modelName.contains("cohere") -> {
       mapOf(
         "prompt" to toSimplePrompt(chatRequest),
-        "max_tokens" to model.maxTokens,
+        "max_tokens" to model.maxTotalTokens,
         "temperature" to chatRequest.temperature,
 //        "p" to 1,
 //        "k" to 0,
@@ -373,7 +373,7 @@ open class OpenAIClient(
     model.modelName.contains("ai21") -> {
       mapOf(
         "prompt" to toSimplePrompt(chatRequest),
-        "maxTokens" to model.maxTokens,
+        "maxTokens" to model.maxTotalTokens,
         "temperature" to chatRequest.temperature,
 //        "topP" to 0.9,
         "stopSequences" to emptyList<String>(),
@@ -387,7 +387,7 @@ open class OpenAIClient(
       val alternatingMessages = alternateMessagesRoles(chatRequest.messages)
       mapOf(
         "anthropic_version" to anthropic_version(model),
-        "max_tokens" to model.maxTokens,
+        "max_tokens" to model.maxOutTokens,
         "temperature" to chatRequest.temperature,
         "messages" to alternatingMessages.filter {
           when (it.role) {

@@ -14,13 +14,18 @@ import com.simiacryptus.jopenai.models.ChatModels.Companion.values
 @JsonDeserialize(using = ChatModelsDeserializer::class)
 @JsonSerialize(using = ChatModelsSerializer::class)
 open class ChatModels(
-  val name : String,
+  val name: String,
   modelName: String,
-  maxTokens: Int,
+  maxTotalTokens: Int,
+  maxOutTokens: Int = maxTotalTokens,
   val provider: APIProvider,
   private val inputTokenPricePerK: Double,
   private val outputTokenPricePerK: Double,
-) : OpenAITextModel(modelName, maxTokens) {
+) : OpenAITextModel(
+  modelName = modelName,
+  maxTotalTokens = maxTotalTokens,
+  maxOutTokens = maxOutTokens
+) {
   override fun pricing(usage: Usage) =
     (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
 
@@ -28,25 +33,26 @@ open class ChatModels(
     val GPT35Turbo = ChatModels(
       name = "GPT35Turbo",
       modelName = "gpt-3.5-turbo-0125",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.OpenAI,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-/*
-    val GPT4 = ChatModels(
-      name = "GPT4",
-      modelName = "gpt-4-32k",
-      maxTokens = 32768,
-      provider = APIProvider.OpenAI,
-      inputTokenPricePerK = 0.06,
-      outputTokenPricePerK = 0.12
-    )
-*/
+
+    /*
+        val GPT4 = ChatModels(
+          name = "GPT4",
+          modelName = "gpt-4-32k",
+          maxTokens = 32768,
+          provider = APIProvider.OpenAI,
+          inputTokenPricePerK = 0.06,
+          outputTokenPricePerK = 0.12
+        )
+    */
     val GPT4Turbo = ChatModels(
       name = "GPT4Turbo",
       modelName = "gpt-4-turbo-preview",
-      maxTokens = 128000,
+      maxTotalTokens = 128000,
       provider = APIProvider.OpenAI,
       inputTokenPricePerK = 0.01,
       outputTokenPricePerK = 0.03
@@ -54,7 +60,7 @@ open class ChatModels(
     val GPT4Vision = ChatModels(
       name = "GPT4Vision",
       modelName = "gpt-4-vision-preview",
-      maxTokens = 8192,
+      maxTotalTokens = 8192,
       provider = APIProvider.OpenAI,
       inputTokenPricePerK = 0.01,
       outputTokenPricePerK = 0.03
@@ -63,7 +69,7 @@ open class ChatModels(
     private val SonarSmallChat = ChatModels(
       name = "SonarSmallChat",
       modelName = "sonar-small-chat",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -72,7 +78,7 @@ open class ChatModels(
     private val SonarSmallOnline = ChatModels(
       name = "SonarSmallOnline",
       modelName = "sonar-small-online",
-      maxTokens = 12000,
+      maxTotalTokens = 12000,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -81,7 +87,7 @@ open class ChatModels(
     private val SonarMediumChat = ChatModels(
       name = "SonarMediumChat",
       modelName = "sonar-medium-chat",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -90,7 +96,7 @@ open class ChatModels(
     private val SonarMediumOnline = ChatModels(
       name = "SonarMediumOnline",
       modelName = "sonar-medium-online",
-      maxTokens = 12000,
+      maxTotalTokens = 12000,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -99,7 +105,7 @@ open class ChatModels(
     private val Codellama70bInstruct = ChatModels(
       name = "Codellama70bInstruct",
       modelName = "codellama-70b-instruct",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -108,7 +114,7 @@ open class ChatModels(
     private val Mistral7bInstruct = ChatModels(
       name = "Mistral7bInstruct",
       modelName = "mistral-7b-instruct",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -117,7 +123,7 @@ open class ChatModels(
     private val Mixtral8x7bInstruct = ChatModels(
       name = "Mixtral8x7bInstruct",
       modelName = "mixtral-8x7b-instruct",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.Perplexity,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -126,7 +132,7 @@ open class ChatModels(
     private val LLaMA270bChat = ChatModels(
       name = "LLaMA270bChat",
       modelName = "llama2-70b-4096",
-      maxTokens = 4096,
+      maxTotalTokens = 4096,
       provider = APIProvider.Groq,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -135,27 +141,28 @@ open class ChatModels(
     private val Mixtral8x7bInstructV01 = ChatModels(
       name = "Mixtral8x7bInstructV01",
       modelName = "mixtral-8x7b-32768",
-      maxTokens = 32768,
+      maxTotalTokens = 32768,
       provider = APIProvider.Groq,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
 
-/*
     val Gemma7bIt = ChatModels(
       name = "Gemma7bIt",
-      modelName = "Gemma-7b-it",
-      maxTokens = 8192,
+      modelName = "gemma-7b-it",
+      maxTotalTokens = 8192,
+      maxOutTokens = 8192,
       provider = APIProvider.Groq,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-*/
+    /*
+    */
 
     private val Zephyr7bBeta = ChatModels(
       name = "Zephyr7bBeta",
       modelName = "zephyr-7b-beta",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -163,7 +170,7 @@ open class ChatModels(
     private val DialoGPTLarge = ChatModels(
       name = "DialoGPTLarge",
       modelName = "DialoGPT-large",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -171,25 +178,15 @@ open class ChatModels(
     private val YarnMistral7b128k = ChatModels(
       name = "YarnMistral7b128k",
       modelName = "Yarn-Mistral-7b-128k",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-/*
-    val PygmalionAI = ChatModels(
-      name = "PygmalionAI",
-      modelName = "PygmalionAI",
-      maxTokens = 16384,
-      provider = APIProvider.ModelsLab,
-      inputTokenPricePerK = 0.0005,
-      outputTokenPricePerK = 0.0015
-    )
-*/
-private val Pygmalion13b = ChatModels(
+    private val Pygmalion13b = ChatModels(
       name = "Pygmalion13b",
       modelName = "pygmalion-1.3b",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -197,7 +194,7 @@ private val Pygmalion13b = ChatModels(
     private val Opt67b = ChatModels(
       name = "Opt67b",
       modelName = "opt-6.7b",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -205,7 +202,7 @@ private val Pygmalion13b = ChatModels(
     private val MistralLite = ChatModels(
       name = "MistralLite",
       modelName = "MistralLite",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -213,7 +210,7 @@ private val Pygmalion13b = ChatModels(
     private val Openchat35 = ChatModels(
       name = "Openchat35",
       modelName = "openchat_3.5",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -221,7 +218,7 @@ private val Pygmalion13b = ChatModels(
     private val NeuralChat7bV3 = ChatModels(
       name = "NeuralChat7bV3",
       modelName = "neural-chat-7b-v3",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -229,7 +226,7 @@ private val Pygmalion13b = ChatModels(
     private val OpenHermes25Mistral7B = ChatModels(
       name = "OpenHermes25Mistral7B",
       modelName = "OpenHermes-2.5-Mistral-7B",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -237,7 +234,7 @@ private val Pygmalion13b = ChatModels(
     private val Dolphin221Mistral7b = ChatModels(
       name = "Dolphin221Mistral7b",
       modelName = "dolphin-2.2.1-mistral-7b",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -245,12 +242,13 @@ private val Pygmalion13b = ChatModels(
     private val Mistral7BOpenOrca = ChatModels(
       name = "Mistral7BOpenOrca",
       modelName = "Mistral-7B-OpenOrca",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
-//    val CodeLlama7bHf = ChatModels(
+
+    //    val CodeLlama7bHf = ChatModels(
 //      name = "CodeLlama7bHf",
 //      modelName = "CodeLlama-7b-hf",
 //      maxTokens = 16384,
@@ -258,10 +256,10 @@ private val Pygmalion13b = ChatModels(
 //      inputTokenPricePerK = 0.0005,
 //      outputTokenPricePerK = 0.0015
 //    )
-private val DeepseekCoder67bInstruct = ChatModels(
+    private val DeepseekCoder67bInstruct = ChatModels(
       name = "DeepseekCoder67bInstruct",
       modelName = "deepseek-coder-6.7b-instruct",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -269,7 +267,7 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val Phi15 = ChatModels(
       name = "Phi15",
       modelName = "phi-1_5",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -277,7 +275,7 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val Zephyr7bAlpha = ChatModels(
       name = "Zephyr7bAlpha",
       modelName = "zephyr-7b-alpha",
-      maxTokens = 16384,
+      maxTotalTokens = 16384,
       provider = APIProvider.ModelsLab,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
@@ -286,7 +284,7 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val AWSLLaMA270bChat = ChatModels(
       name = "AWSLLaMA270bChat",
       modelName = "meta.llama2-70b-chat-v1",
-      maxTokens = 2048,
+      maxTotalTokens = 2048,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.00195,
       outputTokenPricePerK = 0.00256
@@ -294,7 +292,7 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val AWSLLaMA213bChat = ChatModels(
       name = "AWSLLaMA213bChat",
       modelName = "meta.llama2-13b-chat-v1",
-      maxTokens = 2048,
+      maxTotalTokens = 2048,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.00075,
       outputTokenPricePerK = 0.001
@@ -302,7 +300,7 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val Mistral7bInstructV02 = ChatModels(
       name = "Mistral7bInstructV02",
       modelName = "mistral.mistral-7b-instruct-v0:2",
-      maxTokens = 2 * 1024,
+      maxTotalTokens = 2 * 1024,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.00015,
       outputTokenPricePerK = 0.0002
@@ -310,23 +308,16 @@ private val DeepseekCoder67bInstruct = ChatModels(
     private val Mixtral8x7bInstructV01AWS = ChatModels(
       name = "Mixtral8x7bInstructV01AWS",
       modelName = "mistral.mixtral-8x7b-instruct-v0:1",
-      maxTokens = 2 * 1024,
+      maxTotalTokens = 2 * 1024,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.00045,
       outputTokenPricePerK = 0.0007
     )
-//    val AmazonTitanEmbedTextV1 = ChatModels(
-//      name = "AmazonTitanEmbedTextV1",
-//      modelName = "amazon.titan-embed-text-v1",
-//      maxTokens = 16384,
-//      provider = APIProvider.AWS,
-//      inputTokenPricePerK = 0.0005,
-//      outputTokenPricePerK = 0.0015
-//    )
-private val AmazonTitanTextLiteV1 = ChatModels(
+
+    private val AmazonTitanTextLiteV1 = ChatModels(
       name = "AmazonTitanTextLiteV1",
       modelName = "amazon.titan-text-lite-v1",
-      maxTokens = 4096,
+      maxTotalTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0003,
       outputTokenPricePerK = 0.0004
@@ -334,7 +325,7 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val AmazonTitanTextExpressV1 = ChatModels(
       name = "AmazonTitanTextExpressV1",
       modelName = "amazon.titan-text-express-v1",
-      maxTokens = 8192,
+      maxTotalTokens = 8192,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0008,
       outputTokenPricePerK = 0.0016
@@ -342,7 +333,7 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val CohereCommandTextV14 = ChatModels(
       name = "CohereCommandTextV14",
       modelName = "cohere.command-text-v14",
-      maxTokens = 4000,
+      maxTotalTokens = 4000,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0015,
       outputTokenPricePerK = 0.002
@@ -350,7 +341,7 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val AI21J2UltraV1 = ChatModels(
       name = "AI21J2UltraV1",
       modelName = "ai21.j2-ultra-v1",
-      maxTokens = 8191,
+      maxTotalTokens = 8191,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0125,
       outputTokenPricePerK = 0.0125
@@ -358,7 +349,7 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val AI21J2MidV1 = ChatModels(
       name = "AI21J2MidV1",
       modelName = "ai21.j2-mid-v1",
-      maxTokens = 8191,
+      maxTotalTokens = 8191,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0188,
       outputTokenPricePerK = 0.0188
@@ -366,7 +357,8 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val Claude3Sonnet = ChatModels(
       name = "Claude3Sonnet",
       modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
-      maxTokens = 200000,
+      maxTotalTokens = 200000,
+      maxOutTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.003,
       outputTokenPricePerK = 0.015
@@ -374,7 +366,8 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val Claude3Haiku = ChatModels(
       name = "Claude3Haiku",
       modelName = "anthropic.claude-3-haiku-20240307-v1:0",
-      maxTokens = 200000,
+      maxTotalTokens = 200000,
+      maxOutTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.00025,
       outputTokenPricePerK = 0.000125
@@ -382,7 +375,8 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val ClaudeV2_1 = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-v2:1",
-      maxTokens = 100000,
+      maxTotalTokens = 100000,
+      maxOutTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.008,
       outputTokenPricePerK = 0.024
@@ -390,7 +384,8 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val ClaudeV2 = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-v2",
-      maxTokens = 100000,
+      maxTotalTokens = 100000,
+      maxOutTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.008,
       outputTokenPricePerK = 0.024
@@ -398,7 +393,8 @@ private val AmazonTitanTextLiteV1 = ChatModels(
     private val ClaudeV2Instant = ChatModels(
       name = "ClaudeV2",
       modelName = "anthropic.claude-instant-v1",
-      maxTokens = 100000,
+      maxTotalTokens = 100000,
+      maxOutTokens = 4096,
       provider = APIProvider.AWS,
       inputTokenPricePerK = 0.0008,
       outputTokenPricePerK = 0.0024
@@ -418,11 +414,10 @@ private val AmazonTitanTextLiteV1 = ChatModels(
       "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
       "LLaMA270bChat" to LLaMA270bChat,
       "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
-//      "Gemma7bIt" to Gemma7bIt,
+      "Gemma7bIt" to Gemma7bIt,
       "Zephyr7bBeta" to Zephyr7bBeta,
       "DialoGPTLarge" to DialoGPTLarge,
       "YarnMistral7b128k" to YarnMistral7b128k,
-//      "PygmalionAI" to PygmalionAI,
       "Pygmalion13b" to Pygmalion13b,
       "Opt67b" to Opt67b,
       "MistralLite" to MistralLite,
@@ -439,7 +434,6 @@ private val AmazonTitanTextLiteV1 = ChatModels(
       "AWSLLaMA213bChat" to AWSLLaMA213bChat,
       "Mistral7bInstructV02" to Mistral7bInstructV02,
       "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
-//      "AmazonTitanEmbedTextV1" to AmazonTitanEmbedTextV1,
       "AmazonTitanTextLiteV1" to AmazonTitanTextLiteV1,
       "AmazonTitanTextExpressV1" to AmazonTitanTextExpressV1,
       "CohereCommandTextV14" to CohereCommandTextV14,
