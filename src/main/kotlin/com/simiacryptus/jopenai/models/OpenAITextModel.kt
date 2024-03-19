@@ -14,7 +14,8 @@ import com.simiacryptus.jopenai.ApiModel.Usage
 @JsonSerialize(using = OpenAITextModelSerializer::class)
 open class OpenAITextModel(
   override val modelName: String = "",
-  val maxTokens: Int = -1,
+  val maxTotalTokens: Int = -1,
+  val maxOutTokens: Int = maxTotalTokens,
 ) : OpenAIModel {
   open fun pricing(usage: Usage): Double = 0.0
 }
