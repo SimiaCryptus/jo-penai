@@ -9,7 +9,7 @@ interface ValidatedObject {
   class ValidationError(message: String, val obj: Any) : RuntimeException("""
     |Error validating object: 
     |```text
-    |$message
+    |${message}
     |```
     |
     |```json

@@ -255,6 +255,21 @@ open class OpenAIClient(
 
         val apiProvider = model.provider
         val result = when {
+
+          apiProvider == APIProvider.Anthropic -> {
+            val anthropicChatRequest = mapToAnthropicChatRequest(chatRequest, model)
+            val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(anthropicChatRequest)
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            val request = HttpPost("${apiBase[apiProvider]}/messages")
+            request.addHeader("Content-Type", "application/json")
+            request.addHeader("Accept", "application/json")
+            request.addHeader("x-api-key", "${key.get(apiProvider)}")
+            request.addHeader("anthropic-version", "2023-06-01")
+            request.entity = StringEntity(json, Charsets.UTF_8, false)
+            val rawResponse = post(request)
+            fromAnthropicResponse(rawResponse)
+          }
+
           apiProvider == APIProvider.Perplexity -> {
             val json =
               JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
@@ -312,6 +327,71 @@ open class OpenAIClient(
       }
     }
   }
+
+  private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: ChatModels): AnthropicChatRequest {
+    return AnthropicChatRequest(
+      model = chatRequest.model,
+      system = chatRequest.messages.firstOrNull { it.role == Role.system }?.content?.joinToString("\n\n") {
+        it.text ?: ""
+      },
+      messages = alternateAnthropicRoles(chatRequest.messages.filter { it.role != Role.system }),
+      max_tokens = chatRequest.max_tokens ?: model.maxOutTokens,
+      temperature = chatRequest.temperature,
+//     top_p = chatRequest.top_p,
+//     top_k = chatRequest.top_k
+    )
+  }
+
+  private fun alternateAnthropicRoles(messages: List<ChatMessage>): List<AnthropicMessage> {
+    val alternatingMessages = mutableListOf<AnthropicMessage>()
+    val remainingMessages = messages.toMutableList()
+    while (remainingMessages.isNotEmpty()) {
+      val thisRole = remainingMessages.firstOrNull()?.role
+      val toConsolidate = remainingMessages.takeWhile { it.role == thisRole }.toTypedArray()
+      remainingMessages.removeAll(toConsolidate)
+      alternatingMessages += AnthropicMessage(
+        role = thisRole.toString(),
+        content = toConsolidate.joinToString("\n\n") { it.content?.joinToString("\n") { it.text ?: "" } ?: "" }
+      )
+    }
+    return alternatingMessages
+  }
+
+  data class AnthropicChatRequest(
+    val model: String? = null,
+    val system: String? = null,
+    val messages: List<AnthropicMessage>? = null,
+    val max_tokens: Int? = null,
+    val temperature: Double? = null,
+    val top_p: Double? = null,
+    val top_k: Int? = null
+  )
+
+  data class AnthropicMessage(
+    val role: String? = null,
+    val content: String? = null
+  )
+
+  data class AnthropicResponse(
+    val id: String,
+    val type: String,
+    val role: String,
+    val content: List<AnthropicContentBlock>,
+    val model: String,
+    val stop_reason: String,
+    val stop_sequence: String?,
+    val usage: AnthropicUsage
+  )
+
+  data class AnthropicContentBlock(
+    val type: String,
+    val text: String?
+  )
+
+  data class AnthropicUsage(
+    val input_tokens: Int,
+    val output_tokens: Int
+  )
 
   data class AWSAuth(
     val profile: String = "default",
@@ -672,6 +752,32 @@ open class OpenAIClient(
     val generation_token_count: Int? = null,
     val stop_reason: String? = null
   )
+
+  open fun fromAnthropicResponse(rawResponse: String): String {
+    val errorCheck = JsonUtil.objectMapper().readTree(rawResponse)
+    if (errorCheck.has("type") && errorCheck.get("type").asText() == "error") {
+      throw RuntimeException("Error response received: $rawResponse")
+    }
+    val response = JsonUtil.objectMapper().readValue(rawResponse, AnthropicResponse::class.java)
+    return JsonUtil.toJson(
+      ChatResponse(
+        id = response.id,
+        choices = listOf(
+          ChatChoice(
+            message = ChatMessageResponse(
+              content = response.content.joinToString("\n") { it.text ?: "" }
+            ),
+            index = 0
+          )
+        ),
+        usage = Usage(
+          prompt_tokens = response.usage.input_tokens,
+          completion_tokens = response.usage.output_tokens,
+          total_tokens = response.usage.input_tokens + response.usage.output_tokens
+        )
+      )
+    )
+  }
 
   open fun fromModelsLab(rawResponse: String): String {
     val response = JsonUtil.objectMapper().readValue(rawResponse, ModelsLabDataModel.ChatResponse::class.java)

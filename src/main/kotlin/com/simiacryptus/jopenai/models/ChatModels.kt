@@ -399,6 +399,34 @@ open class ChatModels(
       inputTokenPricePerK = 0.0008,
       outputTokenPricePerK = 0.0024
     )
+    val AnthropicClaude3Opus = ChatModels(
+      name = "Claude3Opus",
+      modelName = "claude-3-opus-20240229",
+      maxTotalTokens = 200000,
+      maxOutTokens = 4096,
+      provider = APIProvider.Anthropic,
+      inputTokenPricePerK = 15.0 / 1000.0,
+      outputTokenPricePerK = 75.0 / 1000.0
+    )
+    val AnthropicClaude3Sonnet = ChatModels(
+      name = "Claude3Sonnet",
+      modelName = "claude-3-sonnet-20240229",
+      maxTotalTokens = 200000,
+      maxOutTokens = 4096,
+      provider = APIProvider.Anthropic,
+      inputTokenPricePerK = 3.0 / 1000.0,
+      outputTokenPricePerK = 15.0 / 1000.0
+    )
+    val AnthropicClaude3Haiku = ChatModels(
+      name = "Claude3Haiku",
+      modelName = "claude-3-haiku-20240307",
+      maxTotalTokens = 200000,
+      maxOutTokens = 4096,
+      provider = APIProvider.Anthropic,
+      inputTokenPricePerK = 0.25 / 1000.0,
+      outputTokenPricePerK = 1.25 / 1000.0
+    )
+
 
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
@@ -444,6 +472,9 @@ open class ChatModels(
       "ClaudeV2_1" to ClaudeV2_1,
       "ClaudeV2" to ClaudeV2,
       "ClaudeV2Instant" to ClaudeV2Instant,
+      "AnthropicClaude3Opus" to AnthropicClaude3Opus,
+      "AnthropicClaude3Sonnet" to AnthropicClaude3Sonnet,
+      "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
     )
   }
 }

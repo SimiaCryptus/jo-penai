@@ -6,4 +6,5 @@ enum class APIProvider(val base: String? = null) {
   Perplexity("https://api.perplexity.ai"),
   ModelsLab("https://modelslab.com/api/v6"),
   AWS("https://api.openai.aws"),
+  Anthropic("https://api.anthropic.com/v1"),
 }
