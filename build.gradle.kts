@@ -13,6 +13,7 @@ plugins {
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.9.21"
     id("signing")
+    id("jacoco")
 }
 
 repositories {
@@ -42,6 +43,14 @@ tasks {
         testLogging {
             events(TestLogEvent.PASSED, TestLogEvent.SKIPPED, TestLogEvent.FAILED)
             exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+        }
+        finalizedBy(jacocoTestReport)
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
         }
     }
 }
