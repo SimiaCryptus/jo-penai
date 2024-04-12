@@ -32,35 +32,17 @@ open class ChatModels(
   companion object {
     val GPT35Turbo = ChatModels(
       name = "GPT35Turbo",
-      modelName = "gpt-3.5-turbo-0125",
+      modelName = "gpt-3.5-turbo",
       maxTotalTokens = 16384,
       provider = APIProvider.OpenAI,
       inputTokenPricePerK = 0.0005,
       outputTokenPricePerK = 0.0015
     )
 
-    /*
-        val GPT4 = ChatModels(
-          name = "GPT4",
-          modelName = "gpt-4-32k",
-          maxTokens = 32768,
-          provider = APIProvider.OpenAI,
-          inputTokenPricePerK = 0.06,
-          outputTokenPricePerK = 0.12
-        )
-    */
     val GPT4Turbo = ChatModels(
       name = "GPT4Turbo",
-      modelName = "gpt-4-turbo-preview",
+      modelName = "gpt-4-turbo",
       maxTotalTokens = 128000,
-      provider = APIProvider.OpenAI,
-      inputTokenPricePerK = 0.01,
-      outputTokenPricePerK = 0.03
-    )
-    val GPT4Vision = ChatModels(
-      name = "GPT4Vision",
-      modelName = "gpt-4-vision-preview",
-      maxTotalTokens = 8192,
       provider = APIProvider.OpenAI,
       inputTokenPricePerK = 0.01,
       outputTokenPricePerK = 0.03
@@ -248,14 +230,6 @@ open class ChatModels(
       outputTokenPricePerK = 0.0015
     )
 
-    //    val CodeLlama7bHf = ChatModels(
-//      name = "CodeLlama7bHf",
-//      modelName = "CodeLlama-7b-hf",
-//      maxTokens = 16384,
-//      provider = APIProvider.ModelsLab,
-//      inputTokenPricePerK = 0.0005,
-//      outputTokenPricePerK = 0.0015
-//    )
     private val DeepseekCoder67bInstruct = ChatModels(
       name = "DeepseekCoder67bInstruct",
       modelName = "deepseek-coder-6.7b-instruct",
@@ -427,12 +401,38 @@ open class ChatModels(
       outputTokenPricePerK = 1.25 / 1000.0
     )
 
+    val Gemini15ProPreview = ChatModels(
+      name = "Gemini15ProPreview",
+      modelName = "models/gemini-1.5-pro-latest",
+      maxTotalTokens = 1048576,
+      maxOutTokens = 8192,
+      provider = APIProvider.Google,
+      inputTokenPricePerK = 0.002, // Assuming pricing, adjust as necessary
+      outputTokenPricePerK = 0.004 // Assuming pricing, adjust as necessary
+    )
+    val GeminiPro = ChatModels(
+      name = "GeminiPro",
+      modelName = "models/gemini-pro",
+      maxTotalTokens = 30720,
+      maxOutTokens = 2048,
+      provider = APIProvider.Google,
+      inputTokenPricePerK = 0.002, // Assuming pricing, adjust as necessary
+      outputTokenPricePerK = 0.004 // Assuming pricing, adjust as necessary
+    )
+//    val Gemini10ProVision = ChatModels(
+//      name = "Gemini10ProVision",
+//      modelName = "models/gemini-pro-vision",
+//      maxTotalTokens = 12288,
+//      maxOutTokens = 4096,
+//      provider = APIProvider.Google,
+//      inputTokenPricePerK = 0.002, // Assuming pricing, adjust as necessary
+//      outputTokenPricePerK = 0.004 // Assuming pricing, adjust as necessary
+//    )
+
 
     fun values() = mapOf(
       "GPT35Turbo" to GPT35Turbo,
-//      "GPT4" to GPT4,
       "GPT4Turbo" to GPT4Turbo,
-      "GPT4Vision" to GPT4Vision,
       "SonarSmallChat" to SonarSmallChat,
       "SonarSmallOnline" to SonarSmallOnline,
       "SonarMediumChat" to SonarMediumChat,
@@ -475,6 +475,9 @@ open class ChatModels(
       "AnthropicClaude3Opus" to AnthropicClaude3Opus,
       "AnthropicClaude3Sonnet" to AnthropicClaude3Sonnet,
       "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
+      "Gemini15ProPreview" to Gemini15ProPreview,
+      "GeminiPro" to GeminiPro,
+//      "Gemini10ProVision" to Gemini10ProVision,
     )
   }
 }

@@ -93,7 +93,16 @@ open class OpenAIClient(
 
   @Throws(IOException::class)
   protected open fun authorize(request: HttpRequest, apiProvider: APIProvider) {
-    request.addHeader("Authorization", "Bearer ${key.get(apiProvider)}")
+    when(apiProvider) {
+      APIProvider.Google -> {
+//        request.addHeader("X-goog-api-key", "${key.get(apiProvider)}")
+      }
+      APIProvider.Anthropic -> {
+        request.addHeader("x-api-key", "${key.get(apiProvider)}")
+        request.addHeader("anthropic-version", "2023-06-01")
+      }
+      else -> request.addHeader("Authorization", "Bearer ${key.get(apiProvider)}")
+    }
   }
 
   @Throws(IOException::class)
@@ -256,6 +265,16 @@ open class OpenAIClient(
         val apiProvider = model.provider
         val result = when {
 
+          apiProvider == APIProvider.Google -> {
+            val geminiChatRequest = toGeminiChatRequest(chatRequest.copy(messages=chatRequest.messages.map { it.copy(role = when(it.role) {
+              Role.system -> Role.user // Google doesn't think we can be trusted with system prompts... Understandable; we might request white people be treated as equals...
+              else -> it.role
+            }) }), model)
+            val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(geminiChatRequest)
+            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+            fromGemini(post("${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}", json, apiProvider))
+          }
+
           apiProvider == APIProvider.Anthropic -> {
             val anthropicChatRequest = mapToAnthropicChatRequest(chatRequest, model)
             val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(anthropicChatRequest)
@@ -327,6 +346,165 @@ open class OpenAIClient(
       }
     }
   }
+
+  private fun fromGemini(responseBody: String): String {
+    val fromJson = JsonUtil.fromJson<GenerateContentResponse>(responseBody, GenerateContentResponse::class.java)
+    return JsonUtil.toJson(
+      ChatResponse(
+        choices = fromJson.candidates.mapIndexed { index, candidate ->
+          ChatChoice(
+            message = ChatMessageResponse(
+              content = candidate.content.parts?.joinToString("\n") { it.text ?: "" }
+            ),
+            index = index
+          )
+        }
+      )
+    )
+  }
+
+
+  private fun toGeminiChatRequest(chatRequest: ChatRequest, model: ChatModels): GenerateContentRequest {
+    return GenerateContentRequest(
+//      model = model.modelName,
+/*
+      system_instruction = chatRequest.messages.filter { it.role == Role.system }?.reduceOrNull {
+        acc, chatMessage ->
+        ChatMessage(
+          role = Role.system,
+          content = acc.content?.plus(chatMessage.content ?: emptyList())
+            ?: chatMessage.content
+        )
+      }?.content?.let {
+        Content(
+          parts = it.map {
+            Part(
+              text = it.text ?: ""
+            )
+          }
+        )
+      },
+*/
+      contents = collectRoleSequences(chatRequest.messages.filter { when(it.role) {
+//        Role.system -> false
+        else -> true
+      } }.map {
+        Content(
+          role = when(it.role) {
+            Role.user -> "user"
+            Role.system -> "user"
+            Role.assistant -> "model"
+            else -> throw RuntimeException("Unsupported role: ${it.role}")
+          },
+          parts = it.content?.map {
+            Part(
+              text = it.text
+            )
+          }
+        )
+      })?.map { collectTextParts(it) },
+      generationConfig = GenerationConfig(
+        temperature = 0.3f, /*chatRequest.temperature.toFloat(),*/
+//        candidateCount = 1,
+//        maxOutputTokens = model.maxOutTokens-1,
+//        topK = 0,
+//        topP = 0.9f,
+//        stopSequences = chatRequest.stop?.map { it.toString() }
+      )
+/*
+*/
+    )
+  }
+
+  private fun collectTextParts(it: Content): Content {
+    var text = ""
+    val partsList = it.parts?.toMutableList() ?: mutableListOf()
+    val newParts = mutableListOf<Part>()
+    while(partsList.isNotEmpty()) {
+      val parts = partsList.takeWhile { it.text != null }
+      text = parts.joinToString("\n") { it.text ?: "" }
+      partsList.removeAll(parts)
+      newParts.add(Part(text = text))
+      // Copy all non-text parts
+      val nonTextParts = partsList.takeWhile { it.text == null }
+      newParts.addAll(nonTextParts)
+      partsList.removeAll(nonTextParts)
+    }
+    return Content(parts = newParts)
+  }
+
+  private fun collectRoleSequences(map: List<OpenAIClient.Content>): List<OpenAIClient.Content>? {
+    val alternatingMessages = mutableListOf<OpenAIClient.Content>()
+    val messagesCopy = map.toMutableList()
+    while (messagesCopy.isNotEmpty()) {
+      val thisRole = messagesCopy.firstOrNull()?.role
+      val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
+      messagesCopy.removeAll(toConsolidate)
+      val consolidatedMessage = toConsolidate.reduceOrNull { acc, chatMessage ->
+        Content(
+          role = acc.role,
+          parts = acc.parts?.plus(chatMessage.parts ?: emptyList())
+            ?: chatMessage.parts
+        )
+      }
+      alternatingMessages.add(consolidatedMessage ?: Content())
+    }
+    return alternatingMessages
+
+  }
+
+  data class GenerateContentRequest(
+    val model : String? = null,
+    val contents: List<Content>? = null,
+    val system_instruction: Content? = null,
+    val safetySettings: List<SafetySetting>? = null,
+    val generationConfig: GenerationConfig? = null
+  )
+
+  data class Content(
+    val role: String? = null,
+    val parts: List<Part>? = null
+  )
+
+  data class Part(
+    val inlineData: Blob? = null,
+    val text: String? = null
+  )
+
+  data class Blob(
+    val mimeType: String? = null,
+    val data: String? = null
+  )
+
+  data class SafetySetting(
+    val threshold: String? = null,
+    val category: String? = null
+  )
+
+  data class GenerationConfig(
+    val temperature: Float? = null,
+    val candidateCount: Int? = null,
+    val topK: Int? = null,
+    val maxOutputTokens: Int? = null,
+    val topP: Float? = null,
+    val stopSequences: List<String>? = null
+  )
+
+  data class GenerateContentResponse(
+    val candidates: List<Candidate>
+  )
+
+  data class Candidate(
+    val content: Content, // Reuse or adjust your existing Content class
+    val finishReason: String,
+    val index: Int,
+    val safetyRatings: List<SafetyRating>
+  )
+
+  data class SafetyRating(
+    val category: String,
+    val probability: String
+  )
 
   private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: ChatModels): AnthropicChatRequest {
     return AnthropicChatRequest(
@@ -505,7 +683,7 @@ open class OpenAIClient(
       val thisRole = messagesCopy.firstOrNull()?.role
       val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
       messagesCopy.removeAll(toConsolidate)
-      val consolidatedMessage = toConsolidate.reduce { acc, chatMessage ->
+      val consolidatedMessage = toConsolidate.reduceOrNull { acc, chatMessage ->
         ChatMessage(
           role = acc.role,
           content = listOf(
@@ -517,7 +695,7 @@ open class OpenAIClient(
           )
         )
       }
-      alternatingMessages.add(consolidatedMessage)
+      alternatingMessages.add(consolidatedMessage ?: ChatMessage())
     }
     return alternatingMessages
   }

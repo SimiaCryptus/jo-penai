@@ -8,21 +8,37 @@ import org.junit.jupiter.api.DynamicNode
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.CONCURRENT)
 class ModelTests {
 
   @TestFactory
+  @Execution(ExecutionMode.CONCURRENT)
   fun generateChatModelTests(): Array<DynamicNode> {
     // Retrieve all ChatModels
-    val chatModels = ChatModels.values().values
-
-    // Generate a dynamic test for each model
-    return chatModels.map { model ->
-      DynamicTest.dynamicTest(model.modelName) {
-        testChatWithModel(model)
-      }
-    }.map { it as DynamicNode }.toTypedArray()
+    return APIProvider.values().filter { when(it) {
+      APIProvider.Google -> true
+      APIProvider.OpenAI -> true
+      APIProvider.Anthropic -> true
+      APIProvider.AWS -> true
+      APIProvider.Groq -> true
+      APIProvider.Perplexity -> true
+      APIProvider.ModelsLab -> true
+      else -> true
+//      else -> false
+    } }.flatMap { provider ->
+      // Generate a dynamic test for each model
+      ChatModels.values()
+        .filter { it.value.provider == provider }
+        .values.map { model ->
+          DynamicTest.dynamicTest("${provider.name} - ${model.modelName}") {
+            testChatWithModel(model)
+          }
+        }.map { it as DynamicNode }.toList()
+    }.toTypedArray()
   }
 
   private fun testChatWithModel(model: ChatModels) {
