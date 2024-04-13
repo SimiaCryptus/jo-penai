@@ -595,11 +595,12 @@ open class OpenAIClient(
 //        "top_p" to 0.9,
       )
     }
+
     //mistral
     model.modelName.contains("mistral") -> {
       mapOf(
         "prompt" to toSimplePrompt(chatRequest),
-        "max_tokens" to model.maxTotalTokens,
+        "max_tokens" to model.maxOutTokens,
         "temperature" to chatRequest.temperature,
 //        "top_p" to 0.9,
 //        "top_k" to 50,
