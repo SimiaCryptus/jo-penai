@@ -20,15 +20,15 @@ class ModelTests {
   fun generateChatModelTests(): Array<DynamicNode> {
     // Retrieve all ChatModels
     return APIProvider.values().filter { when(it) {
-//      APIProvider.Google -> true
-//      APIProvider.OpenAI -> true
-//      APIProvider.Anthropic -> true
+      APIProvider.Google -> true
+      APIProvider.OpenAI -> true
+      APIProvider.Anthropic -> true
       APIProvider.AWS -> true
-//      APIProvider.Groq -> true
-//      APIProvider.Perplexity -> true
-//      APIProvider.ModelsLab -> true
-//      else -> true
-      else -> false
+      APIProvider.Groq -> true
+      APIProvider.Perplexity -> true
+      APIProvider.ModelsLab -> true
+      else -> true
+//      else -> false
     } }.flatMap { provider ->
       // Generate a dynamic test for each model
       ChatModels.values()
