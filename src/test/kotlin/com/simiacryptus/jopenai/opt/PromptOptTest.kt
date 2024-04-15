@@ -13,7 +13,7 @@ object PromptOptTest {
     private val log = LoggerFactory.getLogger(PromptOptTest::class.java)
 
     @JvmStatic
-    fun main( args: Array<String>) {
+    fun main(args: Array<String>) {
         try {
             PromptOptimization(
                 OpenAIClient(

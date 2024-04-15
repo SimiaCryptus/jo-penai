@@ -13,8 +13,8 @@ abstract class TypeDescriber {
     var coverMethods = true
     abstract fun describe(
         rawType: Class<in Nothing>,
-       stackMax: Int = 10,
-       describedTypes: MutableSet<String> = mutableSetOf()
+        stackMax: Int = 10,
+        describedTypes: MutableSet<String> = mutableSetOf()
     ): String
 
     abstract fun describe(self: Method, clazz: Class<*>? = null, stackMax: Int = 5): String

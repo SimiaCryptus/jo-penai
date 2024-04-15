@@ -1,7 +1,6 @@
 package com.simiacryptus.jopenai.audio
 
 import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.sound.sampled.AudioFileFormat
@@ -21,6 +20,7 @@ data class AudioPacket(
     val rms: Double by lazy { rms(samples) }
     val size: Int by lazy { samples.size }
     val spectralEntropy: Double by lazy { spectralEntropy(fft) }
+
     @Suppress("unused")
     val zeroCrossings: Int by lazy {
         samples.toList().windowed(2).count { it[0] > 0 && it[1] < 0 || it[0] < 0 && it[1] > 0 }
@@ -67,7 +67,7 @@ data class AudioPacket(
 
     companion object {
 
-      fun spectralEntropy(floats: FloatArray): Double {
+        fun spectralEntropy(floats: FloatArray): Double {
             val fft = fft(floats)
             val fftSize = fft.size / 2
             var sum = 0.0

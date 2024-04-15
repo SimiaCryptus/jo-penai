@@ -7,7 +7,7 @@ import java.lang.reflect.Type
 
 open class AbbrevWhitelistYamlDescriber(private vararg val abbreviated: String) : YamlDescriber() {
     override fun isAbbreviated(self: Type): Boolean {
-        if (self.typeName in TypeDescriber.primitives) {
+        if (self.typeName in primitives) {
             return false
         } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             return isAbbreviated(self.actualTypeArguments[0])

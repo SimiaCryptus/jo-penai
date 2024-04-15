@@ -503,6 +503,6 @@ class ChatModelsSerializer : StdSerializer<ChatModels>(ChatModels::class.java) {
 class ChatModelsDeserializer : JsonDeserializer<ChatModels>() {
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModels {
         val modelName = p.readValueAs(String::class.java)
-        return ChatModels.values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
+        return values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
     }
 }
