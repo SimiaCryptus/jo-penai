@@ -31,7 +31,8 @@ class PercentileLoudnessWindowBuffer(
     private val quietWindow = ArrayList<Double>()
 
     override fun shouldOutput(): Boolean {
-        val quietPacket = synchronized(outputPacketBuffer) { outputPacketBuffer.takeLast(quietWindowMax).reduce { a, b -> a + b } }
+        val quietPacket =
+            synchronized(outputPacketBuffer) { outputPacketBuffer.takeLast(quietWindowMax).reduce { a, b -> a + b } }
         val loudness = quietPacket.spectralEntropy
         // Binary search the RMS value in the rmsHeap list
         var index = rmsHeap.binarySearch(loudness)

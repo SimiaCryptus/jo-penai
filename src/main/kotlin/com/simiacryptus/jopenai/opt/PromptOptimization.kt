@@ -187,16 +187,20 @@ open class PromptOptimization(
             model = model.modelName
         )
         var response = com.simiacryptus.jopenai.ApiModel.ChatResponse()
-        chatRequest = chatRequest.copy(messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-            com.simiacryptus.jopenai.ApiModel.Role.system,
-            systemPrompt.toContentList()
-        ))
+        chatRequest = chatRequest.copy(
+            messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
+                com.simiacryptus.jopenai.ApiModel.Role.system,
+                systemPrompt.toContentList()
+            )
+        )
         return testCase.turns.map { turn ->
             var matched: Boolean
-            chatRequest = chatRequest.copy(messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-                com.simiacryptus.jopenai.ApiModel.Role.user,
-                turn.userMessage.toContentList()
-            ))
+            chatRequest = chatRequest.copy(
+                messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
+                    com.simiacryptus.jopenai.ApiModel.Role.user,
+                    turn.userMessage.toContentList()
+                )
+            )
             val startTemp = 0.3
             chatRequest = chatRequest.copy(temperature = startTemp)
             for (retry in 0..testCase.retries) {
@@ -216,10 +220,12 @@ open class PromptOptimization(
                     )
                 }
             }
-            chatRequest = chatRequest.copy(messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-                com.simiacryptus.jopenai.ApiModel.Role.assistant,
-                (response.choices.first().message?.content ?: "").toContentList()
-            ))
+            chatRequest = chatRequest.copy(
+                messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
+                    com.simiacryptus.jopenai.ApiModel.Role.assistant,
+                    (response.choices.first().message?.content ?: "").toContentList()
+                )
+            )
             response to turn.expectations.map { it.score(api, response) }.average()
         }
     }

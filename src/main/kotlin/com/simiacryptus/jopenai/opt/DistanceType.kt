@@ -27,6 +27,7 @@ enum class DistanceType {
             return 1 - dotProduct / (contentMagnitude * promptMagnitude)
         }
     };
+
     abstract fun distance(
         contentEmbedding: DoubleArray,
         promptEmbedding: DoubleArray

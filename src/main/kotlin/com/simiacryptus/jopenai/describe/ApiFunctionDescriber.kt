@@ -85,7 +85,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
                             toApiFunctionFormat(
                                 it.type.javaType,
                                 stackMax - 1,
- mutableSetOf()
+                                mutableSetOf()
                             ).replace("\n", "\n    ")
                         }"
                     }

@@ -7,9 +7,10 @@ import kotlin.math.min
 import kotlin.math.pow
 import kotlin.reflect.javaType
 import kotlin.reflect.typeOf
+
 @Suppress("unused")
 @OptIn(ExperimentalStdlibApi::class)
-class GPT4Tokenizer(isCodex:Boolean = false) {
+class GPT4Tokenizer(isCodex: Boolean = false) {
 
     class TextEncoder {
         fun encode(text: String): ByteArray {
@@ -30,7 +31,9 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
 
     companion object {
 
-        val codecJson = GPT4Tokenizer::class.java.getResourceAsStream("/gpt4.json")?.readAllBytes()?.toString(Charsets.UTF_8) ?: ""
+        val codecJson =
+            GPT4Tokenizer::class.java.getResourceAsStream("/gpt4.json")?.readAllBytes()?.toString(Charsets.UTF_8) ?: ""
+
         fun <E> List<E>.indexOf2(element: E, minIndex: Int): Int {
             for (i in minIndex until this.size) {
                 if (this[i] == element) {
@@ -284,7 +287,10 @@ class GPT4Tokenizer(isCodex:Boolean = false) {
 
     fun decode(tokens: List<Int>): String {
         val text = tokens.map { x -> this.decodings[x] }.joinToString(separator = "")
-        return String(text.toCharArray().map { this.byteDecoder[it.toString()]?.toByte() ?: 0 }.toTypedArray().toByteArray(), Charset.forName("UTF-8"))
+        return String(
+            text.toCharArray().map { this.byteDecoder[it.toString()]?.toByte() ?: 0 }.toTypedArray().toByteArray(),
+            Charset.forName("UTF-8")
+        )
     }
 
     fun estimateTokenCount(input: String): Int {

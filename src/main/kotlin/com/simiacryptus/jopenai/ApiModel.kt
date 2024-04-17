@@ -126,6 +126,7 @@ interface ApiModel {
                         !tokens.contentEquals(other.tokens) -> false
                         else -> true
                     }
+
                     other.tokens != null -> false
                     temperature != other.temperature -> false
                     avg_logprob != other.avg_logprob -> false
@@ -218,14 +219,17 @@ interface ApiModel {
         val content: List<ContentPart>? = null,
         val function_call: FunctionCall? = null,
     )
+
     data class ChatMessageResponse(
         val role: Role? = null,
         val content: String? = null,
         val function_call: FunctionCall? = null,
     )
+
     enum class Role {
         assistant, user, system
     }
+
     data class FunctionCall(
         val name: String? = null,
         val arguments: String? = null,
@@ -290,6 +294,7 @@ interface ApiModel {
                                 !embedding.contentEquals(other.embedding) -> return false
                             }
                         }
+
                         other.embedding != null -> return false
                         index != other.index -> return false
                     }

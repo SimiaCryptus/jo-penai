@@ -5,7 +5,8 @@ import com.simiacryptus.jopenai.describe.TypeDescriber
 
 class ApiFunctionDescriberTest : TypeDescriberTestBase() {
     override val typeDescriber: TypeDescriber get() = ApiFunctionDescriber()
-    override val classDescription: String get() = """
+    override val classDescription: String
+        get() = """
         |data class DataClassExample (
         |    val a: int
         |  val b: string
@@ -13,7 +14,8 @@ class ApiFunctionDescriberTest : TypeDescriberTestBase() {
         |  val d: Map
         |)
     """.trimMargin()
-    override val methodDescription get() = """
+    override val methodDescription
+        get() = """
         |methodExample(
         |  p1: int
         |  p2: string

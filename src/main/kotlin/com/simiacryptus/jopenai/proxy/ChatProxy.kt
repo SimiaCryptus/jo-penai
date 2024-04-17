@@ -64,7 +64,8 @@ open class ChatProxy<T : Any>(
             )
         }
         totalExamplesLength.addAndGet(toJson(exampleMessages).length)
-        request = request.copy(messages = ArrayList(
+        request = request.copy(
+            messages = ArrayList(
                 listOf(
                     ChatMessage(
                         ApiModel.Role.system, """
@@ -86,7 +87,8 @@ open class ChatProxy<T : Any>(
                                 argsToString(prompt.argList).toContentList()
                             )
                         )
-                ))
+            )
+        )
         request = request.copy(model = model.modelName)
         request = request.copy(temperature = temperature)
         val json = toJson(request)

@@ -29,7 +29,7 @@ abstract class LoudnessWindowBuffer(
                 synchronized(outputPacketBuffer) { outputPacketBuffer.add(packet) }
                 synchronized(recentPacketBuffer) {
                     recentPacketBuffer.add(packet)
-                    while(recentPacketBuffer.size > packetLookback) recentPacketBuffer.removeAt(0)
+                    while (recentPacketBuffer.size > packetLookback) recentPacketBuffer.removeAt(0)
                 }
                 if (shouldOutput()) {
                     // Add the converted raw to wav byte array to the output buffer

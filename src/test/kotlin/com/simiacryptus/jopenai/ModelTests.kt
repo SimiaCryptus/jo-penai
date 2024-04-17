@@ -15,47 +15,49 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 @Execution(ExecutionMode.CONCURRENT)
 class ModelTests {
 
-  @TestFactory
-  @Execution(ExecutionMode.CONCURRENT)
-  fun generateChatModelTests(): Array<DynamicNode> {
-    // Retrieve all ChatModels
-    return APIProvider.values().filter { when(it) {
-      APIProvider.Google -> true
-      APIProvider.OpenAI -> true
-      APIProvider.Anthropic -> true
-      APIProvider.AWS -> true
-      APIProvider.Groq -> true
-      APIProvider.Perplexity -> true
-      APIProvider.ModelsLab -> true
-      else -> true
+    @TestFactory
+    @Execution(ExecutionMode.CONCURRENT)
+    fun generateChatModelTests(): Array<DynamicNode> {
+        // Retrieve all ChatModels
+        return APIProvider.values().filter {
+            when (it) {
+                APIProvider.Google -> true
+                APIProvider.OpenAI -> true
+                APIProvider.Anthropic -> true
+                APIProvider.AWS -> true
+                APIProvider.Groq -> true
+                APIProvider.Perplexity -> true
+                APIProvider.ModelsLab -> true
+                else -> true
 //      else -> false
-    } }.flatMap { provider ->
-      // Generate a dynamic test for each model
-      ChatModels.values()
-        .filter { it.value.provider == provider }
-        .values.map { model ->
-          DynamicTest.dynamicTest("${provider.name} - ${model.modelName}") {
-            testChatWithModel(model)
-          }
-        }.map { it as DynamicNode }.toList()
-    }.toTypedArray()
-  }
+            }
+        }.flatMap { provider ->
+            // Generate a dynamic test for each model
+            ChatModels.values()
+                .filter { it.value.provider == provider }
+                .values.map { model ->
+                    DynamicTest.dynamicTest("${provider.name} - ${model.modelName}") {
+                        testChatWithModel(model)
+                    }
+                }.map { it as DynamicNode }.toList()
+        }.toTypedArray()
+    }
 
-  private fun testChatWithModel(model: ChatModels) {
-    val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
-    if (prov.isBlank()) return
-    val client = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })
-    val request = ApiModel.ChatRequest(
-      model = model.modelName,
-      messages = ArrayList(
-        listOf(
-          ApiModel.ChatMessage(ApiModel.Role.system, "You are a spiritual teacher".toContentList()),
-          ApiModel.ChatMessage(ApiModel.Role.user, "What is the meaning of life?".toContentList()),
+    private fun testChatWithModel(model: ChatModels) {
+        val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
+        if (prov.isBlank()) return
+        val client = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })
+        val request = ApiModel.ChatRequest(
+            model = model.modelName,
+            messages = ArrayList(
+                listOf(
+                    ApiModel.ChatMessage(ApiModel.Role.system, "You are a spiritual teacher".toContentList()),
+                    ApiModel.ChatMessage(ApiModel.Role.user, "What is the meaning of life?".toContentList()),
+                )
+            )
         )
-      )
-    )
-    val chatResponse = client.chat(request, model)
-    println(chatResponse.choices.first().message?.content ?: "No response")
-  }
+        val chatResponse = client.chat(request, model)
+        println(chatResponse.choices.first().message?.content ?: "No response")
+    }
 
 }

@@ -52,7 +52,7 @@ abstract class GPTProxyBase<T : Any>(
         }
         val argList = if (clazz.isKotlinClass()) {
             val declaredMethod = clazz.kotlin.functions.find { it.name == method.name }
-            if(null != declaredMethod) {
+            if (null != declaredMethod) {
                 (args ?: arrayOf()).zip(declaredMethod.parameters.filter { it.kind == KParameter.Kind.VALUE })
                     .filter<Pair<Any?, KParameter>> { (arg: Any?, _) -> arg != null }
                     .withIndex()

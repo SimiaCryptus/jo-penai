@@ -65,6 +65,7 @@ class GPT4TokenizerTest {
         assertEquals(input, decoded, "Encoding and decoding should be complementary operations")
         assertEquals(estimateTokenCount, encoded.size, "Encoding should produce the correct number of tokens")
     }
+
     @ParameterizedTest
     @ValueSource(strings = ["This is a Test", "Hello, World!", "Foo Bar", "This is a longer test string"])
     fun testEncodingDecodingAreComplementaryCodex(input: String) {
