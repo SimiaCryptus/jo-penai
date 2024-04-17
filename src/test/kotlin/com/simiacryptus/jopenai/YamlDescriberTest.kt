@@ -99,7 +99,10 @@ properties:
     data class FirstType(val name: String)
     data class SecondType(val id: Int)
 
-    enum class TestEnum
+    @Suppress("unused")
+    enum class TestEnum {
+        FIRST_OPTION, SECOND_OPTION, THIRD_OPTION
+    }
 
     @Test
     fun testDescribeEnumType() {
