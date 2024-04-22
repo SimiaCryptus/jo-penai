@@ -384,6 +384,22 @@ open class ChatModels(
             inputTokenPricePerK = 0.0008,
             outputTokenPricePerK = 0.0024
         )
+        private val LaMA38b = ChatModels(
+            name = "LaMA38b",
+            modelName = "llama3-8b-8192",
+            maxTotalTokens = 8192,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        private val LLaMA370b = ChatModels(
+            name = "LLaMA370b",
+            modelName = "llama3-70b-8192",
+            maxTotalTokens = 8192,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
         val AnthropicClaude3Opus = ChatModels(
             name = "Claude3Opus",
             modelName = "claude-3-opus-20240229",
@@ -486,6 +502,8 @@ open class ChatModels(
             "ClaudeV2Instant" to ClaudeV2Instant,
             "AnthropicClaude3Opus" to AnthropicClaude3Opus,
             "AnthropicClaude3Sonnet" to AnthropicClaude3Sonnet,
+            "LaMA38b" to LaMA38b,
+            "LLaMA370b" to LLaMA370b,
             "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
             "Gemini15ProPreview" to Gemini15ProPreview,
             "GeminiPro" to GeminiPro,

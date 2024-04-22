@@ -2,16 +2,25 @@ package com.simiacryptus.jopenai.util
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.core.JsonToken
 import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.lang.reflect.Type
 
 object JsonUtil {
+    // Hack to pass the target type to the deserializer
+    val _initForReading: ThreadLocal<JavaType?> = ThreadLocal.withInitial { null }
     open fun objectMapper(): ObjectMapper {
-        return ObjectMapper()
+        return object : ObjectMapper() {
+            override fun _initForReading(p: JsonParser?, targetType: JavaType?): JsonToken {
+                _initForReading.set(targetType)
+                return super._initForReading(p, targetType)
+            }
+        }
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
             .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
@@ -19,6 +28,8 @@ object JsonUtil {
             .disable(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES)
             .disable(DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES)
             .disable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+//            .enable(DeserializationFeature.UNWRAP_ROOT_VALUE)
+//            .enable(SerializationFeature.WRAP_ROOT_VALUE)
             .enable(JsonReadFeature.ALLOW_JAVA_COMMENTS.mappedFeature())
             .enable(JsonReadFeature.ALLOW_YAML_COMMENTS.mappedFeature())
             .enable(JsonReadFeature.ALLOW_TRAILING_COMMA.mappedFeature())
