@@ -164,7 +164,7 @@ open class OpenAIClient(
                     request.prompt.trim { it <= ' ' })
             log(
                 msg = String.format(
-                    "Chat Completion:\n\t%s", completionResult.toString().replace("\n", "\n\t")
+                    "Text Completion:\n\t%s", completionResult.toString().replace("\n", "\n\t")
                 )
             )
             response
@@ -260,6 +260,7 @@ open class OpenAIClient(
     open fun chat(
         chatRequest: ChatRequest, model: ChatModels
     ): ChatResponse {
+        val requestID = UUID.randomUUID().toString()
         //log.info("Chat request: $chatRequest", RuntimeException())
         return withReliability {
             withPerformanceLogging {
@@ -280,7 +281,7 @@ open class OpenAIClient(
                             }), model)
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(geminiChatRequest)
-                        log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                         fromGemini(
                             post(
                                 "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}",
@@ -292,9 +293,8 @@ open class OpenAIClient(
 
                     apiProvider == APIProvider.Anthropic -> {
                         val anthropicChatRequest = mapToAnthropicChatRequest(chatRequest, model)
-                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
-                            .writeValueAsString(anthropicChatRequest)
-                        log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(anthropicChatRequest)
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                         val request = HttpPost("${apiBase[apiProvider]}/messages")
                         request.addHeader("Content-Type", "application/json")
                         request.addHeader("Accept", "application/json")
@@ -307,25 +307,22 @@ open class OpenAIClient(
 
                     apiProvider == APIProvider.Perplexity -> {
                         val json =
-                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
-                                .writeValueAsString(chatRequest.copy(stop = null))
-                        log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.Groq -> {
-                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
-                            .writeValueAsString(toGroq(chatRequest))
-                        log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.ModelsLab -> {
                         modelsLabThrottle.runWithPermit {
                             val json =
-                                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
-                                    .writeValueAsString(toModelsLab(chatRequest))
-                            log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
+                            log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                             fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
                         }
                     }
@@ -334,11 +331,10 @@ open class OpenAIClient(
                         val awsAuth = JsonUtil.fromJson<AWSAuth>(key[apiProvider]!!, AWSAuth::class.java)
                         val invokeModelRequest = toAWS(model, chatRequest)
                         val bedrockRuntimeClient = BedrockRuntimeClient.builder()
-                            .credentialsProvider(
-                                ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build()
-                            )
+                            .credentialsProvider(ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build())
                             .region(Region.of(awsAuth.region))
                             .build()
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, bedrockRuntimeClient.toString().replace("\n", "\n\t")))
                         val invokeModelResponse = bedrockRuntimeClient
                             .invokeModel(invokeModelRequest)
                         val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
@@ -346,9 +342,8 @@ open class OpenAIClient(
                     }
 
                     else -> {
-                        val json =
-                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-                        log(msg = String.format("Chat Request\nPrefix:\n\t%s\n", json.replace("\n", "\n\t")))
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
                 }
@@ -359,7 +354,7 @@ open class OpenAIClient(
                 }
                 log(
                     msg = String.format(
-                        "Chat Completion:\n\t%s",
+                        "Chat Completion %s:\n\t%s", requestID,
                         response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
                             ?: JsonUtil.toJson(response)
                     )
@@ -1141,7 +1136,7 @@ open class OpenAIClient(
             }
             log(
                 msg = String.format(
-                    "Chat Completion:\n\t%s",
+                    "Edit Completion:\n\t%s",
                     response.firstChoice.orElse("").toString().trim { it <= ' ' }.toString().replace("\n", "\n\t")
                 )
             )
