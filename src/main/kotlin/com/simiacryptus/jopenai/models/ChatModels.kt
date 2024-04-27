@@ -340,6 +340,15 @@ open class ChatModels(
             inputTokenPricePerK = 0.0008,
             outputTokenPricePerK = 0.0016
         )
+        private val Claude3OpusAWS = ChatModels(
+            name = "Claude3OpusAWS",
+            modelName = "anthropic.claude-3-opus-20240229-v1:0",
+            maxTotalTokens = 200000,
+            maxOutTokens = 4096,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 15.0 / 1000.0,
+            outputTokenPricePerK = 75.0 / 1000.0
+        )
         private val CohereCommandTextV14 = ChatModels(
             name = "CohereCommandTextV14",
             modelName = "cohere.command-text-v14",
@@ -408,6 +417,22 @@ open class ChatModels(
             provider = APIProvider.AWS,
             inputTokenPricePerK = 0.0008,
             outputTokenPricePerK = 0.0024
+        )
+        private val LLaMA38bInstructAWS = ChatModels(
+            name = "LLaMA38bInstructAWS",
+            modelName = "meta.llama3-8b-instruct-v1:0",
+            maxTotalTokens = 8192,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        private val LLaMA370bInstructAWS = ChatModels(
+            name = "LLaMA370bInstructAWS",
+            modelName = "meta.llama3-70b-instruct-v1:0",
+            maxTotalTokens = 8192,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
         )
         private val LaMA38b = ChatModels(
             name = "LaMA38b",
@@ -517,6 +542,9 @@ open class ChatModels(
             "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
             "AmazonTitanTextLiteV1" to AmazonTitanTextLiteV1,
             "AmazonTitanTextExpressV1" to AmazonTitanTextExpressV1,
+            "Claude3OpusAWS" to Claude3OpusAWS,
+            "LLaMA38bInstructAWS" to LLaMA38bInstructAWS,
+            "LLaMA370bInstructAWS" to LLaMA370bInstructAWS,
             "CohereCommandTextV14" to CohereCommandTextV14,
             "AI21J2UltraV1" to AI21J2UltraV1,
             "AI21J2MidV1" to AI21J2MidV1,
