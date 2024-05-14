@@ -80,7 +80,7 @@ class OpenAIClientTest {
                 defaultApiProvider to prov
             )
         )
-        val model = ChatModels.GPT4Turbo
+        val model = ChatModels.GPT4o
         val request = ChatRequest(
             model = model.modelName,
             messages = ArrayList(
@@ -115,7 +115,7 @@ class OpenAIClientTest {
                 size = imageSize
             )
         ).data.first().url
-        val model = ChatModels.GPT4Turbo
+        val model = ChatModels.GPT4o
         val request = ChatRequest(
             model = model.modelName,
             messages = ArrayList(
