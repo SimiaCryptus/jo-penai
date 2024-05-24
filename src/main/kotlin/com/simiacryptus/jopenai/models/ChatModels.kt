@@ -496,6 +496,15 @@ open class ChatModels(
             inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.021
         )
+        val GeminiFlashPreview = ChatModels(
+            name = "GeminiFlashPreview",
+            modelName = "gemini-1.5-flash-latest",
+            maxTotalTokens = 1048576,
+            maxOutTokens = 8192,
+            provider = APIProvider.Google,
+            inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.021
+        )
         val GeminiPro = ChatModels(
             name = "GeminiPro",
             modelName = "models/gemini-pro",
@@ -572,6 +581,7 @@ open class ChatModels(
             "LLaMA370b" to LLaMA370b,
             "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
             "Gemini15ProPreview" to Gemini15ProPreview,
+            "GeminiFlashPreview" to GeminiFlashPreview,
             "GeminiPro" to GeminiPro,
 //      "Gemini10ProVision" to Gemini10ProVision,
         )
