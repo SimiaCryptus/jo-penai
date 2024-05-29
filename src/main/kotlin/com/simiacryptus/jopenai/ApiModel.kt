@@ -314,7 +314,6 @@ interface ApiModel {
     data class EmbeddingRequest(
         val model: String? = null,
         val input: String? = null,
-        val user: String? = null
     )
 
     // https://platform.openai.com/docs/api-reference/images/create
