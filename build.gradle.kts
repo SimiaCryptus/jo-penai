@@ -74,13 +74,15 @@ val jackson_databind_nullable_version = "0.2.6"
 val jakarta_annotation_version = "1.3.5"
 val httpclient_version = "5.1.3"
 val jodatime_version = "2.9.9"
+val aws_version = "2.25.60"
 
 dependencies {
 
 //    compileOnly("software.amazon.awssdk:bedrock:2.25.7")
 //    compileOnly("software.amazon.awssdk:bedrockagent:2.25.7")
 //    compileOnly("software.amazon.awssdk:bedrockagentruntime:2.25.7")
-    implementation("software.amazon.awssdk:bedrockruntime:2.25.7")
+    implementation("software.amazon.awssdk:bedrockruntime:$aws_version")
+    implementation("software.amazon.awssdk:auth:$aws_version")
 
     implementation ("io.swagger:swagger-annotations:$swagger_annotations_version")
     implementation ("com.google.code.findbugs:jsr305:3.0.2")
