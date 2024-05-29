@@ -25,6 +25,8 @@ import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
 import org.slf4j.event.Level
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
+import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.core.SdkBytes
 import software.amazon.awssdk.regions.Region
@@ -331,7 +333,7 @@ open class OpenAIClient(
                         val awsAuth = JsonUtil.fromJson<AWSAuth>(key[apiProvider]!!, AWSAuth::class.java)
                         val invokeModelRequest = toAWS(model, chatRequest)
                         val bedrockRuntimeClient = BedrockRuntimeClient.builder()
-                            .credentialsProvider(ProfileCredentialsProvider.builder().profileName(awsAuth.profile).build())
+                            .credentialsProvider(awsCredentials(awsAuth))
                             .region(Region.of(awsAuth.region))
                             .build()
                         log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, bedrockRuntimeClient.toString().replace("\n", "\n\t")))
@@ -363,6 +365,13 @@ open class OpenAIClient(
             }
         }
     }
+
+    protected open fun awsCredentials(awsAuth: AWSAuth): AwsCredentialsProviderChain? =
+        AwsCredentialsProviderChain.builder().credentialsProviders(
+            InstanceProfileCredentialsProvider.create(),
+            ProfileCredentialsProvider.create(awsAuth.profile),
+        ).build()
+
 
     private fun fromGemini(responseBody: String): String {
         val fromJson = JsonUtil.fromJson<GenerateContentResponse>(responseBody, GenerateContentResponse::class.java)
