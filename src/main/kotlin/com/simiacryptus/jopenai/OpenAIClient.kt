@@ -616,10 +616,10 @@ open class OpenAIClient(
         model: ChatModels,
         chatRequest: ChatRequest
     ) = when {
-        model.modelName.contains("llama2") -> {
+        model.modelName.contains("llama") -> {
             mapOf(
                 "prompt" to toSimplePrompt(chatRequest),
-                "max_gen_len" to model.maxTotalTokens,
+                "max_gen_len" to model.maxOutTokens,
                 "temperature" to chatRequest.temperature,
 //        "top_p" to 0.9,
             )
@@ -745,7 +745,7 @@ open class OpenAIClient(
 
     private fun fromAWS(responseBody: String, model: String): String {
         return when {
-            model.contains("llama2") -> {
+            model.contains("llama") -> {
                 val fromJson = JsonUtil.fromJson<AwsResponseLlama2>(responseBody, AwsResponseLlama2::class.java)
                 JsonUtil.toJson(
                     ChatResponse(
