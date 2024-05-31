@@ -94,11 +94,3 @@ Defines the structure of the conversation for evaluation.
 ## Contributing
 
 Feel free to open issues or submit pull requests as you see fit.
-
-## License
-
-This project is licensed under the MIT License.
-
----
-
-For more details, refer to the inline documentation and tests.
