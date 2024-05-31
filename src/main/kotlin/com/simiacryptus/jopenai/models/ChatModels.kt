@@ -431,6 +431,7 @@ open class ChatModels(
             name = "LLaMA38bInstructAWS",
             modelName = "meta.llama3-8b-instruct-v1:0",
             maxTotalTokens = 8192,
+            maxOutTokens = 2048,
             provider = APIProvider.AWS,
             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
@@ -439,6 +440,7 @@ open class ChatModels(
             name = "LLaMA370bInstructAWS",
             modelName = "meta.llama3-70b-instruct-v1:0",
             maxTotalTokens = 8192,
+            maxOutTokens = 2048,
             provider = APIProvider.AWS,
             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
