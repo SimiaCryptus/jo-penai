@@ -314,6 +314,12 @@ open class OpenAIClient(
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
+                    apiProvider == APIProvider.Mistral -> {
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                    }
+
                     apiProvider == APIProvider.Groq -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
                         log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
