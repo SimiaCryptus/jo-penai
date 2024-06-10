@@ -106,18 +106,74 @@ open class ChatModels(
             name = "Mistral7bInstruct",
             modelName = "mistral-7b-instruct",
             maxTotalTokens = 16384,
-            provider = APIProvider.Perplexity,
-            inputTokenPricePerK = 0.0005,
-            outputTokenPricePerK = 0.0015
+             provider = APIProvider.Perplexity,
+             inputTokenPricePerK = 0.0005,
+             outputTokenPricePerK = 0.0015
         )
 
         val Mixtral8x7bInstruct = ChatModels(
             name = "Mixtral8x7bInstruct",
             modelName = "mixtral-8x7b-instruct",
             maxTotalTokens = 16384,
-            provider = APIProvider.Perplexity,
-            inputTokenPricePerK = 0.0005,
-            outputTokenPricePerK = 0.0015
+             provider = APIProvider.Perplexity,
+             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+         )
+        val Mistral7B = ChatModels(
+            name = "Mistral7B",
+            modelName = "open-mistral-7b",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val Mixtral8x7B = ChatModels(
+            name = "Mixtral8x7B",
+            modelName = "open-mixtral-8x7b",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val Mixtral8x22B = ChatModels(
+            name = "Mixtral8x22B",
+            modelName = "open-mixtral-8x22b",
+            maxTotalTokens = 65536,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val MistralSmall = ChatModels(
+            name = "MistralSmall",
+            modelName = "mistral-small-latest",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val MistralMedium = ChatModels(
+            name = "MistralMedium",
+            modelName = "mistral-medium-latest",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val MistralLarge = ChatModels(
+            name = "MistralLarge",
+            modelName = "mistral-large-latest",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
+        val Codestral = ChatModels(
+            name = "Codestral",
+            modelName = "codestral-latest",
+            maxTotalTokens = 32768,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
         )
 
         val LLaMA270bChat = ChatModels(
@@ -582,10 +638,18 @@ open class ChatModels(
             "LaMA38b" to LaMA38b,
             "LLaMA370b" to LLaMA370b,
             "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
-            "Gemini15ProPreview" to Gemini15ProPreview,
+
+            "Mistral7B" to Mistral7B,
+            "Mixtral8x7B" to Mixtral8x7B,
+            "Mixtral8x22B" to Mixtral8x22B,
+            "MistralSmall" to MistralSmall,
+            "MistralMedium" to MistralMedium,
+            "MistralLarge" to MistralLarge,
+            "Codestral" to Codestral,
+
             "GeminiFlashPreview" to GeminiFlashPreview,
+            "Gemini15ProPreview" to Gemini15ProPreview,
             "GeminiPro" to GeminiPro,
-//      "Gemini10ProVision" to Gemini10ProVision,
         )
     }
 }

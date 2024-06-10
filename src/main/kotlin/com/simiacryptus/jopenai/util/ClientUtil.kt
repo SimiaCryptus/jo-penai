@@ -107,7 +107,7 @@ object ClientUtil {
             _keyTxt = value
         }
 
-    val keyMap: MutableMap<String, String>
+    val keyMap: Map<String, String>
         get() {
             val _keyTxt1 = _keyTxt
             if (null != _keyTxt1) return JsonUtil.fromJson(_keyTxt1, Map::class.java)!!

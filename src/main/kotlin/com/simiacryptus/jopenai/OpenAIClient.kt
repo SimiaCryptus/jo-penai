@@ -283,7 +283,13 @@ open class OpenAIClient(
                             }), model)
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(geminiChatRequest)
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
                         fromGemini(
                             post(
                                 "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}",
@@ -295,8 +301,15 @@ open class OpenAIClient(
 
                     apiProvider == APIProvider.Anthropic -> {
                         val anthropicChatRequest = mapToAnthropicChatRequest(chatRequest, model)
-                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(anthropicChatRequest)
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(anthropicChatRequest)
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
                         val request = HttpPost("${apiBase[apiProvider]}/messages")
                         request.addHeader("Content-Type", "application/json")
                         request.addHeader("Accept", "application/json")
@@ -309,22 +322,56 @@ open class OpenAIClient(
 
                     apiProvider == APIProvider.Perplexity -> {
                         val json =
-                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest.copy(stop = null))
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                                .writeValueAsString(chatRequest.copy(stop = null))
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                    }
+
+                    apiProvider == APIProvider.Mistral -> {
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(toGroq(chatRequest))
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.Groq -> {
-                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toGroq(chatRequest))
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(toGroq(chatRequest))
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.ModelsLab -> {
                         modelsLabThrottle.runWithPermit {
                             val json =
-                                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(toModelsLab(chatRequest))
-                            log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                                JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                                    .writeValueAsString(toModelsLab(chatRequest))
+                            log(
+                                msg = String.format(
+                                    "Chat Request %s\nPrefix:\n\t%s\n",
+                                    requestID,
+                                    json.replace("\n", "\n\t")
+                                )
+                            )
                             fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
                         }
                     }
@@ -336,7 +383,13 @@ open class OpenAIClient(
                             .credentialsProvider(awsCredentials(awsAuth))
                             .region(Region.of(awsAuth.region))
                             .build()
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, bedrockRuntimeClient.toString().replace("\n", "\n\t")))
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                bedrockRuntimeClient.toString().replace("\n", "\n\t")
+                            )
+                        )
                         val invokeModelResponse = bedrockRuntimeClient
                             .invokeModel(invokeModelRequest)
                         val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
@@ -344,8 +397,15 @@ open class OpenAIClient(
                     }
 
                     else -> {
-                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n", requestID, json.replace("\n", "\n\t")))
+                        val json =
+                            JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
+                        log(
+                            msg = String.format(
+                                "Chat Request %s\nPrefix:\n\t%s\n",
+                                requestID,
+                                json.replace("\n", "\n\t")
+                            )
+                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
                 }
@@ -709,26 +769,53 @@ open class OpenAIClient(
     private fun alternateMessagesRoles(messages: List<ChatMessage>): List<ChatMessage> {
         val alternatingMessages = mutableListOf<ChatMessage>()
         val messagesCopy = messages.toMutableList()
+        var isFirst = true
         while (messagesCopy.isNotEmpty()) {
             val thisRole = messagesCopy.firstOrNull()?.role
-            val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
-            messagesCopy.removeAll(toConsolidate)
-            val consolidatedMessage = toConsolidate.reduceOrNull { acc, chatMessage ->
-                ChatMessage(
-                    role = acc.role,
-                    content = listOf(
-                        ContentPart(
-                            type = "text",
-                            text = (acc.content?.plus(chatMessage.content ?: emptyList())
-                                ?: chatMessage.content)?.joinToString("\n") { it.text ?: "" }
+            val consolidatedMessage = takeAll(messagesCopy, thisRole)
+            if (isFirst) {
+                isFirst = false
+                if ((consolidatedMessage?.role ?: "") != "user") {
+                    val chatMessage = takeAll(messagesCopy, Role.user)
+                    alternatingMessages.add(
+                        concat(
+                            (consolidatedMessage ?: ChatMessage()).copy(role = Role.user),
+                            chatMessage ?: ChatMessage()
                         )
                     )
-                )
+                    continue
+                }
             }
             alternatingMessages.add(consolidatedMessage ?: ChatMessage())
         }
         return alternatingMessages
     }
+
+    private fun takeAll(
+        messagesCopy: MutableList<ChatMessage>,
+        thisRole: Role?
+    ): ChatMessage? {
+        val toConsolidate = messagesCopy.takeWhile { it.role == thisRole }.toTypedArray()
+        messagesCopy.removeAll(toConsolidate)
+        val consolidatedMessage = toConsolidate.reduceOrNull { acc, chatMessage ->
+            concat(acc, chatMessage)
+        }
+        return consolidatedMessage
+    }
+
+    private fun concat(
+        acc: ChatMessage,
+        chatMessage: ChatMessage
+    ) = ChatMessage(
+        role = acc.role,
+        content = listOf(
+            ContentPart(
+                type = "text",
+                text = (acc.content?.plus(chatMessage.content ?: emptyList())
+                    ?: chatMessage.content)?.joinToString("\n") { it.text ?: "" }
+            )
+        )
+    )
 
     open fun toSimplePrompt(
         chatRequest: ChatRequest,

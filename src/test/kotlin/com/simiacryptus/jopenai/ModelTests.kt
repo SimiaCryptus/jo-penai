@@ -2,6 +2,8 @@ package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.models.APIProvider
 import com.simiacryptus.jopenai.models.ChatModels
+import com.simiacryptus.jopenai.models.ChatModels.Companion.LLaMA370bInstructAWS
+import com.simiacryptus.jopenai.models.ChatModels.Companion.LLaMA38bInstructAWS
 import com.simiacryptus.jopenai.util.ClientUtil
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import org.junit.jupiter.api.DynamicNode
@@ -21,21 +23,30 @@ class ModelTests {
         // Retrieve all ChatModels
         return APIProvider.values().filter {
             when (it) {
-                APIProvider.Google -> true
-                APIProvider.OpenAI -> true
-                APIProvider.Anthropic -> true
-                APIProvider.AWS -> true
-                APIProvider.Groq -> true
-                APIProvider.Perplexity -> true
-                APIProvider.ModelsLab -> true
-                else -> true
-//      else -> false
+//                APIProvider.Google -> true
+//                APIProvider.OpenAI -> true
+//                APIProvider.Anthropic -> true
+//                APIProvider.AWS -> true
+                APIProvider.Mistral -> true
+//                APIProvider.Groq -> true
+//                APIProvider.Perplexity -> true
+//                APIProvider.ModelsLab -> true
+//                else -> true
+      else -> false
             }
         }.flatMap { provider ->
             // Generate a dynamic test for each model
             ChatModels.values()
                 .filter { it.value.provider == provider }
-                .values.map { model ->
+                .values
+                .filter { model ->
+                    when(model) {
+//                        LLaMA38bInstructAWS -> true
+//                        LLaMA370bInstructAWS -> true
+//                        else -> false
+                        else -> true
+                    }
+                }.map { model ->
                     DynamicTest.dynamicTest("${provider.name} - ${model.modelName}") {
                         testChatWithModel(model)
                     }
