@@ -438,6 +438,15 @@ open class ChatModels(
             inputTokenPricePerK = 0.0188,
             outputTokenPricePerK = 0.0188
         )
+        val Claude35Sonnet = ChatModels(
+            name = "Claude3Sonnet",
+            modelName = "anthropic.claude-3-5-sonnet-20240620-v1:0",
+            maxTotalTokens = 200000,
+            maxOutTokens = 4096,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.003,
+            outputTokenPricePerK = 0.015
+        )
         val Claude3Sonnet = ChatModels(
             name = "Claude3Sonnet",
             modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -525,6 +534,15 @@ open class ChatModels(
             provider = APIProvider.Anthropic,
             inputTokenPricePerK = 15.0 / 1000.0,
             outputTokenPricePerK = 75.0 / 1000.0
+        )
+        val AnthropicClaude35Sonnet = ChatModels(
+            name = "Claude3Sonnet",
+            modelName = "claude-3-5-sonnet-20240620",
+            maxTotalTokens = 200000,
+            maxOutTokens = 4096,
+            provider = APIProvider.Anthropic,
+            inputTokenPricePerK = 3.0 / 1000.0,
+            outputTokenPricePerK = 15.0 / 1000.0
         )
         val AnthropicClaude3Sonnet = ChatModels(
             name = "Claude3Sonnet",
@@ -625,12 +643,14 @@ open class ChatModels(
             "CohereCommandTextV14" to CohereCommandTextV14,
             "AI21J2UltraV1" to AI21J2UltraV1,
             "AI21J2MidV1" to AI21J2MidV1,
+            "Claude35Sonnet" to Claude35Sonnet,
             "Claude3Sonnet" to Claude3Sonnet,
             "Claude3Haiku" to Claude3Haiku,
             "ClaudeV2_1" to ClaudeV2_1,
             "ClaudeV2" to ClaudeV2,
             "ClaudeV2Instant" to ClaudeV2Instant,
             "AnthropicClaude3Opus" to AnthropicClaude3Opus,
+            "AnthropicClaude35Sonnet" to AnthropicClaude35Sonnet,
             "AnthropicClaude3Sonnet" to AnthropicClaude3Sonnet,
             "Llama38bInstruct" to Llama38bInstruct,
             "Llama370bInstruct" to Llama370bInstruct,

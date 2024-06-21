@@ -264,10 +264,12 @@ open class OpenAIClient(
     ): ChatResponse {
         val requestID = UUID.randomUUID().toString()
         //log.info("Chat request: $chatRequest", RuntimeException())
+        if (chatRequest.messages.isEmpty()) {
+            throw RuntimeException("No messages provided")
+        }
         return withReliability {
             withPerformanceLogging {
                 chatCounter.incrementAndGet()
-
                 val apiProvider = model.provider
                 val result = when {
 
