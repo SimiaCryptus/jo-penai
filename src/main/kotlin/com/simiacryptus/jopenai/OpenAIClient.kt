@@ -1051,29 +1051,33 @@ open class OpenAIClient(
     )
 
     open fun fromAnthropicResponse(rawResponse: String): String {
-        val errorCheck = JsonUtil.objectMapper().readTree(rawResponse)
-        if (errorCheck.has("type") && errorCheck.get("type").asText() == "error") {
-            throw RuntimeException("Error response received: $rawResponse")
-        }
-        val response = JsonUtil.objectMapper().readValue(rawResponse, AnthropicResponse::class.java)
-        return JsonUtil.toJson(
-            ChatResponse(
-                id = response.id,
-                choices = listOf(
-                    ChatChoice(
-                        message = ChatMessageResponse(
-                            content = response.content.joinToString("\n") { it.text ?: "" }
-                        ),
-                        index = 0
+        try {
+            val errorCheck = JsonUtil.objectMapper().readTree(rawResponse)
+            if (errorCheck.has("type") && errorCheck.get("type").asText() == "error") {
+                throw RuntimeException("Error response received: $rawResponse")
+            }
+            val response = JsonUtil.objectMapper().readValue(rawResponse, AnthropicResponse::class.java)
+            return JsonUtil.toJson(
+                ChatResponse(
+                    id = response.id,
+                    choices = listOf(
+                        ChatChoice(
+                            message = ChatMessageResponse(
+                                content = response.content.joinToString("\n") { it.text ?: "" }
+                            ),
+                            index = 0
+                        )
+                    ),
+                    usage = Usage(
+                        prompt_tokens = response.usage.input_tokens,
+                        completion_tokens = response.usage.output_tokens,
+                        total_tokens = response.usage.input_tokens + response.usage.output_tokens
                     )
-                ),
-                usage = Usage(
-                    prompt_tokens = response.usage.input_tokens,
-                    completion_tokens = response.usage.output_tokens,
-                    total_tokens = response.usage.input_tokens + response.usage.output_tokens
                 )
             )
-        )
+        } catch (e: Exception) {
+            throw RuntimeException("Error parsing Anthropic response: $rawResponse", e)
+        }
     }
 
     open fun fromModelsLab(rawResponse: String): String {
