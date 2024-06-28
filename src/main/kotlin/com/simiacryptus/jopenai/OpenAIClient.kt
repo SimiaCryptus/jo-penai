@@ -385,13 +385,8 @@ open class OpenAIClient(
                             .credentialsProvider(awsCredentials(awsAuth))
                             .region(Region.of(awsAuth.region))
                             .build()
-                        log(
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                bedrockRuntimeClient.toString().replace("\n", "\n\t")
-                            )
-                        )
+                        log(msg = String.format("Chat Request %s\nPrefix:\n\t%s\n",
+                            requestID, JsonUtil.toJson(chatRequest).replace("\n", "\n\t")))
                         val invokeModelResponse = bedrockRuntimeClient
                             .invokeModel(invokeModelRequest)
                         val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
@@ -926,7 +921,7 @@ open class OpenAIClient(
                         choices = listOf(
                             ChatChoice(
                                 message = ChatMessageResponse(
-                                    content = fromJson.content?.first()?.text ?: ""
+                                    content = fromJson.content?.firstOrNull()?.text ?: ""
                                 ),
                                 index = 0
                             )
