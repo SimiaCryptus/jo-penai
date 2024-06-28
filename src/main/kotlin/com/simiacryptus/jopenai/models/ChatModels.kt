@@ -184,32 +184,14 @@ open class ChatModels(
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
-
-        val Llama38bInstruct = ChatModels(
-            name = "Llama38bInstruct",
-            modelName = "llama-3-8b-instruct",
+        val LLaMA38b = ChatModels(
+            name = "LLaMA38b",
+            modelName = "llama3-8b-8192",
             maxTotalTokens = 8192,
-            provider = APIProvider.Perplexity,
+             provider = APIProvider.Groq,
             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
         )
-        val Llama370bInstruct = ChatModels(
-            name = "Llama370bInstruct",
-            modelName = "llama-3-70b-instruct",
-            maxTotalTokens = 8192,
-            provider = APIProvider.Perplexity,
-            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
-            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
-        )
-        val Mixtral8x22bInstruct = ChatModels(
-            name = "Mixtral8x22bInstruct",
-            modelName = "mixtral-8x22b-instruct",
-            maxTotalTokens = 4096,
-            provider = APIProvider.Groq,
-            inputTokenPricePerK = 0.0005,
-            outputTokenPricePerK = 0.0015
-        )
-
         val Mixtral8x7bInstructV01 = ChatModels(
             name = "Mixtral8x7bInstructV01",
             modelName = "mixtral-8x7b-32768",
@@ -652,9 +634,8 @@ open class ChatModels(
             "AnthropicClaude3Opus" to AnthropicClaude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicClaude35Sonnet,
             "AnthropicClaude3Sonnet" to AnthropicClaude3Sonnet,
-            "Llama38bInstruct" to Llama38bInstruct,
-            "Llama370bInstruct" to Llama370bInstruct,
-            "Mixtral8x22bInstruct" to Mixtral8x22bInstruct,
+            "LLaMA38b" to LLaMA38b,
+            "LLaMA370b" to LLaMA370b,
             "LaMA38b" to LaMA38b,
             "LLaMA370b" to LLaMA370b,
             "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
