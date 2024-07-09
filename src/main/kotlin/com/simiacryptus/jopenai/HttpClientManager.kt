@@ -12,6 +12,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
 import org.apache.hc.core5.util.Timeout
+import org.apache.hc.core5.http.HttpHeaders
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.BufferedOutputStream
@@ -27,7 +28,8 @@ open class HttpClientManager(
     val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
     private val workPool: ThreadPoolExecutor = Companion.workPool,
-    private val client: CloseableHttpClient = Companion.client
+    private val userAgent: String = DEFAULT_USER_AGENT,
+    private val client: CloseableHttpClient = createHttpClient(userAgent),
 ) : API() {
 
     companion object {
@@ -50,13 +52,17 @@ open class HttpClientManager(
                 ThreadFactoryBuilder().setNameFormat("API Thread %d").build()
             )
 
-        val client: CloseableHttpClient = HttpClientBuilder.create()
+        const val DEFAULT_USER_AGENT = "JOpenAI/1.0"
+        fun createHttpClient(userAgent: String = DEFAULT_USER_AGENT): CloseableHttpClient = HttpClientBuilder.create()
             .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
             .setConnectionManager(with(PoolingHttpClientConnectionManager()) {
                 defaultMaxPerRoute = 100
                 maxTotal = 100
                 this
-            }).build()
+            })
+            .setUserAgent(userAgent)
+            .setDefaultHeaders(listOf(org.apache.hc.core5.http.message.BasicHeader(HttpHeaders.USER_AGENT, userAgent)))
+            .build()
 
         private val log = LoggerFactory.getLogger(HttpClientManager::class.java)
         val startTime by lazy { System.currentTimeMillis() }
@@ -223,7 +229,7 @@ open class HttpClientManager(
     }
 
     fun <T> withClient(fn: Function<CloseableHttpClient, T>): T {
-        Thread.currentThread()
+        val client = createHttpClient(userAgent)
         return fn.apply(client)
     }
 
