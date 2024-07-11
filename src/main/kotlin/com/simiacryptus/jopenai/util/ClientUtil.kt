@@ -100,7 +100,7 @@ object ClientUtil {
             if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
             val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
             if (keyFile.exists()) return keyFile.readText().trim()
-            if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
+            //if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
             return ""
         }
         set(value) {
