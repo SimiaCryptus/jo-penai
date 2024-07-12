@@ -6,6 +6,7 @@ import com.simiacryptus.jopenai.ApiModel
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
 import com.simiacryptus.jopenai.models.APIProvider
+import com.simiacryptus.jopenai.util.JsonUtil.fromJson
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
@@ -108,7 +109,7 @@ object ClientUtil {
         }
 
     val keyMap: Map<String, String>
-        get() = JsonUtil.fromJson(keyTxt, Map::class.java)!!
+        get() = try { fromJson(keyTxt, Map::class.java)!! } catch (e: Exception) { emptyMap() }
 
     fun String.toContentList() = listOf(this).map { ApiModel.ContentPart(text = it, type = "text") }
     fun String.toChatMessage(role: ApiModel.Role = ApiModel.Role.user) =
