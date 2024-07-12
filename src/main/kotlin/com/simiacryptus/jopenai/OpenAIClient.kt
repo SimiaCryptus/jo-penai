@@ -49,7 +49,7 @@ open class OpenAIClient(
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
     workPool: ThreadPoolExecutor = HttpClientManager.workPool,
-    client: CloseableHttpClient = HttpClientManager.client
+    client: CloseableHttpClient = createHttpClient()
 ) : HttpClientManager(
     logLevel = logLevel,
     logStreams = logStreams,

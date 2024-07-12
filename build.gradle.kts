@@ -98,7 +98,9 @@ dependencies {
 
 
     implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.9")
-    implementation(group = "org.apache.httpcomponents.client5", name = "httpclient5", version = "5.2.3")
+    implementation(group = "org.apache.httpcomponents.client5", name = "httpclient5", version = "5.3.1") {
+        exclude(group = "org.slf4j", module = "slf4j-api")
+    }
     implementation(group = "com.fasterxml.jackson.core", name = "jackson-databind", version = jackson_version)
     implementation(group = "com.fasterxml.jackson.core", name = "jackson-annotations", version = jackson_version)
     implementation(group = "com.fasterxml.jackson.module", name = "jackson-module-kotlin", version = jackson_version)

@@ -6,6 +6,7 @@ import com.simiacryptus.jopenai.ApiModel
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
 import com.simiacryptus.jopenai.models.APIProvider
+import com.simiacryptus.jopenai.util.JsonUtil.fromJson
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
@@ -100,7 +101,7 @@ object ClientUtil {
             if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
             val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
             if (keyFile.exists()) return keyFile.readText().trim()
-            if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
+            //if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
             return ""
         }
         set(value) {
@@ -108,17 +109,7 @@ object ClientUtil {
         }
 
     val keyMap: Map<String, String>
-        get() {
-            val _keyTxt1 = _keyTxt
-            if (null != _keyTxt1) return JsonUtil.fromJson(_keyTxt1, Map::class.java)!!
-            val resourceAsStream = OpenAIClient::class.java.getResourceAsStream("/openai.key.json")
-            if (null != resourceAsStream) return JsonUtil.fromJson(
-                resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim(), Map::class.java
-            )
-            val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
-            if (!keyFile.exists()) return mutableMapOf()
-            return JsonUtil.fromJson(keyFile.readText().trim(), Map::class.java)
-        }
+        get() = try { fromJson(keyTxt, Map::class.java)!! } catch (e: Exception) { emptyMap() }
 
     fun String.toContentList() = listOf(this).map { ApiModel.ContentPart(text = it, type = "text") }
     fun String.toChatMessage(role: ApiModel.Role = ApiModel.Role.user) =
