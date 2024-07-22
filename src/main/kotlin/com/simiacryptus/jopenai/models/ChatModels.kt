@@ -57,6 +57,15 @@ open class ChatModels(
             outputTokenPricePerK = 0.015
         )
 
+        val GPT4oMini = ChatModels(
+            name = "GPT4oMini",
+            modelName = "gpt-4o-mini",
+            maxTotalTokens = 128000,
+            provider = APIProvider.OpenAI,
+            inputTokenPricePerK = 0.005,
+            outputTokenPricePerK = 0.015
+        )
+
         val SonarSmallChat = ChatModels(
             name = "SonarSmallChat",
             modelName = "sonar-small-chat",
@@ -587,6 +596,7 @@ open class ChatModels(
             "GPT35Turbo" to GPT35Turbo,
             "GPT4Turbo" to GPT4Turbo,
             "GPT4o" to GPT4o,
+            "GPT4oMini" to GPT4oMini,
             "SonarSmallChat" to SonarSmallChat,
             "SonarSmallOnline" to SonarSmallOnline,
             "SonarMediumChat" to SonarMediumChat,
