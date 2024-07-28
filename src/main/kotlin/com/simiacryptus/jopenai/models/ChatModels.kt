@@ -176,6 +176,14 @@ open class ChatModels(
             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
         )
+        val MistralNemo = ChatModels(
+            name = "MistralNemo",
+            modelName = "open-mistral-nemo",
+            maxTotalTokens = 128*1024-1,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
         val Codestral = ChatModels(
             name = "Codestral",
             modelName = "codestral-latest",
@@ -184,7 +192,39 @@ open class ChatModels(
             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
         )
+        val CodestralMamba = ChatModels(
+            name = "CodestralMamba",
+            modelName = "open-codestral-mamba",
+            maxTotalTokens = 128*1024-1,
+            provider = APIProvider.Mistral,
+            inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
+            outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
+        )
 
+        val Llama_31_405B  = ChatModels(
+            name = "Llama_31_405B",
+            modelName = "llama-3.1-405b-reasoning",
+            maxTotalTokens = 1288 * 1024 - 1,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005,
+            outputTokenPricePerK = 0.0015
+        )
+        val Llama_31_70B  = ChatModels(
+            name = "Llama_31_70B",
+            modelName = "llama-3.1-70b-versatile",
+            maxTotalTokens = 1288 * 1024 - 1,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005,
+            outputTokenPricePerK = 0.0015
+        )
+        val Llama_31_8B  = ChatModels(
+            name = "Llama_31_8B",
+            modelName = "llama-3.1-8b-instant",
+            maxTotalTokens = 1288 * 1024 - 1,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005,
+            outputTokenPricePerK = 0.0015
+        )
         val LLaMA270bChat = ChatModels(
             name = "LLaMA270bChat",
             modelName = "llama2-70b-4096",
@@ -336,6 +376,32 @@ open class ChatModels(
             outputTokenPricePerK = 0.0015
         )
 
+        val AWSLLaMA31_405bChat = ChatModels(
+            name = "AWSLLaMA31_405bChat",
+            modelName = "meta.llama3-1-405b-instruct-v1:0",
+            maxTotalTokens = 128 * 1024 - 1,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.00195,
+            outputTokenPricePerK = 0.00256
+        )
+        val AWSLLaMA31_70bChat = ChatModels(
+            name = "AWSLLaMA31_70bChat",
+            modelName = "meta.llama3-1-70b-instruct-v1:0",
+            maxTotalTokens = 128 * 1024 - 1,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.00195,
+            outputTokenPricePerK = 0.00256
+        )
+        val AWSLLaMA31_8bChat = ChatModels(
+            name = "AWSLLaMA31_8bChat",
+            modelName = "meta.llama3-1-8b-instruct-v1:0",
+            maxTotalTokens = 128 * 1024 - 1,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.00195,
+            outputTokenPricePerK = 0.00256
+        )
+
+
         val AWSLLaMA270bChat = ChatModels(
             name = "AWSLLaMA270bChat",
             modelName = "meta.llama2-70b-chat-v1",
@@ -373,6 +439,15 @@ open class ChatModels(
         val MistralLarge2402 = ChatModels(
             name = "MistralLarge2402",
             modelName = "mistral.mistral-large-2402-v1:0",
+            maxTotalTokens = 32 * 1024,
+            maxOutTokens = 4000,
+            provider = APIProvider.AWS,
+            inputTokenPricePerK = 0.008,
+            outputTokenPricePerK = 0.024
+        )
+        val MistralLarge2407 = ChatModels(
+            name = "MistralLarge2407",
+            modelName = "mistral.mistral-large-2407-v1:0",
             maxTotalTokens = 32 * 1024,
             maxOutTokens = 4000,
             provider = APIProvider.AWS,
@@ -604,6 +679,9 @@ open class ChatModels(
             "Codellama70bInstruct" to Codellama70bInstruct,
             "Mistral7bInstruct" to Mistral7bInstruct,
             "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
+            "Llama_31_405B" to Llama_31_405B,
+            "Llama_31_70B" to Llama_31_70B,
+            "Llama_31_8B" to Llama_31_8B,
             "LLaMA270bChat" to LLaMA270bChat,
             "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
             "Gemma7bIt" to Gemma7bIt,
@@ -618,11 +696,14 @@ open class ChatModels(
             "OpenHermes25Mistral7B" to OpenHermes25Mistral7B,
             "Dolphin221Mistral7b" to Dolphin221Mistral7b,
             "Mistral7BOpenOrca" to Mistral7BOpenOrca,
-//      "CodeLlama7bHf" to CodeLlama7bHf,
             "DeepseekCoder67bInstruct" to DeepseekCoder67bInstruct,
             "Phi15" to Phi15,
             "Zephyr7bAlpha" to Zephyr7bAlpha,
             "MistralLarge2402" to MistralLarge2402,
+            "MistralLarge2407" to MistralLarge2407,
+            "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
+            "AWSLLaMA31_70bChat" to AWSLLaMA31_70bChat,
+            "AWSLLaMA31_8bChat" to AWSLLaMA31_8bChat,
             "AWSLLaMA270bChat" to AWSLLaMA270bChat,
             "AWSLLaMA213bChat" to AWSLLaMA213bChat,
             "Mistral7bInstructV02" to Mistral7bInstructV02,
@@ -649,15 +730,15 @@ open class ChatModels(
             "LaMA38b" to LaMA38b,
             "LLaMA370b" to LLaMA370b,
             "AnthropicClaude3Haiku" to AnthropicClaude3Haiku,
-
             "Mistral7B" to Mistral7B,
             "Mixtral8x7B" to Mixtral8x7B,
             "Mixtral8x22B" to Mixtral8x22B,
             "MistralSmall" to MistralSmall,
             "MistralMedium" to MistralMedium,
             "MistralLarge" to MistralLarge,
+            "MistralNemo" to MistralNemo,
+            "CodestralMamba" to CodestralMamba,
             "Codestral" to Codestral,
-
             "GeminiFlashPreview" to GeminiFlashPreview,
             "Gemini15ProPreview" to Gemini15ProPreview,
             "GeminiPro" to GeminiPro,
