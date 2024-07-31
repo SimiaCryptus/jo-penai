@@ -66,68 +66,43 @@ open class ChatModels(
             outputTokenPricePerK = 0.015
         )
 
-        val SonarSmallChat = ChatModels(
-            name = "SonarSmallChat",
-            modelName = "sonar-small-chat",
-            maxTotalTokens = 16384,
+        val SonarSmallChat128k = ChatModels(
+            name = "SonarSmallChat128k",
+            modelName = "llama-3.1-sonar-small-128k-chat",
+            maxTotalTokens = 128 * 1024,
             provider = APIProvider.Perplexity,
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
 
-        val SonarSmallOnline = ChatModels(
-            name = "SonarSmallOnline",
-            modelName = "sonar-small-online",
-            maxTotalTokens = 12000,
+        val SonarSmallOnline128k = ChatModels(
+            name = "SonarSmallOnline128k",
+            modelName = "llama-3.1-sonar-small-128k-online",
+            maxTotalTokens = 128 * 1024,
             provider = APIProvider.Perplexity,
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
 
-        val SonarMediumChat = ChatModels(
-            name = "SonarMediumChat",
-            modelName = "sonar-medium-chat",
-            maxTotalTokens = 16384,
+        val SonarLargeChat128k = ChatModels(
+            name = "SonarLargeChat128k",
+            modelName = "llama-3.1-sonar-large-128k-chat",
+            maxTotalTokens = 128 * 1024,
             provider = APIProvider.Perplexity,
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
 
-        val SonarMediumOnline = ChatModels(
-            name = "SonarMediumOnline",
-            modelName = "sonar-medium-online",
-            maxTotalTokens = 12000,
+        val SonarLargeOnline128k = ChatModels(
+            name = "SonarLargeOnline128k",
+            modelName = "llama-3.1-sonar-large-128k-online",
+            maxTotalTokens = 128 * 1024,
             provider = APIProvider.Perplexity,
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
 
-        val Codellama70bInstruct = ChatModels(
-            name = "Codellama70bInstruct",
-            modelName = "codellama-70b-instruct",
-            maxTotalTokens = 16384,
-            provider = APIProvider.Perplexity,
-            inputTokenPricePerK = 0.0005,
-            outputTokenPricePerK = 0.0015
-        )
 
-        val Mistral7bInstruct = ChatModels(
-            name = "Mistral7bInstruct",
-            modelName = "mistral-7b-instruct",
-            maxTotalTokens = 16384,
-             provider = APIProvider.Perplexity,
-             inputTokenPricePerK = 0.0005,
-             outputTokenPricePerK = 0.0015
-        )
-
-        val Mixtral8x7bInstruct = ChatModels(
-            name = "Mixtral8x7bInstruct",
-            modelName = "mixtral-8x7b-instruct",
-            maxTotalTokens = 16384,
-             provider = APIProvider.Perplexity,
-             inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
-             outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
-         )
         val Mistral7B = ChatModels(
             name = "Mistral7B",
             modelName = "open-mistral-7b",
@@ -672,13 +647,10 @@ open class ChatModels(
             "GPT4Turbo" to GPT4Turbo,
             "GPT4o" to GPT4o,
             "GPT4oMini" to GPT4oMini,
-            "SonarSmallChat" to SonarSmallChat,
-            "SonarSmallOnline" to SonarSmallOnline,
-            "SonarMediumChat" to SonarMediumChat,
-            "SonarMediumOnline" to SonarMediumOnline,
-            "Codellama70bInstruct" to Codellama70bInstruct,
-            "Mistral7bInstruct" to Mistral7bInstruct,
-            "Mixtral8x7bInstruct" to Mixtral8x7bInstruct,
+            "SonarSmallChat128k" to SonarSmallChat128k,
+            "SonarSmallOnline128k" to SonarSmallOnline128k,
+            "SonarLargeChat128k" to SonarLargeChat128k,
+            "SonarLargeOnline128k" to SonarLargeOnline128k,
             "Llama_31_405B" to Llama_31_405B,
             "Llama_31_70B" to Llama_31_70B,
             "Llama_31_8B" to Llama_31_8B,
