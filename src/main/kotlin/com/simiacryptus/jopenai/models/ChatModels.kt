@@ -26,6 +26,8 @@ open class ChatModels(
     maxTotalTokens = maxTotalTokens,
     maxOutTokens = maxOutTokens
 ) {
+    override fun toString() = modelName
+
     override fun pricing(usage: Usage) =
         (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
 
