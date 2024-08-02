@@ -236,8 +236,16 @@ open class ChatModels(
             inputTokenPricePerK = 0.0005,
             outputTokenPricePerK = 0.0015
         )
-        /*
-        */
+
+        val Gemma2_9bIt = ChatModels(
+            name = "Gemma2_9bIt",
+            modelName = "gemma2-9b-it",
+            maxTotalTokens = 8192,
+            maxOutTokens = 8192,
+            provider = APIProvider.Groq,
+            inputTokenPricePerK = 0.0005,
+            outputTokenPricePerK = 0.0015
+        )
 
         val Zephyr7bBeta = ChatModels(
             name = "Zephyr7bBeta",
@@ -659,6 +667,7 @@ open class ChatModels(
             "LLaMA270bChat" to LLaMA270bChat,
             "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
             "Gemma7bIt" to Gemma7bIt,
+            "Gemma2_9bIt" to Gemma2_9bIt,
             "Zephyr7bBeta" to Zephyr7bBeta,
             "DialoGPTLarge" to DialoGPTLarge,
             "YarnMistral7b128k" to YarnMistral7b128k,
