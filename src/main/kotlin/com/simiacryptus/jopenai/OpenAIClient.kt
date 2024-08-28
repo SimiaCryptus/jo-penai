@@ -261,7 +261,7 @@ open class OpenAIClient(
         }
 
     open fun chat(
-        chatRequest: ChatRequest, model: ChatModels
+        chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         var chatRequest = chatRequest
         if (isEnemy) {
@@ -468,7 +468,7 @@ open class OpenAIClient(
     }
 
 
-    private fun toGeminiChatRequest(chatRequest: ChatRequest, model: ChatModels): GenerateContentRequest {
+    private fun toGeminiChatRequest(chatRequest: ChatRequest, model: OpenAITextModel): GenerateContentRequest {
         return GenerateContentRequest(
 //      model = model.modelName,
             /*
@@ -613,7 +613,7 @@ open class OpenAIClient(
         val probability: String
     )
 
-    private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: ChatModels): AnthropicChatRequest {
+    private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: OpenAITextModel): AnthropicChatRequest {
         return AnthropicChatRequest(
             model = chatRequest.model,
             system = chatRequest.messages.firstOrNull { it.role == Role.system }?.content?.joinToString("\n\n") {
@@ -683,7 +683,7 @@ open class OpenAIClient(
         val region: String = Region.US_WEST_2.id(),
     )
 
-    open fun toAWS(model: ChatModels, chatRequest: ChatRequest) = InvokeModelRequest.builder()
+    open fun toAWS(model: OpenAITextModel, chatRequest: ChatRequest) = InvokeModelRequest.builder()
         .modelId(model.modelName)
         .accept("application/json")
         .contentType("application/json")
@@ -691,7 +691,7 @@ open class OpenAIClient(
         .build()
 
     open fun awsBody(
-        model: ChatModels,
+        model: OpenAITextModel,
         chatRequest: ChatRequest
     ) = when {
         model.modelName.contains("llama") -> {
@@ -779,7 +779,7 @@ open class OpenAIClient(
         else -> throw RuntimeException("Unsupported model: $model")
     }
 
-    open fun anthropic_version(model: ChatModels) = when {
+    open fun anthropic_version(model: OpenAITextModel) = when {
         else -> "bedrock-2023-05-31"
 //    else -> null
     }
