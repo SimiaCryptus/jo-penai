@@ -18,7 +18,7 @@ open class ChatModels(
     modelName: String,
     maxTotalTokens: Int,
     maxOutTokens: Int = maxTotalTokens,
-    val provider: APIProvider,
+    override val provider: APIProvider,
     val inputTokenPricePerK: Double,
     val outputTokenPricePerK: Double,
 ) : OpenAITextModel(
