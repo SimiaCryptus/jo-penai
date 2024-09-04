@@ -24,17 +24,17 @@ Maven:
 <dependency>
     <groupId>com.simiacryptus</groupId>
     <artifactId>jo-penai</artifactId>
-    <version>1.0.68</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 Gradle:
 ```groovy
-implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.0.68'
+implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.1.0'
 ```
 
 ```kotlin
-implementation("com.simiacryptus:jo-penai:1.0.68")
+implementation("com.simiacryptus:jo-penai:1.1.0")
 ```
 
 ## Developer Guide: High-Level Design of `HttpClientManager` and `OpenAIClient`
