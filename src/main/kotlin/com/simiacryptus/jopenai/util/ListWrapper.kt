@@ -30,7 +30,7 @@ open class ListWrapper<T : Any>(
     override fun hashCode(): Int {
         var result = 1
         forEach {
-            result = 31 * result + (it?.hashCode() ?: 0)
+            result = 31 * result + it.hashCode()
         }
         return result
     }

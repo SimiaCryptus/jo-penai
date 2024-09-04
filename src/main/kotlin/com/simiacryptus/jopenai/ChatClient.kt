@@ -377,7 +377,7 @@ open class ChatClient(
             */
             contents = collectRoleSequences(chatRequest.messages.filter {
                 when (it.role) {
-//        Role.system -> false
+        //        Role.system -> false
                     else -> true
                 }
             }.map {
@@ -394,7 +394,7 @@ open class ChatClient(
                         )
                     }
                 )
-            })?.map { collectTextParts(it) },
+            }).map { collectTextParts(it) },
             generationConfig = GenerationConfig(
                 temperature = 0.3f,
                 /*chatRequest.temperature.toFloat(),*/
