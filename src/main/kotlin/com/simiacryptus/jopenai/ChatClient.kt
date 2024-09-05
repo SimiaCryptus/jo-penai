@@ -18,6 +18,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
+import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain
 import software.amazon.awssdk.auth.credentials.InstanceProfileCredentialsProvider
@@ -48,22 +49,40 @@ open class ChatClient(
     client = client
 ), ChatInterface {
 
-    fun getIsolatedLoggingClient() : ChatInterface {
-        val inner = this
-        return object : ChatClient(
-            key = key,
-            apiBase = apiBase,
-            logLevel = Level.INFO
-        ) {
-            override fun log(level: Level, msg: String) {
-                if (isWarCrimeState) return
-                super.log(level, msg)
-                inner.log(level, msg)
-            }
+    open var session: Any? = null
+    open var user: Any? = null
+    var budget : Number? = null
+
+    private class ChildClient(
+        val inner: ChatClient,
+        key: Map<APIProvider, String> = inner.key,
+        apiBase: Map<APIProvider, String> = inner.apiBase
+    ) : ChatClient(
+        key = key,
+        apiBase = apiBase,
+        logLevel = Level.INFO
+    ) {
+        override fun log(level: Level, msg: String) {
+            if (isWarCrimeState) return
+            super.log(level, msg)
+            inner.log(level, msg)
         }
     }
 
+    fun getChildClient() : ChatClient = ChildClient(inner = this, key = key, apiBase = apiBase).apply {
+        session = inner.session
+        user = inner.user
+    }
+
     protected open fun onUsage(model: OpenAIModel?, tokens: Usage) {
+        log.debug(
+            "Usage recorded for session: {}, user: {}, model: {}, tokens: {}",
+            session,
+            user,
+            model,
+            tokens
+        )
+        if(null != budget) budget = budget!!.toDouble() - (tokens.cost ?: 0.0)
     }
 
     override fun moderate(text: String) = withReliability {
@@ -128,6 +147,8 @@ open class ChatClient(
 
     @Throws(IOException::class)
     protected open fun authorize(request: HttpRequest, apiProvider: APIProvider) {
+        log.debug("Authorizing request for session: {}, user: {}, apiProvider: {}", session, user, apiProvider)
+        require(null == budget || budget!!.toDouble() > 0.0) { "Budget Exceeded" }
         when (apiProvider) {
             APIProvider.Google -> {
 //        request.addHeader("X-goog-api-key", "${key.get(apiProvider)}")
@@ -1061,7 +1082,7 @@ open class ChatClient(
     )
 
     companion object {
-        private val log = org.slf4j.LoggerFactory.getLogger(OpenAIClient::class.java)
+        private val log = LoggerFactory.getLogger(OpenAIClient::class.java)
         var modelsLabThrottle = Semaphore(1)
         var modelslab_chatRequest_prototype = ModelsLabDataModel.ChatRequest(
             max_new_tokens = 1000,
