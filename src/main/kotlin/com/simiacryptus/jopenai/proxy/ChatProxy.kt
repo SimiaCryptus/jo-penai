@@ -3,6 +3,7 @@ package com.simiacryptus.jopenai.proxy
 import com.simiacryptus.jopenai.ApiModel
 import com.simiacryptus.jopenai.ApiModel.ChatMessage
 import com.simiacryptus.jopenai.ApiModel.ChatRequest
+import com.simiacryptus.jopenai.ChatClient
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 open class ChatProxy<T : Any>(
     clazz: Class<out T>,
-    val api: OpenAIClient,
+    val api: ChatClient,
     var model: ChatModels,
     temperature: Double = 0.5,
     private var verbose: Boolean = false,
@@ -22,7 +23,7 @@ open class ChatProxy<T : Any>(
 
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
-        api = params["api"] as OpenAIClient? ?: OpenAIClient(),
+        api = params["api"] as ChatClient? ?: ChatClient(),
         model = (params["model"] as ChatModels?)!!,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
@@ -31,26 +32,9 @@ open class ChatProxy<T : Any>(
         validation = params["validation"] as Boolean? ?: true,
     )
 
-    override val metrics: Map<String, Any>
-        get() = hashMapOf(
-            "totalInputLength" to totalInputLength.get(),
-            "totalOutputLength" to totalOutputLength.get(),
-            "totalNonJsonPrefixLength" to totalNonJsonPrefixLength.get(),
-            "totalNonJsonSuffixLength" to totalNonJsonSuffixLength.get(),
-            "totalYamlLength" to totalYamlLength.get(),
-            "totalExamplesLength" to totalExamplesLength.get(),
-        ) + super.metrics + api.metrics
-    private val totalNonJsonPrefixLength = AtomicInteger(0)
-    private val totalNonJsonSuffixLength = AtomicInteger(0)
-    private val totalInputLength = AtomicInteger(0)
-    private val totalYamlLength = AtomicInteger(0)
-    private val totalExamplesLength = AtomicInteger(0)
-    private val totalOutputLength = AtomicInteger(0)
-
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
         if (verbose) log.info(prompt.toString())
         var request = ChatRequest()
-        totalYamlLength.addAndGet(prompt.apiYaml.length)
         val exampleMessages = examples.flatMap {
             listOf(
                 ChatMessage(
@@ -63,7 +47,6 @@ open class ChatProxy<T : Any>(
                 )
             )
         }
-        totalExamplesLength.addAndGet(toJson(exampleMessages).length)
         request = request.copy(
             messages = ArrayList(
                 listOf(
@@ -93,15 +76,11 @@ open class ChatProxy<T : Any>(
         request = request.copy(temperature = temperature)
         val json = toJson(request)
         if (moderated) api.moderate(json)
-        totalInputLength.addAndGet(json.length)
 
         val completion = api.chat(request, model).choices.first().message?.content.orEmpty()
         if (verbose) log.info(completion)
-        totalOutputLength.addAndGet(completion.length)
         val trimPrefix = trimPrefix(completion)
         val trimSuffix = trimSuffix(trimPrefix.first)
-        totalNonJsonPrefixLength.addAndGet(trimPrefix.second.length)
-        totalNonJsonSuffixLength.addAndGet(trimSuffix.second.length)
         return trimSuffix.first
     }
 

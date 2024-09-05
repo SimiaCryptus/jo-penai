@@ -109,7 +109,9 @@ object ClientUtil {
         }
 
     val keyMap: Map<String, String>
-        get() = try { fromJson(keyTxt, Map::class.java)!! } catch (e: Exception) { emptyMap() }
+        get() = try {
+            fromJson(keyTxt, Map::class.java)
+        } catch (e: Exception) { emptyMap() }
 
     fun String.toContentList() = listOf(this).map { ApiModel.ContentPart(text = it, type = "text") }
     fun String.toChatMessage(role: ApiModel.Role = ApiModel.Role.user) =

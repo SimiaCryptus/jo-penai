@@ -587,7 +587,7 @@ open class ChatModels(
             outputTokenPricePerK = 75.0 / 1000.0
         )
         val AnthropicClaude35Sonnet = ChatModels(
-            name = "Claude3Sonnet",
+            name = "Claude35Sonnet",
             modelName = "claude-3-5-sonnet-20240620",
             maxTotalTokens = 200000,
             maxOutTokens = 4096,

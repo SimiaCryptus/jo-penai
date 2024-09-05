@@ -1,5 +1,6 @@
 package com.simiacryptus.jopenai.opt
 
+import com.simiacryptus.jopenai.ChatClient
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.describe.Description
 import com.simiacryptus.jopenai.models.ChatModels
@@ -14,6 +15,7 @@ import kotlin.math.pow
 
 open class PromptOptimization(
     val api: OpenAIClient,
+    val chatClient: ChatClient,
     val model: ChatModels,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
@@ -169,7 +171,7 @@ open class PromptOptimization(
 
     protected open fun geneticApi(temperature: Double = 0.3) = ChatProxy(
         clazz = GeneticApi::class.java,
-        api = api,
+        api = chatClient,
         model = model,
         temperature = temperature
     ).create()
@@ -204,7 +206,7 @@ open class PromptOptimization(
             val startTemp = 0.3
             chatRequest = chatRequest.copy(temperature = startTemp)
             for (retry in 0..testCase.retries) {
-                response = api.chat(chatRequest, model)
+                response = chatClient.chat(chatRequest, model)
                 matched = turn.expectations.all { it.matches(api, response) }
                 if (matched) {
                     break
