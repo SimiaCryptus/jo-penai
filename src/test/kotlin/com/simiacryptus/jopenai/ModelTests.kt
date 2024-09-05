@@ -57,7 +57,7 @@ class ModelTests {
     private fun testChatWithModel(model: ChatModels) {
         val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
         if (prov.isBlank()) return
-        val client = OpenAIClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })
+        val client = ChatClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })
         val request = ApiModel.ChatRequest(
             model = model.modelName,
             messages = ArrayList(
