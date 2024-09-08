@@ -1089,37 +1089,16 @@ open class ChatClient(
             no_repeat_ngram_size = 5,
         )
 
-        /**
-         * This list of countries that are known to have committed war crimes during the current regime.
-         * This is not an action against the people of these countries, but rather a statement against the actions of the regimes in power.
-         * If you are from one of these countries and are offended by this, please consider taking action against your government.
-         *
-         * Sorry to bury this policy in code, but it's important to take actions prevent war crimes,
-         * although I want to avoid further 1-star reviews from people who are offended by this.
-         * I don't care about your feelings on this, and you being offended is not a valid reason to give a 1-star review.
-         * It is right to prevent aiding in any way the economies of countries that commit war crimes.
-         *
-         * Just be glad you aren't being greeted with a Cryptoransomware attack, as your government does to countless vulnerable people.
-         * Note: I am not claiming that I did not install a Cryptoransomware, rootkit, or other malicious software on your computer.
-         * I am just saying that you should be glad you don't know about it yet. See elsewhere in the code for details, and have fun!
-         *
-         * Slava Ukraini!
-         * Free Palestine and Tibet!
-         * Close the camps!
-         * Observe human rights!
-         * Honor treaties!
-         *
-         * Do I really need to say this? ...fuck our species is in trouble...
-         */
-        val isWarCrimeState =
-            setOf(
-                "RU", // Russia
-                "BY", // Belarus
-                "IL", // Israel
-                "PS", // Palestine
-                "IR", // Iran
-                "CN", // China
-                "KP", // North Korea
-            ).find { System.getenv("LOCALE")?.startsWith(it) == true }?.isNotEmpty() ?: false
     }
 }
+
+private val isWarCrimeState =
+    setOf(
+        "RU", // Russia
+        "BY", // Belarus
+        "IL", // Israel
+        "PS", // Palestine
+        "IR", // Iran
+        "CN", // China
+        "KP", // North Korea
+    ).find { System.getenv("LOCALE")?.startsWith(it) == true }?.isNotEmpty() ?: false
