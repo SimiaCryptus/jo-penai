@@ -5,6 +5,7 @@ import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
 import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveGenericType
+import com.simiacryptus.util.DynamicEnum
 import org.slf4j.LoggerFactory
 import java.lang.reflect.*
 import java.util.*
@@ -38,12 +39,12 @@ open class YamlDescriber : TypeDescriber() {
             |type: object
             |class: ${rawType.name}
             """.trimMargin()
-        if (rawType.isEnum) {
+        if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
             return """
-        |type: enum
-        |values:
-        |${rawType.enumConstants.joinToString("\n") { "  - $it" }}
-        """.trimMargin()
+                |type: enum
+                |values:
+                |${getEnumValues(rawType).joinToString("\n") { "  - $it" }}
+                """.trimMargin()
         }
         val propertiesYaml = if (rawType.isKotlinClass()) {
             rawType.kotlin.memberProperties.filter { it.visibility == KVisibility.PUBLIC }.map {
@@ -67,15 +68,15 @@ open class YamlDescriber : TypeDescriber() {
                 val description =
                     it.annotations.find { x -> x is Description } as? Description
                 return@map if (description != null) """
-                |${it.name}:
-                |  description: ${description.value.trim()}
-                |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
-                """.trimIndent()
+                    |${it.name}:
+                    |  description: ${description.value.trim()}
+                    |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+                    """.trimIndent()
                 else
                     """
-                |${it.name}:
-                |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
-                """.trimMargin().trim()
+                    |${it.name}:
+                    |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+                    """.trimMargin().trim()
             }.toTypedArray()
         }
         val methodsYaml = (if (rawType.isKotlinClass()) {
@@ -85,9 +86,9 @@ open class YamlDescriber : TypeDescriber() {
                         && !it.isOperator && !it.isInfix && !it.isAbstract
             }.map {
                 """
-            |${it.name}:
-            |  ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
-            """.trimMargin().trim()
+                |${it.name}:
+                |  ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
+                """.trimMargin().trim()
             }.toTypedArray()
         } else {
             if (includeMethods) {
@@ -99,9 +100,9 @@ open class YamlDescriber : TypeDescriber() {
                     }
                     .map {
                         """
-                |${it.name}:
-                |  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
-                """.trimMargin().trim()
+                        |${it.name}:
+                        |  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
+                        """.trimMargin().trim()
                     }.toTypedArray()
             } else {
                 arrayOf()
@@ -162,11 +163,11 @@ open class YamlDescriber : TypeDescriber() {
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
         val description = self.annotations.find { x -> x is Description } as? Description
         val responseYaml = """
-        |responses:
-        |  application/json:
-        |    schema:
-        |      ${returnTypeYaml.replace("\n", "\n      ")}
-        """.trimMargin().trim().filterEmptyLines()
+            |responses:
+            |  application/json:
+            |    schema:
+            |      ${returnTypeYaml.replace("\n", "\n      ")}
+            """.trimMargin().trim().filterEmptyLines()
         val buffer = StringBuffer()
         buffer.append("operationId: ${self.name}\n")
         if (description != null) {
@@ -184,10 +185,10 @@ open class YamlDescriber : TypeDescriber() {
         val description = self.getAnnotation(Description::class.java)?.value?.trim()
             ?.let { "description: " + it.replace("\n", "\\n") } ?: ""
         return """
-        |- name: ${self.name}
-        |  ${description}
-        |  ${toYaml(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-        |""".trimMargin().trim().filterEmptyLines()
+            |- name: ${self.name}
+            |  ${description}
+            |  ${toYaml(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+            |""".trimMargin().trim().filterEmptyLines()
     }
 
     private fun describe(
@@ -209,15 +210,15 @@ open class YamlDescriber : TypeDescriber() {
             ?.let { "description: ${it.value.trim().replace("\n", "\\n")}" } ?: ""
         val operationID = if (includeOperationID) "operationId: ${self.name}" else ""
         return """
-      |${operationID}
-      |${description}
-      |parameters:
-      |  ${parameterYaml.replace("\n", "\n  ")}
-      |responses:
-      |  application/json:
-      |    schema:
-      |      ${returnTypeYaml.replace("\n", "\n      ")}
-      """.trimMargin().filterEmptyLines()
+          |${operationID}
+          |${description}
+          |parameters:
+          |  ${parameterYaml.replace("\n", "\n  ")}
+          |responses:
+          |  application/json:
+          |    schema:
+          |      ${returnTypeYaml.replace("\n", "\n      ")}
+          """.trimMargin().filterEmptyLines()
     }
 
     private fun toYaml(
@@ -235,11 +236,11 @@ open class YamlDescriber : TypeDescriber() {
             ?.let { "description: " + it.replace("\n", "\\n") } ?: ""
         val defaultValueInfo = if (self.isOptional) "required: false" else "required: true"
         return """
-      |- name: ${self.name}
-      |  ${description}
-      |  ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
-      |  ${defaultValueInfo}
-      |""".trimMargin().trim().filterEmptyLines()
+          |- name: ${self.name}
+          |  ${description}
+          |  ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
+          |  ${defaultValueInfo}
+          |""".trimMargin().trim().filterEmptyLines()
     }
 
 
@@ -248,45 +249,45 @@ open class YamlDescriber : TypeDescriber() {
         describedTypes.add(self.toString())
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.')
         return if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) """
-      |type: object
-      |class: ${self.typeName}
-      """.trimMargin().filterEmptyLines()
-        else if (self is Class<*> && self.isEnum) {
-            val enumConstants = self.enumConstants.joinToString("\n") { "  - $it" }
+          |type: object
+          |class: ${self.typeName}
+          """.trimMargin().filterEmptyLines()
+        else if (self is Class<*> && (self.isEnum || DynamicEnum::class.java.isAssignableFrom(self))) {
+            val enumConstants = getEnumValues(self).joinToString("\n") { "  - $it" }
             """
-      |type: enum
-      |values:
-      |$enumConstants
-      """.trimMargin().filterEmptyLines()
+                |type: enum
+                |values:
+                |$enumConstants
+            """.trimMargin().filterEmptyLines()
         } else if (typeName in primitives) {
             "type: $typeName"
-        } else if (self is Class<*> && self.isEnum) {
-            val enumConstants = self.enumConstants.joinToString("\n") { "  - $it" }
+        } else if (self is Class<*> && (self.isEnum || DynamicEnum::class.java.isAssignableFrom(self))) {
+            val enumConstants = getEnumValues(self).joinToString("\n") { "  - $it" }
             """
-     |type: enum
-     |values:
-     |$enumConstants
-     """.trimMargin().filterEmptyLines()
+                |type: enum
+                |values:
+                |$enumConstants
+            """.trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-      |type: array
-      |items:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
+              |type: array
+              |items:
+              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+              |""".trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-      |type: map
-      |keys:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-      |values:
-      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
+              |type: map
+              |keys:
+              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+              |values:
+              |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+              |""".trimMargin().filterEmptyLines()
         } else if (self.isArray) {
             """
-      |type: array
-      |items:
-      |  ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
+              |type: array
+              |items:
+              |  ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+              |""".trimMargin().filterEmptyLines()
         } else {
             describe(TypeToken.of(self).rawType, stackMax, describedTypes)
         }
@@ -294,41 +295,55 @@ open class YamlDescriber : TypeDescriber() {
 
     private fun toYaml(self: KType, stackMax: Int): String {
         if (isAbbreviated(self.javaType) || stackMax <= 0) return """
-      |type: object
-      |class: $self
-      """.trimMargin().filterEmptyLines()
+          |type: object
+          |class: $self
+          """.trimMargin().filterEmptyLines()
         val typeName = self.toString().substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return if (typeName in primitives) {
             "type: $typeName"
         } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-      |type: array
-      |items:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
+              |type: array
+              |items:
+              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+              |""".trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-      |type: map
-      |keys:
-      |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-      |values:
-      |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
-        } else if (self.classifier is KClass<*> && (self.classifier as KClass<*>).isSubclassOf(Enum::class)) {
-            val enumConstants = (self.classifier as KClass<*>).java.enumConstants.joinToString("\n") { "  - $it" }
+              |type: map
+              |keys:
+              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+              |values:  
+              |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+             """.trimMargin().filterEmptyLines()
+        } else if (self.classifier is KClass<*> && ((self.classifier as KClass<*>).isSubclassOf(Enum::class) || (self.classifier as KClass<*>).isSubclassOf(
+                DynamicEnum::class
+            ))
+        ) {
+            val enumConstants = getEnumValues((self.classifier as KClass<*>).java).joinToString("\n") { "  - $it" }
             """
-      |type: enum
-      |values:
-      |$enumConstants
-      """.trimMargin().filterEmptyLines()
+                |type: enum
+                |values:
+                |$enumConstants
+            """.trimMargin().filterEmptyLines()
         } else if (self.javaType.isArray) {
             """
-      |type: array
-      |items:
-      |  ${toYaml(self.javaType.componentType!!, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-      |""".trimMargin().filterEmptyLines()
+              |type: array
+              |items:
+              |  ${toYaml(self.javaType.componentType!!, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+            """.trimMargin().filterEmptyLines()
         } else {
             describe(TypeToken.of(self.javaType).rawType, stackMax)
+        }
+    }
+
+    open fun getEnumValues(clazz: Class<*>): List<String> {
+        return when {
+            clazz.isEnum -> clazz.enumConstants.map { it.toString() }
+            DynamicEnum::class.java.isAssignableFrom(clazz) -> {
+                DynamicEnum.values(clazz as Class<out DynamicEnum<*>>).map { it.name }
+            }
+
+            else -> emptyList()
         }
     }
 

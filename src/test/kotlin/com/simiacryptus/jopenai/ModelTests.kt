@@ -2,8 +2,6 @@ package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.models.APIProvider
 import com.simiacryptus.jopenai.models.ChatModels
-import com.simiacryptus.jopenai.models.ChatModels.Companion.LLaMA370bInstructAWS
-import com.simiacryptus.jopenai.models.ChatModels.Companion.LLaMA38bInstructAWS
 import com.simiacryptus.jopenai.util.ClientUtil
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import org.junit.jupiter.api.DynamicNode
