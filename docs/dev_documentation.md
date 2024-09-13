@@ -1017,7 +1017,7 @@ To use the `PromptOptimization` feature, follow these steps:
 
 ```kotlin
 val apiClient = OpenAIClient("your_api_key")
-val promptOptimization = PromptOptimization(api = apiClient, model = ChatModels.GPT3_5Turbo)
+val promptOptimization = PromptOptimization(api = apiClient, model = OpenAIModels.GPT3_5Turbo)
 
 val testCases = listOf(
     TestCase(
@@ -3444,7 +3444,7 @@ representing the model name into a corresponding `ChatModels` instance.
 val usage = Usage(prompt_tokens = 100, completion_tokens = 150)
 
 // Calculate pricing for GPT-3.5 Turbo model
-val price = ChatModels.GPT35Turbo.pricing(usage)
+val price = OpenAIModels.GPT35Turbo.pricing(usage)
 
 println("The price for the usage is: $price")
 ```
@@ -3453,7 +3453,7 @@ println("The price for the usage is: $price")
 
 ```kotlin
 val objectMapper = ObjectMapper()
-objectMapper.writeValueAsString(ChatModels.GPT35Turbo)
+objectMapper.writeValueAsString(OpenAIModels.GPT35Turbo)
 // Output: "GPT35Turbo"
 ```
 

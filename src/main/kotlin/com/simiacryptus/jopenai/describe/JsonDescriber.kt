@@ -1,14 +1,17 @@
 package com.simiacryptus.jopenai.describe
 
 import com.fasterxml.jackson.module.kotlin.isKotlinClass
+import com.google.common.reflect.TypeToken
+import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
+import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
+import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveGenericType
+import com.simiacryptus.util.DynamicEnum
 import org.slf4j.LoggerFactory
-import java.lang.reflect.Method
-import java.lang.reflect.Modifier
-import java.util.*
-import kotlin.reflect.KVisibility
+import java.lang.reflect.*
+import kotlin.reflect.*
 import kotlin.reflect.full.functions
 import kotlin.reflect.full.memberProperties
-import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.javaType
 
 open class JsonDescriber(
     private val whitelist: MutableSet<String> = setOf(
@@ -38,6 +41,11 @@ open class JsonDescriber(
         if (!describedTypes.add(rawType.name) && rawType.name !in primitives) {
 //      log.debug("Preventing recursion for type: ${rawType.name}")
             return "{...}"
+        } else if (rawType.simpleName.lowercase() in primitives) {
+            return """
+            {
+              "type": "${rawType.simpleName.lowercase()}"
+            }""".trimIndent()
         }
 //    log.debug("Describing type: ${rawType.name} with stackMax: $stackMax")
         if (isAbbreviated(rawType) || stackMax <= 0) return """{
@@ -46,6 +54,16 @@ open class JsonDescriber(
               "class": "${rawType.name}"
             }
             """.trimIndent()
+        if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
+            return """
+            {
+              "type": "enum",
+              "values": [
+                ${getEnumValues(rawType).joinToString(",\n") { "\"$it\"" }}
+              ]
+            }
+            """.trimIndent()
+        }
         val propertiesJson = if (rawType.isKotlinClass()) {
             rawType.kotlin.memberProperties.filter { it.visibility == KVisibility.PUBLIC }.joinToString(",\n") {
                 val description =
@@ -53,11 +71,11 @@ open class JsonDescriber(
                 val propertyDescription = if (description != null) """
                     "${it.name}": {
                       "description": "${description.value.trim()}",
-                      "type": "${it.returnType.classifier}"
+                      ${toJson(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n      ")}
                     }
                     """.trimIndent().trim() else """
                     "${it.name}": {
-                      "type": "${it.returnType.classifier}"
+                      ${toJson(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n      ")}
                     }
                     """.trimIndent().trim()
                 propertyDescription
@@ -69,11 +87,11 @@ open class JsonDescriber(
                 val fieldDescription = if (description != null) """
                 "${it.name}": {
                   "description": "${description.value.trim()}",
-                 "type": "${it.type.simpleName.lowercase(Locale.getDefault())}"
+                  ${toJson(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                 }
                 """.trimIndent() else """
                 "${it.name}": {
-                 "type": "${it.type.simpleName.lowercase(Locale.getDefault())}"
+                  ${toJson(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                 }
                 """.trimIndent()
                 fieldDescription
@@ -87,7 +105,7 @@ open class JsonDescriber(
             }.joinToString(",\n") {
                 """
             "${it.name}": {
-              ${describe(it.javaMethod!!, rawType.kotlin.java, stackMax - 1).replace("\n", "\n  ")}
+              ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
             }
             """.trimIndent().trim()
             }
@@ -144,6 +162,7 @@ open class JsonDescriber(
         val returnType = self.returnType
         clazz ?: return "..."
         val description = getAllAnnotations(clazz, self).find { x -> x is Description } as? Description
+        val parameterJson = self.parameters.map { toJson(it, stackMax - 1) }.toTypedArray().joinToString(",\n").trim()
         val methodDescription = if (description != null) """
             "description": "${description.value.trim()}",
             ${describe(returnType, stackMax, mutableSetOf()).replace("\n", "\n  ")}
@@ -155,6 +174,7 @@ open class JsonDescriber(
               "type": "method",
               "class": "${clazz.name ?: "unknown"}",
               "name": "${self.name}",
+              "parameters": [$parameterJson],
               $methodDescription
             }
             """.trimIndent()
@@ -165,6 +185,141 @@ open class JsonDescriber(
             ?: listOf())
                 ).toList()
     }
+    private fun toJson(self: Parameter, stackMax: Int): String {
+        if (stackMax <= 0) return "{...}"
+        val description = self.getAnnotation(Description::class.java)?.value?.trim()
+            ?.let { "\"description\": \"${it.replace("\n", "\\n")}\"," } ?: ""
+        return """
+        {
+          "name": "${self.name}",
+          $description
+          ${toJson(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+        }
+        """.trimIndent()
+    }
+
+    private fun describe(
+        self: KFunction<*>,
+        concreteClass: KClass<*>,
+        stackMax: Int,
+        includeOperationID: Boolean = true,
+        describedTypes: MutableSet<String>
+    ): String {
+        val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
+        if (describedTypes.contains(functionTypeRepresentation) && functionTypeRepresentation !in primitives) return "{...}"
+        describedTypes.add(functionTypeRepresentation)
+        if (stackMax <= 0) return "{...}"
+        if (!coverMethods) return "{}"
+        val parameterJson = self.parameters.filter { it.name != null }
+            .map { toJson(it, concreteClass, stackMax - 1, describedTypes) }.toTypedArray().joinToString(",\n").trim()
+        val returnTypeJson = toJson(self.returnType, stackMax - 1, describedTypes).trim()
+        val description = (self.annotations.find { x -> x is Description } as? Description)
+            ?.let { "\"description\": \"${it.value.trim().replace("\n", "\\n")}\"," } ?: ""
+        val operationID = if (includeOperationID) "\"operationId\": \"${self.name}\"," else ""
+        return """
+        {
+          $operationID
+          $description
+          "parameters": [
+            $parameterJson
+          ],
+          "returnType": $returnTypeJson
+        }
+        """.trimIndent()
+    }
+
+    private fun toJson(
+        self: KParameter,
+        concreteClass: KClass<*>,
+        stackMax: Int,
+        describedTypes: MutableSet<String>
+    ): String {
+        val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
+        if (describedTypes.contains(parameterTypeRepresentation) && parameterTypeRepresentation !in primitives) return "{...}"
+        describedTypes.add(parameterTypeRepresentation)
+        if (stackMax <= 0) return "{...}"
+        val kType = resolveGenericType(concreteClass, self.type)
+        val description = (self.annotations.find { it is Description } as? Description)?.value?.trim()
+            ?.let { "\"description\": \"${it.replace("\n", "\\n")}\"," } ?: ""
+        val defaultValueInfo = if (self.isOptional) "\"required\": false" else "\"required\": true"
+        return """
+        {
+          "name": "${self.name}",
+          $description
+          ${toJson(kType, stackMax - 1, describedTypes).replace("\n", "\n  ")},
+          $defaultValueInfo
+        }
+        """.trimIndent()
+    }
+
+    private fun toJson(self: KType, stackMax: Int, describedTypes: MutableSet<String>): String {
+        return toJson(self.javaType, stackMax, describedTypes)
+    }
+
+    private fun toJson(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
+        if (describedTypes.contains(self.toString())) return "{...}"
+        describedTypes.add(self.toString())
+        val typeName = self.typeName.substringAfterLast('.').replace('$', '.')
+        return if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) """
+        {
+          "type": "object",
+          "class": "${self.typeName}"
+        }
+        """.trimIndent()
+        else if (self is Class<*> && (self.isEnum || DynamicEnum::class.java.isAssignableFrom(self))) {
+            val enumConstants = getEnumValues(self).joinToString(",\n") { "\"$it\"" }
+            """
+            {
+              "type": "enum",
+              "values": [
+                $enumConstants
+              ]
+            }
+            """.trimIndent()
+        } else if (typeName in primitives) {
+            """
+            {
+              "type": "$typeName"
+            }
+            """.trimIndent()
+        } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
+            """
+            {
+              "type": "array",
+              "items": ${toJson(self.actualTypeArguments[0], stackMax - 1, describedTypes)}
+            }
+            """.trimIndent()
+        } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
+            """
+            {
+              "type": "map",
+              "keys": ${toJson(self.actualTypeArguments[0], stackMax - 1, describedTypes)},
+              "values": ${toJson(self.actualTypeArguments[1], stackMax - 1, describedTypes)}
+            }
+            """.trimIndent()
+        } else if (self.isArray) {
+            """
+            {
+              "type": "array",
+              "items": ${toJson(self.componentType!!, stackMax - 1, describedTypes)}
+            }
+            """.trimIndent()
+        } else {
+            describe(TypeToken.of(self).rawType, stackMax, describedTypes)
+        }
+    }
+
+    open fun getEnumValues(clazz: Class<*>): List<String> {
+        return when {
+            clazz.isEnum -> clazz.enumConstants.map { it.toString() }
+            DynamicEnum::class.java.isAssignableFrom(clazz) -> {
+                DynamicEnum.values(clazz as Class<out DynamicEnum<*>>).map { it.name }
+            }
+
+            else -> emptyList()
+        }
+    }
+
 
     open val includeMethods: Boolean = true
     override val methodBlacklist = setOf(
@@ -181,4 +336,3 @@ open class JsonDescriber(
     )
 
 }
-
