@@ -167,6 +167,19 @@ open class ChatClient(
         chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         var chatRequest = chatRequest
+        if (model.modelName in listOf("o1-preview", "o1-mini")) {
+            chatRequest = chatRequest.copy(
+                messages = chatRequest.messages.map { message ->
+                    if (message.role == Role.system) {
+                        message.copy(role = Role.user)
+                    } else {
+                        message
+                    }
+                },
+                temperature = 1.0,
+                stop = null
+            )
+        }
         if (chatRequest.messages.any { it.content?.any { it.text?.contains("<div id=") == true } == true }) {
             log.warn(
                 "HTML content detected: ${chatRequest.messages.filter { it.content?.any { it.text?.contains("<div id=") == true } == true }}",

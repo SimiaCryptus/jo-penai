@@ -68,6 +68,24 @@ open class ChatModels(
             outputTokenPricePerK = 0.015
         )
 
+        val O1Preview = ChatModels(
+            name = "O1Preview",
+            modelName = "o1-preview",
+            maxTotalTokens = 128 * 1024,
+            provider = APIProvider.OpenAI,
+            inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
+            outputTokenPricePerK = 0.0015
+        )
+
+        val O1Mini = ChatModels(
+            name = "O1Mini",
+            modelName = "o1-mini",
+            maxTotalTokens = 128 * 1024,
+            provider = APIProvider.OpenAI,
+            inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
+            outputTokenPricePerK = 0.0015
+        )
+
         val SonarSmallChat128k = ChatModels(
             name = "SonarSmallChat128k",
             modelName = "llama-3.1-sonar-small-128k-chat",
@@ -657,6 +675,8 @@ open class ChatModels(
             "GPT4Turbo" to GPT4Turbo,
             "GPT4o" to GPT4o,
             "GPT4oMini" to GPT4oMini,
+            "O1Preview" to O1Preview,
+            "O1Mini" to O1Mini,
             "SonarSmallChat128k" to SonarSmallChat128k,
             "SonarSmallOnline128k" to SonarSmallOnline128k,
             "SonarLargeChat128k" to SonarLargeChat128k,
