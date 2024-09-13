@@ -11,7 +11,7 @@ plugins {
     java
     `java-library`
     `maven-publish`
-    id("org.jetbrains.kotlin.jvm") version "2.0.0-Beta5"
+    id("org.jetbrains.kotlin.jvm") version "2.0.20"
     id("signing")
     id("jacoco")
 }
@@ -66,7 +66,7 @@ kotlin {
 
 val logback_version = "1.4.11"
 val jupiter_version = "5.10.1"
-val jackson_version = "2.17.0"
+val jackson_version = "2.17.2"
 
 val swagger_annotations_version = "1.6.6"
 val jackson_databind_version = jackson_version
@@ -97,7 +97,7 @@ dependencies {
     implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
 
 
-    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.9")
+    implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.16")
     implementation(group = "org.apache.httpcomponents.client5", name = "httpclient5", version = "5.3.1") {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
