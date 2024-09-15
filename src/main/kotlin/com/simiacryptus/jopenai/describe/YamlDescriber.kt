@@ -1,6 +1,7 @@
 package com.simiacryptus.jopenai.describe
 
 import com.fasterxml.jackson.module.kotlin.isKotlinClass
+import com.simiacryptus.jopenai.describe.DescriptorUtil.getAllAnnotations
 import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
@@ -41,7 +42,7 @@ open class YamlDescriber : TypeDescriber() {
             """.trimMargin()
         if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
             return """
-                |type: enum
+                |type: enumeration
                 |values:
                 |${getEnumValues(rawType).joinToString("\n") { "  - $it" }}
                 """.trimMargin()
@@ -49,11 +50,11 @@ open class YamlDescriber : TypeDescriber() {
         val propertiesYaml = if (rawType.isKotlinClass()) {
             rawType.kotlin.memberProperties.filter { it.visibility == KVisibility.PUBLIC }.map {
                 val description =
-                    DescriptorUtil.getAllAnnotations(rawType, it).find { x -> x is Description } as? Description
+                    getAllAnnotations(rawType, it).filterIsInstance<Description>().firstOrNull()
                 if (description != null) {
                     """
                     |${it.name}:
-                    |  description: ${description.value.trim()}
+                    |  description: "${description.value.trim().replace("\"", "\\\"")}"
                     |  ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
                 } else {
@@ -110,8 +111,8 @@ open class YamlDescriber : TypeDescriber() {
         }).toMutableList()
         if (!coverMethods) methodsYaml.clear()
         if (propertiesYaml.isEmpty() && methodsYaml.isEmpty()) return """
-            |type: object
-            |class: ${rawType.name}
+             |type: object
+             |class: "${rawType.name}"
             """.trimMargin()
         if (propertiesYaml.isEmpty()) return """
             |type: object
@@ -161,7 +162,7 @@ open class YamlDescriber : TypeDescriber() {
         }
         val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
-        val description = self.annotations.find { x -> x is Description } as? Description
+            val description = self.getAnnotation(Description::class.java)?.value?.trim()?.replace("\"", "\\\"")
         val responseYaml = """
             |responses:
             |  application/json:
@@ -171,7 +172,7 @@ open class YamlDescriber : TypeDescriber() {
         val buffer = StringBuffer()
         buffer.append("operationId: ${self.name}\n")
         if (description != null) {
-            buffer.append("description: ${description.value.trim()}\n")
+            buffer.append("description: ${description.trim()}\n")
         }
         if (parameterYaml.isNotBlank()) {
             buffer.append("parameters:\n  ${parameterYaml.replace("\n", "\n  ")}\n")
@@ -295,9 +296,9 @@ open class YamlDescriber : TypeDescriber() {
 
     private fun toYaml(self: KType, stackMax: Int): String {
         if (isAbbreviated(self.javaType) || stackMax <= 0) return """
-          |type: object
-          |class: $self
-          """.trimMargin().filterEmptyLines()
+            |type: object
+            |class: "$self"
+            """.trimMargin().filterEmptyLines()
         val typeName = self.toString().substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return if (typeName in primitives) {
             "type: $typeName"
@@ -347,6 +348,5 @@ open class YamlDescriber : TypeDescriber() {
         }
     }
 
+    private fun String.filterEmptyLines() = this.split("\n").filter { it.isNotBlank() }.joinToString("\n")
 }
-
-fun String.filterEmptyLines() = this.split("\n").filter { it.isNotBlank() }.joinToString("\n")
