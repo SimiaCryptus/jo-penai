@@ -23,7 +23,7 @@ class YamlDescriberTest : TypeDescriberTestBase() {
             |class: com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}DataClassExample
             |properties:
             |  a:
-            |    description: This is an integer
+            |    description: "This is an integer"
             |    type: int
             |  b:
             |    type: string
@@ -67,7 +67,7 @@ properties:
   name:
     type: string
   parent:
-    description: Recursive reference
+    description: "Recursive reference"
     ..."""
         val actualDescription = typeDescriber.describe(RecursiveDataClass::class.java)
         Assertions.assertEquals(expectedDescription, actualDescription)
@@ -107,7 +107,7 @@ properties:
     @Test
     fun testDescribeEnumType() {
         val expectedDescription = """
-     |type: enum
+     |type: enumeration
      |values:
      |  - FIRST_OPTION
      |  - SECOND_OPTION
