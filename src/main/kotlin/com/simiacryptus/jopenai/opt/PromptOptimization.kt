@@ -3,6 +3,7 @@ package com.simiacryptus.jopenai.opt
 import com.simiacryptus.jopenai.ChatClient
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.describe.Description
+import com.simiacryptus.jopenai.models.ApiModel
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.jopenai.proxy.ChatProxy
@@ -184,22 +185,22 @@ open class PromptOptimization(
     open fun run(
         systemPrompt: String,
         testCase: TestCase
-    ): List<Pair<com.simiacryptus.jopenai.ApiModel.ChatResponse, Double>> {
-        var chatRequest = com.simiacryptus.jopenai.ApiModel.ChatRequest(
+    ): List<Pair<ApiModel.ChatResponse, Double>> {
+        var chatRequest = ApiModel.ChatRequest(
             model = model.modelName
         )
-        var response = com.simiacryptus.jopenai.ApiModel.ChatResponse()
+        var response = ApiModel.ChatResponse()
         chatRequest = chatRequest.copy(
-            messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-                com.simiacryptus.jopenai.ApiModel.Role.system,
+            messages = chatRequest.messages + ApiModel.ChatMessage(
+                ApiModel.Role.system,
                 systemPrompt.toContentList()
             )
         )
         return testCase.turns.map { turn ->
             var matched: Boolean
             chatRequest = chatRequest.copy(
-                messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-                    com.simiacryptus.jopenai.ApiModel.Role.user,
+                messages = chatRequest.messages + ApiModel.ChatMessage(
+                    ApiModel.Role.user,
                     turn.userMessage.toContentList()
                 )
             )
@@ -223,8 +224,8 @@ open class PromptOptimization(
                 }
             }
             chatRequest = chatRequest.copy(
-                messages = chatRequest.messages + com.simiacryptus.jopenai.ApiModel.ChatMessage(
-                    com.simiacryptus.jopenai.ApiModel.Role.assistant,
+                messages = chatRequest.messages + ApiModel.ChatMessage(
+                    ApiModel.Role.assistant,
                     (response.choices.first().message?.content ?: "").toContentList()
                 )
             )

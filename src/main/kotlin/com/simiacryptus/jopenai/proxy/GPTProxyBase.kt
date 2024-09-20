@@ -5,8 +5,8 @@ import com.google.gson.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.AbbrevWhitelistYamlDescriber
 import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveMethodReturnType
 import com.simiacryptus.jopenai.describe.TypeDescriber
-import com.simiacryptus.jopenai.util.JsonUtil.fromJson
-import com.simiacryptus.jopenai.util.JsonUtil.toJson
+import com.simiacryptus.util.JsonUtil.fromJson
+import com.simiacryptus.util.JsonUtil.toJson
 import org.slf4j.Logger
 import java.io.BufferedWriter
 import java.io.File

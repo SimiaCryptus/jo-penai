@@ -1,4 +1,4 @@
-package com.simiacryptus.jopenai
+package com.simiacryptus.jopenai.models
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import java.io.File

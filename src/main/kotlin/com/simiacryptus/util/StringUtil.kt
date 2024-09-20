@@ -1,4 +1,4 @@
-package com.simiacryptus.jopenai.util
+package com.simiacryptus.util
 
 import java.nio.charset.Charset
 import java.util.*

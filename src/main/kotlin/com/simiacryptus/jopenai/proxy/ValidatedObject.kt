@@ -1,6 +1,6 @@
 package com.simiacryptus.jopenai.proxy
 
-import com.simiacryptus.jopenai.util.JsonUtil.toJson
+import com.simiacryptus.util.JsonUtil.toJson
 import kotlin.reflect.full.memberProperties
 
 interface ValidatedObject {

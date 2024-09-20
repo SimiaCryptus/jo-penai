@@ -4,15 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.jopenai.ApiModel.*
+import com.simiacryptus.jopenai.models.ApiModel.*
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.keyMap
-import com.simiacryptus.jopenai.util.JsonUtil
-import com.simiacryptus.jopenai.util.StringUtil
+import com.simiacryptus.util.runWithPermit
+import com.simiacryptus.util.JsonUtil
+import com.simiacryptus.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.HttpRequest
@@ -47,7 +48,7 @@ open class ChatClient(
     scheduledPool = scheduledPool,
     workPool = workPool,
     client = client
-), ChatInterface {
+) {
 
     open var session: Any? = null
     open var user: Any? = null
@@ -85,7 +86,7 @@ open class ChatClient(
         if(null != budget) budget = budget!!.toDouble() - (tokens.cost ?: 0.0)
     }
 
-    override fun moderate(text: String) = withReliability {
+    fun moderate(text: String) = withReliability {
         when {
             defaultApiProvider == APIProvider.Groq -> return@withReliability
             defaultApiProvider == APIProvider.ModelsLab -> return@withReliability
@@ -163,7 +164,7 @@ open class ChatClient(
         }
     }
 
-    override fun chat(
+    open fun chat(
         chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         var chatRequest = chatRequest

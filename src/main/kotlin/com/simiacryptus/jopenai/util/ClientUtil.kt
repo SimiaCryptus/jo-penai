@@ -2,11 +2,11 @@ package com.simiacryptus.jopenai.util
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.jopenai.ApiModel
+import com.simiacryptus.jopenai.models.ApiModel
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
 import com.simiacryptus.jopenai.models.APIProvider
-import com.simiacryptus.jopenai.util.JsonUtil.fromJson
+import com.simiacryptus.util.JsonUtil.fromJson
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
