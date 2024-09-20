@@ -225,6 +225,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(geminiChatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -245,6 +246,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(anthropicChatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -266,6 +268,7 @@ open class ChatClient(
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(chatRequest.copy(stop = null))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -279,6 +282,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -292,6 +296,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -307,6 +312,7 @@ open class ChatClient(
                                 JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                     .writeValueAsString(toModelsLab(chatRequest))
                             log(
+                                level = Level.DEBUG,
                                 msg = String.format(
                                     "Chat Request %s\nPrefix:\n\t%s\n",
                                     requestID,
@@ -325,6 +331,7 @@ open class ChatClient(
                             .region(Region.of(awsAuth.region))
                             .build()
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID, JsonUtil.toJson(chatRequest).replace("\n", "\n\t")
@@ -340,6 +347,7 @@ open class ChatClient(
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -355,6 +363,7 @@ open class ChatClient(
                     onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
                 }
                 log(
+                    level = Level.DEBUG,
                     msg = String.format(
                         "Chat Completion %s:\n\t%s", requestID,
                         response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")

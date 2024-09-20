@@ -50,6 +50,9 @@ open class OpenAIClient(
     client = client
 ) {
 
+    var user: Any? = null
+    var session: Any? = null
+
     open fun onUsage(model: OpenAIModel?, tokens: Usage) {
     }
 
