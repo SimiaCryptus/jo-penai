@@ -1,14 +1,12 @@
 package com.simiacryptus.jopenai.proxy
 
-import com.simiacryptus.jopenai.ApiModel
-import com.simiacryptus.jopenai.ApiModel.ChatMessage
-import com.simiacryptus.jopenai.ApiModel.ChatRequest
+import com.simiacryptus.jopenai.models.ApiModel
+import com.simiacryptus.jopenai.models.ApiModel.ChatMessage
+import com.simiacryptus.jopenai.models.ApiModel.ChatRequest
 import com.simiacryptus.jopenai.ChatClient
-import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
-import com.simiacryptus.jopenai.util.JsonUtil.toJson
-import java.util.concurrent.atomic.AtomicInteger
+import com.simiacryptus.util.JsonUtil.toJson
 
 open class ChatProxy<T : Any>(
     clazz: Class<out T>,

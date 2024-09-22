@@ -98,6 +98,9 @@ dependencies {
 
 
     implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.16")
+    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = logback_version)
+    testImplementation(group = "ch.qos.logback", name = "logback-core", version = logback_version)
+
     implementation(group = "org.apache.httpcomponents.client5", name = "httpclient5", version = "5.3.1") {
         exclude(group = "org.slf4j", module = "slf4j-api")
     }
@@ -118,8 +121,6 @@ dependencies {
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-api", version = jupiter_version)
     testImplementation(group = "org.junit.jupiter", name = "junit-jupiter-params", version = jupiter_version)
     testRuntimeOnly(group = "org.junit.jupiter", name = "junit-jupiter-engine", version = jupiter_version)
-    testImplementation(group = "ch.qos.logback", name = "logback-classic", version = logback_version)
-    testImplementation(group = "ch.qos.logback", name = "logback-core", version = logback_version)
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
 
 }

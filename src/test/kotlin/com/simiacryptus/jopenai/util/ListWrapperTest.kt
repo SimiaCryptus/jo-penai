@@ -1,6 +1,8 @@
 package com.simiacryptus.jopenai.util
 
 import com.fasterxml.jackson.databind.type.TypeFactory
+import com.simiacryptus.util.JsonUtil
+import com.simiacryptus.util.ListWrapper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.reflect.javaType

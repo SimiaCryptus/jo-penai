@@ -4,15 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.jopenai.ApiModel.*
+import com.simiacryptus.jopenai.models.ApiModel.*
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.keyMap
-import com.simiacryptus.jopenai.util.JsonUtil
-import com.simiacryptus.jopenai.util.StringUtil
+import com.simiacryptus.util.runWithPermit
+import com.simiacryptus.util.JsonUtil
+import com.simiacryptus.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.HttpRequest
@@ -47,7 +48,7 @@ open class ChatClient(
     scheduledPool = scheduledPool,
     workPool = workPool,
     client = client
-), ChatInterface {
+) {
 
     open var session: Any? = null
     open var user: Any? = null
@@ -85,7 +86,7 @@ open class ChatClient(
         if(null != budget) budget = budget!!.toDouble() - (tokens.cost ?: 0.0)
     }
 
-    override fun moderate(text: String) = withReliability {
+    fun moderate(text: String) = withReliability {
         when {
             defaultApiProvider == APIProvider.Groq -> return@withReliability
             defaultApiProvider == APIProvider.ModelsLab -> return@withReliability
@@ -163,7 +164,7 @@ open class ChatClient(
         }
     }
 
-    override fun chat(
+    open fun chat(
         chatRequest: ChatRequest, model: OpenAITextModel
     ): ChatResponse {
         var chatRequest = chatRequest
@@ -225,6 +226,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(geminiChatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -245,6 +247,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(anthropicChatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -266,6 +269,7 @@ open class ChatClient(
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(chatRequest.copy(stop = null))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -279,6 +283,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -292,6 +297,7 @@ open class ChatClient(
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -307,6 +313,7 @@ open class ChatClient(
                                 JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                     .writeValueAsString(toModelsLab(chatRequest))
                             log(
+                                level = Level.DEBUG,
                                 msg = String.format(
                                     "Chat Request %s\nPrefix:\n\t%s\n",
                                     requestID,
@@ -325,6 +332,7 @@ open class ChatClient(
                             .region(Region.of(awsAuth.region))
                             .build()
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID, JsonUtil.toJson(chatRequest).replace("\n", "\n\t")
@@ -340,6 +348,7 @@ open class ChatClient(
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
                         log(
+                            level = Level.DEBUG,
                             msg = String.format(
                                 "Chat Request %s\nPrefix:\n\t%s\n",
                                 requestID,
@@ -355,6 +364,7 @@ open class ChatClient(
                     onUsage(model, response.usage.copy(cost = model.pricing(response.usage)))
                 }
                 log(
+                    level = Level.DEBUG,
                     msg = String.format(
                         "Chat Completion %s:\n\t%s", requestID,
                         response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")

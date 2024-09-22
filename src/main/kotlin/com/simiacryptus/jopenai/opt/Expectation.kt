@@ -1,7 +1,7 @@
 package com.simiacryptus.jopenai.opt
 
-import com.simiacryptus.jopenai.ApiModel
-import com.simiacryptus.jopenai.ApiModel.ChatResponse
+import com.simiacryptus.jopenai.models.ApiModel
+import com.simiacryptus.jopenai.models.ApiModel.ChatResponse
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.models.EmbeddingModels
 import org.slf4j.LoggerFactory

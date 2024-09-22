@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.jopenai.ApiModel.*
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
+import com.simiacryptus.jopenai.models.ApiModel.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.keyMap
-import com.simiacryptus.jopenai.util.JsonUtil
-import com.simiacryptus.jopenai.util.StringUtil
+import com.simiacryptus.util.JsonUtil
+import com.simiacryptus.util.StringUtil
 import org.apache.hc.client5.http.classic.methods.HttpGet
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.entity.mime.FileBody
@@ -30,7 +30,6 @@ import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
-import java.util.concurrent.Semaphore
 import java.util.concurrent.ThreadPoolExecutor
 import javax.imageio.ImageIO
 
@@ -49,6 +48,9 @@ open class OpenAIClient(
     workPool = workPool,
     client = client
 ) {
+
+    var user: Any? = null
+    var session: Any? = null
 
     open fun onUsage(model: OpenAIModel?, tokens: Usage) {
     }
@@ -172,7 +174,7 @@ open class OpenAIClient(
         }
     }
 
-    open fun createSpeech(request: SpeechRequest): ByteArray? = withReliability {
+    open fun createSpeech(request: ApiModel.SpeechRequest): ByteArray? = withReliability {
         withPerformanceLogging {
             val httpRequest = HttpPost("${apiBase[defaultApiProvider]}/audio/speech")
             authorize(httpRequest, defaultApiProvider)
@@ -328,7 +330,7 @@ open class OpenAIClient(
         }
     }
 
-    open fun listModels(): ModelListResponse {
+    open fun listModels(): ApiModel.ModelListResponse {
         val result = get("${apiBase[defaultApiProvider]}/models", defaultApiProvider)
         checkError(result)
         return JsonUtil.objectMapper().readValue(result, ModelListResponse::class.java)
@@ -447,11 +449,3 @@ open class OpenAIClient(
 
 }
 
-fun Semaphore.runWithPermit(function: () -> String): String {
-    this.acquire()
-    try {
-        return function()
-    } finally {
-        this.release()
-    }
-}

@@ -1,4 +1,4 @@
-package com.simiacryptus.jopenai.util
+package com.simiacryptus.util
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser

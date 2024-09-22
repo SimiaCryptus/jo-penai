@@ -1,4 +1,4 @@
-package com.simiacryptus.jopenai
+package com.simiacryptus.jopenai.models
 
 class ModelsLabDataModel {
 

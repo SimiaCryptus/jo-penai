@@ -1,5 +1,6 @@
 package com.simiacryptus.jopenai
 
+import com.simiacryptus.jopenai.util.GPT4Tokenizer
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test

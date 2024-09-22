@@ -1,7 +1,7 @@
-package com.simiacryptus.jopenai
+package com.simiacryptus.jopenai.util
 
-import com.simiacryptus.jopenai.GPT4CodecData.bpeRegex
-import com.simiacryptus.jopenai.util.JsonUtil
+import com.simiacryptus.jopenai.util.GPT4CodecData.bpeRegex
+import com.simiacryptus.util.JsonUtil
 import java.nio.charset.Charset
 import kotlin.math.min
 import kotlin.math.pow

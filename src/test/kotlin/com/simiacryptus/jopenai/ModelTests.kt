@@ -1,6 +1,7 @@
 package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.models.APIProvider
+import com.simiacryptus.jopenai.models.ApiModel
 import com.simiacryptus.jopenai.models.ChatModels
 import com.simiacryptus.jopenai.util.ClientUtil
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList

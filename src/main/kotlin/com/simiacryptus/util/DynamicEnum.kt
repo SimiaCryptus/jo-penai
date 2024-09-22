@@ -11,12 +11,12 @@ open class DynamicEnum<T : DynamicEnum<T>>(val name: String) {
     companion object {
         private val registries = mutableMapOf<Class<*>, MutableList<Pair<String, DynamicEnum<*>>>>()
 
-        internal fun <T : DynamicEnum<T>> getRegistry(clazz: Class<T>): MutableList<Pair<String, T>> {
+        internal fun <T> getRegistry(clazz: Class<T>): MutableList<Pair<String, T>> {
             @Suppress("UNCHECKED_CAST")
             return registries.getOrPut(clazz) { mutableListOf() } as MutableList<Pair<String, T>>
         }
 
-        fun <T : DynamicEnum<T>> valueOf(clazz: Class<T>, name: String): T {
+        fun <T> valueOf(clazz: Class<T>, name: String): T {
             return getRegistry(clazz).toMap().get(name)
                 ?: throw IllegalArgumentException("Unknown enum constant: $name")
         }

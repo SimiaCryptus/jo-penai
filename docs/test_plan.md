@@ -1397,7 +1397,7 @@ and performance in various scenarios.
 ```kotlin
 package com.simiacryptus.jopenai.models
 
-import com.simiacryptus.jopenai.ApiModel.Usage
+import com.simiacryptus.jopenai.models.ApiModel.Usage
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

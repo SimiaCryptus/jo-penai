@@ -1,6 +1,6 @@
 package com.simiacryptus.jopenai.models
 
-import com.simiacryptus.jopenai.ApiModel.Usage
+import com.simiacryptus.jopenai.models.ApiModel.Usage
 
 open class CompletionModels(
     modelName: String,
