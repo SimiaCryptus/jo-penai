@@ -112,6 +112,12 @@ open class ChatModels(
     }
 }
 
+fun String.chatModel(): ChatModels {
+    return ChatModels.values().entries.firstOrNull {
+        it.value.modelName == this || it.key == this
+    }?.value ?: OpenAIModels.GPT4oMini
+}
+
 class ChatModelsSerializer : StdSerializer<ChatModels>(ChatModels::class.java) {
     override fun serialize(value: ChatModels, gen: JsonGenerator, provider: SerializerProvider) {
         values().entries.find { it.value == value }?.key?.let { gen.writeString(it) }
