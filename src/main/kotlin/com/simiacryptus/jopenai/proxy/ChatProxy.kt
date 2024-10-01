@@ -14,7 +14,7 @@ open class ChatProxy<T : Any>(
     var model: ChatModels,
     temperature: Double = 0.5,
     private var verbose: Boolean = false,
-    private val moderated: Boolean = true,
+    private val moderated: Boolean = false,
     val deserializerRetries: Int = 2,
     validation: Boolean = true
 ) : GPTProxyBase<T>(clazz, temperature, validation, deserializerRetries) {

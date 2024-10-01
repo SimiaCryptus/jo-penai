@@ -1,4 +1,3 @@
-
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.URI
@@ -192,6 +191,6 @@ if (System.getenv("GPG_PRIVATE_KEY") != null && System.getenv("GPG_PASSPHRASE") 
     }
 }
 val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-  apiVersion = "1.8"
+compileKotlin.compilerOptions {
+  apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
 }

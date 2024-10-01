@@ -203,3 +203,4 @@ object AWSModels {
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
 }
+
