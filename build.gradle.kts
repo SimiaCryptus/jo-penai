@@ -63,7 +63,7 @@ kotlin {
     jvmToolchain(11)
 }
 
-val logback_version = "1.4.11"
+val logback_version = "1.5.8"
 val jupiter_version = "5.10.1"
 val jackson_version = "2.17.2"
 
