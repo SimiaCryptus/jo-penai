@@ -92,7 +92,7 @@ interface ApiModel {
     data class SpeechRequest(
         val input: String,
         val model: String = "tts-1",
-        val voice: String = "alloy",
+        val voice: String = "alloy", // alloy, echo, fable, onyx, nova, and shimmer
         val response_format: String? = "mp3",
         val speed: Double? = 1.0
     )

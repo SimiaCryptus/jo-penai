@@ -181,9 +181,7 @@ abstract class GPTProxyBase<T : Any>(
         private val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
 
 
-        // If the requested `type` is a list, and jsonResult is not a list:
-        //  1) If jsonResult is an object with a single key whose value is a list, return the value of that key
-        //  2) Otherwise, return a list containing jsonResult
+
         fun fixup(jsonResult: String, type: Type): String {
             var jsonResult1 = jsonResult
             if (type is ParameterizedType && List::class.java.isAssignableFrom(type.rawType as Class<*>) && !jsonResult1.startsWith(

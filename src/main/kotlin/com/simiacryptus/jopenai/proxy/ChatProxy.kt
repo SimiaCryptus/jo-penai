@@ -78,30 +78,42 @@ open class ChatProxy<T : Any>(
         val completion = api.chat(request, model).choices.first().message?.content.orEmpty()
         if (verbose) log.info(completion)
         val trimPrefix = trimPrefix(completion)
-        val trimSuffix = trimSuffix(trimPrefix.first)
-        return trimSuffix.first
+        val trimSuffix = trimSuffix(trimPrefix)
+        return trimSuffix
     }
 
     companion object {
 
         private val log = org.slf4j.LoggerFactory.getLogger(ChatProxy::class.java)
-        private fun trimPrefix(completion: String): Pair<String, String> {
-            val start = completion.indexOf('{').coerceAtMost(completion.indexOf('['))
+        private fun trimPrefix(completion: String): String {
+            val braceIndex = completion.indexOf('{')
+            val bracketIndex = completion.indexOf('[')
+            val start = when {
+                braceIndex == -1 && bracketIndex == -1 -> -1
+                braceIndex == -1 -> bracketIndex
+                bracketIndex == -1 -> braceIndex
+                else -> minOf(braceIndex, bracketIndex)
+            }
             return if (start < 0) {
-                completion to ""
+                completion
             } else {
-                val substring = completion.substring(start)
-                substring to completion.substring(0, start)
+                completion.substring(start)
             }
         }
 
-        private fun trimSuffix(completion: String): Pair<String, String> {
-            val end = completion.lastIndexOf('}').coerceAtLeast(completion.lastIndexOf(']'))
+        private fun trimSuffix(completion: String): String {
+            val braceIndex = completion.lastIndexOf('}')
+            val bracketIndex = completion.lastIndexOf(']')
+            val end = when {
+                braceIndex == -1 && bracketIndex == -1 -> -1
+                braceIndex == -1 -> bracketIndex
+                bracketIndex == -1 -> braceIndex
+                else -> maxOf(braceIndex, bracketIndex)
+            }
             return if (end < 0) {
-                completion to ""
+                completion
             } else {
-                val substring = completion.substring(0, end + 1)
-                substring to completion.substring(end + 1)
+                completion.substring(0, end + 1)
             }
         }
 
