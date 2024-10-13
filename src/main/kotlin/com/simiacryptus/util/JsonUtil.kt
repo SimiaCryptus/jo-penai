@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.json.JsonReadFeature
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JavaType
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.lang.reflect.Type
@@ -21,6 +22,7 @@ object JsonUtil {
                 return super._initForReading(p, targetType)
             }
         }
+            //.findAndRegisterModules()
             .enable(JsonParser.Feature.ALLOW_COMMENTS)
             .enable(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES)
             .enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
@@ -50,7 +52,7 @@ object JsonUtil {
                     .configure(KotlinFeature.SingletonSupport, false)
                     .configure(KotlinFeature.StrictNullChecks, false)
                     .build()
-            )
+            ).registerModule(JavaTimeModule())
     }
 
     open fun toJson(data: Any): String {
