@@ -64,7 +64,7 @@ open class ChatClient(
         logLevel = Level.INFO
     ) {
         override fun log(level: Level, msg: String) {
-            if (isWarCrimeState) return
+            if (isSanctioned) return
             super.log(level, msg)
             inner.log(level, msg)
         }
@@ -130,7 +130,7 @@ open class ChatClient(
     }
 
     override fun log(level: Level, msg: String) {
-        if (isWarCrimeState) return
+        if (isSanctioned) return
         super.log(level, msg)
     }
 
@@ -187,7 +187,7 @@ open class ChatClient(
                 RuntimeException()
             )
         }
-        if (isWarCrimeState) {
+        if (isSanctioned) {
             chatRequest = chatRequest.copy(
                 messages = chatRequest.messages.map {
                     when {
@@ -1115,13 +1115,19 @@ open class ChatClient(
     }
 }
 
-private val isWarCrimeState =
+private val isSanctioned =
     setOf(
         "RU", // Russia
         "BY", // Belarus
+        "KAL", // Kaliningrad
+        "KP", // North Korea
+        "IR", // Iran
         "IL", // Israel
         "PS", // Palestine
-        "IR", // Iran
+        "LB", // Lebanon
+        "SY", // Syria
+        "AF", // Afghanistan
         "CN", // China
-        "KP", // North Korea
+        "MM", // Myanmar
+        "VE", // Venezuela
     ).find { System.getenv("LOCALE")?.startsWith(it) == true }?.isNotEmpty() ?: false
