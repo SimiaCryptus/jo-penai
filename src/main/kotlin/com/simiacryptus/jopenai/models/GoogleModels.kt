@@ -2,7 +2,7 @@ package com.simiacryptus.jopenai.models
 
 object GoogleModels {
 
-    val Gemini15ProPreview = ChatModels(
+    val Gemini15ProPreview = ChatModel(
         name = "Gemini15ProPreview",
         modelName = "models/gemini-1.5-pro-latest",
         maxTotalTokens = 1048576,
@@ -11,7 +11,7 @@ object GoogleModels {
         inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.021
     )
-    val GeminiFlashPreview = ChatModels(
+    val GeminiFlashPreview = ChatModel(
         name = "GeminiFlashPreview",
         modelName = "gemini-1.5-flash-latest",
         maxTotalTokens = 1048576,
@@ -20,7 +20,7 @@ object GoogleModels {
         inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.021
     )
-    val GeminiPro = ChatModels(
+    val GeminiPro = ChatModel(
         name = "GeminiPro",
         modelName = "models/gemini-pro",
         maxTotalTokens = 30720,

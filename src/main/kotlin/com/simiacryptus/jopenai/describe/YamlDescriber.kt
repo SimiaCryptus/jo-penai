@@ -1,9 +1,9 @@
 package com.simiacryptus.jopenai.describe
 
 import com.fasterxml.jackson.module.kotlin.isKotlinClass
-import com.simiacryptus.jopenai.describe.DescriptorUtil.getAllAnnotations
 import com.google.common.reflect.TypeToken
 import com.simiacryptus.jopenai.describe.DescriptorUtil.componentType
+import com.simiacryptus.jopenai.describe.DescriptorUtil.getAllAnnotations
 import com.simiacryptus.jopenai.describe.DescriptorUtil.isArray
 import com.simiacryptus.jopenai.describe.DescriptorUtil.resolveGenericType
 import com.simiacryptus.util.DynamicEnum
@@ -162,7 +162,7 @@ open class YamlDescriber : TypeDescriber() {
         }
         val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
-            val description = self.getAnnotation(Description::class.java)?.value?.trim()?.replace("\"", "\\\"")
+        val description = self.getAnnotation(Description::class.java)?.value?.trim()?.replace("\"", "\\\"")
         val responseYaml = """
             |responses:
             |  application/json:

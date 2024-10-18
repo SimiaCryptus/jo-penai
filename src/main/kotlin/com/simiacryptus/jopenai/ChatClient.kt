@@ -4,16 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.simiacryptus.jopenai.models.ApiModel.*
 import com.simiacryptus.jopenai.exceptions.ModerationException
 import com.simiacryptus.jopenai.models.*
+import com.simiacryptus.jopenai.models.ApiModel.*
 import com.simiacryptus.jopenai.util.ClientUtil.allowedCharset
 import com.simiacryptus.jopenai.util.ClientUtil.checkError
 import com.simiacryptus.jopenai.util.ClientUtil.defaultApiProvider
 import com.simiacryptus.jopenai.util.ClientUtil.keyMap
-import com.simiacryptus.util.runWithPermit
 import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.StringUtil
+import com.simiacryptus.util.runWithPermit
 import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.HttpRequest
@@ -46,15 +46,14 @@ open class ChatClient(
     logLevel = logLevel,
     logStreams = logStreams,
     scheduledPool = scheduledPool,
-    workPool = workPool,
-    client = client
+    workPool = workPool
 ) {
 
     open var session: Any? = null
     open var user: Any? = null
-    var budget : Number? = null
+    var budget: Number? = null
 
-    private class ChildClient(
+    protected open class ChildClient(
         val inner: ChatClient,
         key: Map<APIProvider, String> = inner.key,
         apiBase: Map<APIProvider, String> = inner.apiBase
@@ -70,7 +69,7 @@ open class ChatClient(
         }
     }
 
-    fun getChildClient() : ChatClient = ChildClient(inner = this, key = key, apiBase = apiBase).apply {
+    open fun getChildClient(): ChatClient = ChildClient(inner = this, key = key, apiBase = apiBase).apply {
         session = inner.session
         user = inner.user
     }
@@ -83,7 +82,7 @@ open class ChatClient(
             model,
             tokens
         )
-        if(null != budget) budget = budget!!.toDouble() - (tokens.cost ?: 0.0)
+        if (null != budget) budget = budget!!.toDouble() - (tokens.cost ?: 0.0)
     }
 
     fun moderate(text: String) = withReliability {
@@ -165,7 +164,7 @@ open class ChatClient(
     }
 
     open fun chat(
-        chatRequest: ChatRequest, model: OpenAITextModel
+        chatRequest: ChatRequest, model: TextModel
     ): ChatResponse {
         var chatRequest = chatRequest
         if (model.modelName in listOf("o1-preview", "o1-mini")) {
@@ -218,7 +217,7 @@ open class ChatClient(
                             toGeminiChatRequest(chatRequest.copy(messages = chatRequest.messages.map {
                                 it.copy(
                                     role = when (it.role) {
-                                        Role.system -> Role.user // Google doesn't think we can be trusted with system prompts... Understandable; we might request white people be treated as equals...
+                                        Role.system -> Role.user
                                         else -> it.role
                                     }
                                 )
@@ -398,7 +397,7 @@ open class ChatClient(
         )
     }
 
-    private fun toGeminiChatRequest(chatRequest: ChatRequest, model: OpenAITextModel): GenerateContentRequest {
+    private fun toGeminiChatRequest(chatRequest: ChatRequest, model: TextModel): GenerateContentRequest {
         return GenerateContentRequest(
 //      model = model.modelName,
             /*
@@ -421,7 +420,7 @@ open class ChatClient(
             */
             contents = collectRoleSequences(chatRequest.messages.filter {
                 when (it.role) {
-        //        Role.system -> false
+                    //        Role.system -> false
                     else -> true
                 }
             }.map {
@@ -543,7 +542,7 @@ open class ChatClient(
         val probability: String
     )
 
-    private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: OpenAITextModel): AnthropicChatRequest {
+    private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: TextModel): AnthropicChatRequest {
         return AnthropicChatRequest(
             model = chatRequest.model,
             system = chatRequest.messages.firstOrNull { it.role == Role.system }?.content?.joinToString("\n\n") {
@@ -613,7 +612,7 @@ open class ChatClient(
         val region: String = Region.US_WEST_2.id(),
     )
 
-    private fun toAWS(model: OpenAITextModel, chatRequest: ChatRequest) = InvokeModelRequest.builder()
+    private fun toAWS(model: TextModel, chatRequest: ChatRequest) = InvokeModelRequest.builder()
         .modelId(model.modelName)
         .accept("application/json")
         .contentType("application/json")
@@ -621,7 +620,7 @@ open class ChatClient(
         .build()
 
     private fun awsBody(
-        model: OpenAITextModel,
+        model: TextModel,
         chatRequest: ChatRequest
     ): Map<String, Any> = when {
         model.modelName.contains("llama") -> {
@@ -709,7 +708,7 @@ open class ChatClient(
         else -> throw RuntimeException("Unsupported model: $model")
     }
 
-    private fun anthropic_version(model: OpenAITextModel) = when {
+    private fun anthropic_version(model: TextModel) = when {
         else -> "bedrock-2023-05-31"
 //    else -> null
     }
@@ -1115,7 +1114,7 @@ open class ChatClient(
     }
 }
 
-private val isSanctioned =
+val isSanctioned =
     setOf(
         "RU", // Russia
         "BY", // Belarus

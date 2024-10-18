@@ -8,11 +8,13 @@ Additionally, it provides some utilties for handling Audio for capturing transcr
 It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be serviced by a GPT model.
 
 <!-- TOC -->
+
 * [JoePenai - Unofficial Open Source OpenAI API Client for Java/Kotlin](#joepenai---unofficial-open-source-openai-api-client-for-javakotlin)
-  * [To Import](#to-import)
-  * [Developer Guide: High-Level Design of `HttpClientManager` and `OpenAIClient`](#developer-guide-high-level-design-of-httpclientmanager-and-openaiclient)
-  * [OpenAIClient Architecture Documentation](#openaiclient-architecture-documentation)
-  * [GPT-Proxy API](#gpt-proxy-api)
+    * [To Import](#to-import)
+    * [Developer Guide: High-Level Design of `HttpClientManager` and `OpenAIClient`](#developer-guide-high-level-design-of-httpclientmanager-and-openaiclient)
+    * [OpenAIClient Architecture Documentation](#openaiclient-architecture-documentation)
+    * [GPT-Proxy API](#gpt-proxy-api)
+
 <!-- TOC -->
 
 ## To Import
@@ -20,6 +22,7 @@ It also provides a GPT-Proxy API, which allows any Java/Kotlin interface to be s
 https://mvnrepository.com/artifact/com.simiacryptus/jo-penai
 
 Maven:
+
 ```xml
 <dependency>
     <groupId>com.simiacryptus</groupId>
@@ -29,6 +32,7 @@ Maven:
 ```
 
 Gradle:
+
 ```groovy
 implementation group: 'com.simiacryptus', name: 'jo-penai', version: '1.1.7'
 ```
@@ -208,7 +212,6 @@ classDiagram
 
     HttpClientManager <|-- OpenAIClient
 ```
-
 
 ```mermaid
 classDiagram
@@ -918,29 +921,28 @@ wide range of applications.
 When using the GPT-Proxy API, there are a few best practices to keep in mind:
 
 1. Defining Input and Output Types
-   1. Use Kotlin data classes for input and output types.
-   2. Ensure all fields have default values and are mutable.
-   3. Avoid accessor methods (e.g., get and set).
+    1. Use Kotlin data classes for input and output types.
+    2. Ensure all fields have default values and are mutable.
+    3. Avoid accessor methods (e.g., get and set).
 2. Retaining Parameter Metadata
-   1. Configure your build system to retain parameter metadata.
-   2. For Gradle, include compileKotlin { kotlinOptions { javaParameters = true }}.
+    1. Configure your build system to retain parameter metadata.
+    2. For Gradle, include compileKotlin { kotlinOptions { javaParameters = true }}.
 3. Handling Collection Return Types
-   1. Avoid collection return types.
-   2. Use a wrapper object (e.g., MyWidgets) with an extra data class instead of List<MyWidget> as the return type.
+    1. Avoid collection return types.
+    2. Use a wrapper object (e.g., MyWidgets) with an extra data class instead of List<MyWidget> as the return type.
 4. Interface Design
-   1. Keep interfaces simple and consistent.
-   2. Provide enough information without causing confusion.
+    1. Keep interfaces simple and consistent.
+    2. Provide enough information without causing confusion.
 5. API Documentation
-   1. Use descriptive names and annotations for better understanding.
-   2. Utilize the @Description annotation to describe data structures.
+    1. Use descriptive names and annotations for better understanding.
+    2. Utilize the @Description annotation to describe data structures.
 6. Iterative Testing and Adjustments
-   1. Test the API iteratively and refine the interface based on feedback.
-   2. Analyze malformed responses and identify their causes.
+    1. Test the API iteratively and refine the interface based on feedback.
+    2. Analyze malformed responses and identify their causes.
 7. Adding Examples
-   1. Use the addExample call to provide example requests and responses.
+    1. Use the addExample call to provide example requests and responses.
 8. Performance Monitoring
-   1. Monitor API performance using the metrics method.
-
+    1. Monitor API performance using the metrics method.
 
 ### Configuration
 

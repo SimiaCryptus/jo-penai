@@ -12,7 +12,7 @@ import com.simiacryptus.jopenai.models.ApiModel.Usage
 
 @JsonDeserialize(using = OpenAITextModelDeserializer::class)
 @JsonSerialize(using = OpenAITextModelSerializer::class)
-open class OpenAITextModel(
+open class TextModel(
     override val modelName: String = "",
     val maxTotalTokens: Int = -1,
     val maxOutTokens: Int = maxTotalTokens,
@@ -22,10 +22,10 @@ open class OpenAITextModel(
     open fun pricing(usage: Usage): Double = 0.0
 }
 
-class OpenAITextModelSerializer : StdSerializer<OpenAITextModel>(OpenAITextModel::class.java) {
-    override fun serialize(value: OpenAITextModel, gen: JsonGenerator, provider: SerializerProvider) {
+class OpenAITextModelSerializer : StdSerializer<TextModel>(TextModel::class.java) {
+    override fun serialize(value: TextModel, gen: JsonGenerator, provider: SerializerProvider) {
         ((listOf(
-            ChatModels.values(),
+            ChatModel.values(),
             CompletionModels.values(),
             EmbeddingModels.values(),
             EditModels.values(),
@@ -34,15 +34,15 @@ class OpenAITextModelSerializer : StdSerializer<OpenAITextModel>(OpenAITextModel
     }
 }
 
-class OpenAITextModelDeserializer : JsonDeserializer<OpenAITextModel>() {
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): OpenAITextModel {
+class OpenAITextModelDeserializer : JsonDeserializer<TextModel>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): TextModel {
         val modelName = p.readValueAs(String::class.java)
         listOf(
-            ChatModels.values(),
+            ChatModel.values(),
             CompletionModels.values(),
             EmbeddingModels.values(),
             EditModels.values(),
         ).flatMap { it.entries }.find { it.key == modelName }?.value?.let { return it }
-        return OpenAITextModel(modelName)
+        return TextModel(modelName)
     }
 }

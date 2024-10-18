@@ -181,7 +181,6 @@ abstract class GPTProxyBase<T : Any>(
         private val log: Logger = org.slf4j.LoggerFactory.getLogger(GPTProxyBase::class.java)
 
 
-
         fun fixup(jsonResult: String, type: Type): String {
             var jsonResult1 = jsonResult
             if (type is ParameterizedType && List::class.java.isAssignableFrom(type.rawType as Class<*>) && !jsonResult1.startsWith(

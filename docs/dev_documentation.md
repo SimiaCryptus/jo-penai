@@ -1,4 +1,3 @@
-
 # High-Level Architecture Documentation for OpenAI Integration Framework
 
 ## Overview
@@ -267,6 +266,7 @@ This table represents a concise summary of the chat models defined in the code, 
 
 
 <!-- TOC -->
+
 * [High-Level Architecture Documentation for OpenAI Integration Framework](#high-level-architecture-documentation-for-openai-integration-framework)
     * [Overview](#overview)
     * [Architecture Components](#architecture-components)
@@ -756,7 +756,8 @@ This table represents a concise summary of the chat models defined in the code, 
             * [`complete(request: CompletionRequest, model: OpenAITextModel): CompletionResponse`](#completerequest-completionrequest-model-openaitextmodel-completionresponse)
             * [`transcription(wavAudio: ByteArray, prompt: String = ""): String`](#transcriptionwavaudio-bytearray-prompt-string---string)
             * [`createSpeech(request: SpeechRequest): ByteArray?`](#createspeechrequest-speechrequest-bytearray)
-            * [`render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage>`](#renderprompt-string---resolution-int--1024-count-int--1-listbufferedimage)
+            * [
+              `render(prompt: String = "", resolution: Int = 1024, count: Int = 1): List<BufferedImage>`](#renderprompt-string---resolution-int--1024-count-int--1-listbufferedimage)
             * [`chat(chatRequest: ChatRequest, model: ChatModels): ChatResponse`](#chatchatrequest-chatrequest-model-chatmodels-chatresponse)
             * [`moderate(text: String)`](#moderatetext-string)
             * [`edit(editRequest: EditRequest): CompletionResponse`](#editeditrequest-editrequest-completionresponse)
@@ -871,10 +872,13 @@ This table represents a concise summary of the chat models defined in the code, 
             * [`getWhitespacePrefix(vararg lines: CharSequence): CharSequence`](#getwhitespaceprefixvararg-lines-charsequence-charsequence)
             * [`getWhitespaceSuffix(vararg lines: CharSequence): String`](#getwhitespacesuffixvararg-lines-charsequence-string)
             * [`trim(items: List<CharSequence>, max: Int, preserveHead: Boolean): List<CharSequence>`](#trimitems-listcharsequence-max-int-preservehead-boolean-listcharsequence)
-            * [`getPrefixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence`](#getprefixforcontexttext-string-ideallength-int-vararg-delimiters-charsequence-charsequence)
-            * [`getSuffixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence`](#getsuffixforcontexttext-string-ideallength-int-vararg-delimiters-charsequence-charsequence)
+            * [
+              `getPrefixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence`](#getprefixforcontexttext-string-ideallength-int-vararg-delimiters-charsequence-charsequence)
+            * [
+              `getSuffixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence`](#getsuffixforcontexttext-string-ideallength-int-vararg-delimiters-charsequence-charsequence)
             * [`restrictCharacterSet(text: String, charset: Charset): String`](#restrictcharactersettext-string-charset-charset-string)
         * [Usage Example](#usage-example-15)
+
 <!-- TOC -->
 
 # ChatProxy Feature
@@ -942,10 +946,10 @@ temperature (creativity) of the responses, and the validation of the generated r
 ```kotlin
 val apiClient = OpenAIClient(apiKey = "your_api_key")
 val chatProxy = ChatProxy(
-  clazz = YourApiInterface::class.java,
-  api = apiClient,
-  model = ChatModels.Gpt3_5Turbo,
-  temperature = 0.5
+    clazz = YourApiInterface::class.java,
+    api = apiClient,
+    model = ChatModels.Gpt3_5Turbo,
+    temperature = 0.5
 )
 
 val yourApi = chatProxy.create()
@@ -1171,12 +1175,12 @@ these packets in a provided buffer for further processing or analysis.
 import java.util.ArrayDeque
 
 fun main() {
-  val audioBuffer = ArrayDeque<ByteArray>()
-  val secondsPerPacket = 0.5 // 500 milliseconds per packet
-  val continueRecording = { true } // Replace with actual logic to stop recording
+    val audioBuffer = ArrayDeque<ByteArray>()
+    val secondsPerPacket = 0.5 // 500 milliseconds per packet
+    val continueRecording = { true } // Replace with actual logic to stop recording
 
-  val audioRecorder = AudioRecorder(audioBuffer, secondsPerPacket, continueRecording)
-  audioRecorder.run()
+    val audioRecorder = AudioRecorder(audioBuffer, secondsPerPacket, continueRecording)
+    audioRecorder.run()
 }
 ```
 
@@ -1259,18 +1263,18 @@ method. For instance, to create a text completion request:
 
 ```kotlin
 val completionRequest = ApiModel.CompletionRequest(
-  prompt = "Once upon a time",
-  max_tokens = 100,
-  temperature = 0.7
+    prompt = "Once upon a time",
+    max_tokens = 100,
+    temperature = 0.7
 )
 
 // Assuming `aiService` is an instance of a class that handles API requests
 val completionResponse = aiService.completeText(completionRequest)
 
 if (completionResponse.error == null) {
-  println("Generated text: ${completionResponse.choices.first().text}")
+    println("Generated text: ${completionResponse.choices.first().text}")
 } else {
-  println("Error: ${completionResponse.error.message}")
+    println("Error: ${completionResponse.error.message}")
 }
 ```
 
@@ -1410,15 +1414,15 @@ the `outputBuffer`.
 
 ```kotlin
 class MyLoudnessBuffer(
-  inputBuffer: Deque<ByteArray>,
-  outputBuffer: Deque<ByteArray>,
-  continueFn: () -> Boolean
+    inputBuffer: Deque<ByteArray>,
+    outputBuffer: Deque<ByteArray>,
+    continueFn: () -> Boolean
 ) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn) {
 
-  override fun shouldOutput(): Boolean {
-    // Implement logic to determine when to output processed data
-    return true // Example condition
-  }
+    override fun shouldOutput(): Boolean {
+        // Implement logic to determine when to output processed data
+        return true // Example condition
+    }
 }
 
 ```
@@ -1524,11 +1528,11 @@ val continueProcessing = { true }
 val loudnessBuffer = LookbackLoudnessWindowBuffer(inputBuffer, outputBuffer, continueProcessing)
 
 while (continueProcessing()) {
-  // Add audio packets to inputBuffer
-  // Process audio packets
-  if (loudnessBuffer.shouldOutput()) {
-    // Process outputBuffer data
-  }
+    // Add audio packets to inputBuffer
+    // Process audio packets
+    if (loudnessBuffer.shouldOutput()) {
+        // Process outputBuffer data
+    }
 }
 ```
 
@@ -1590,11 +1594,11 @@ val continueFn = { /* logic to continue or stop */ }
 val onText: (String) -> Unit = { text -> println(text) }
 
 val transcriptionProcessor = TranscriptionProcessor(
-  client = openAIClient,
-  audioBuffer = audioBuffer,
-  continueFn = continueFn,
-  prompt = "",
-  onText = onText
+    client = openAIClient,
+    audioBuffer = audioBuffer,
+    continueFn = continueFn,
+    prompt = "",
+    onText = onText
 )
 
 // Start the transcription process
@@ -1885,7 +1889,7 @@ The `Description` annotation can be applied to various program elements. Here ar
 ```kotlin
 @Description("This class represents a user in the system.")
 class User {
-  // Class implementation
+    // Class implementation
 }
 ```
 
@@ -1894,10 +1898,10 @@ class User {
 ```kotlin
 class User {
 
-  @Description("This method returns the user's full name.")
-  fun getFullName(): String {
-    // Method implementation
-  }
+    @Description("This method returns the user's full name.")
+    fun getFullName(): String {
+        // Method implementation
+    }
 }
 ```
 
@@ -1906,11 +1910,11 @@ class User {
 ```kotlin
 class User {
 
-  @Description("The user's first name.")
-  var firstName: String = ""
+    @Description("The user's first name.")
+    var firstName: String = ""
 
-  @Description("The user's last name.")
-  var lastName: String = ""
+    @Description("The user's last name.")
+    var lastName: String = ""
 }
 ```
 
@@ -1952,8 +1956,8 @@ Kotlin classes and their members at runtime. It offers capabilities to:
 
 ```kotlin
 fun getAllAnnotations(
-  rawType: Class<in Nothing>,
-  property: KProperty1<out Any, *>,
+    rawType: Class<in Nothing>,
+    property: KProperty1<out Any, *>,
 ): List<Annotation>
 ```
 
@@ -2187,16 +2191,16 @@ Example:
 
 ```kotlin
 class HTMLTypeDescriber : TypeDescriber() {
-  override val markupLanguage = "HTML"
-  override val methodBlacklist = setOf("toString", "hashCode")
+    override val markupLanguage = "HTML"
+    override val methodBlacklist = setOf("toString", "hashCode")
 
-  override fun describe(rawType: Class<in Nothing>, stackMax: Int, describedTypes: MutableSet<String>): String {
-    // Implementation for describing a class in HTML
-  }
+    override fun describe(rawType: Class<in Nothing>, stackMax: Int, describedTypes: MutableSet<String>): String {
+        // Implementation for describing a class in HTML
+    }
 
-  override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
-    // Implementation for describing a method in HTML
-  }
+    override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
+        // Implementation for describing a method in HTML
+    }
 }
 ```
 
@@ -2398,10 +2402,10 @@ expects a positive integer value:
 
 ```kotlin
 fun setModelComplexity(complexity: Int) {
-  if (complexity <= 0) {
-    throw InvalidValueException("complexity", complexity.toString())
-  }
-  // Proceed with setting the model complexity
+    if (complexity <= 0) {
+        throw InvalidValueException("complexity", complexity.toString())
+    }
+    // Proceed with setting the model complexity
 }
 ```
 
@@ -2481,9 +2485,9 @@ logging the error, notifying the user, or attempting to use a fallback model.
 
 ```kotlin
 try {
-  // Code that might throw InvalidModelException
+    // Code that might throw InvalidModelException
 } catch (e: InvalidModelException) {
-  // Handle the exception (e.g., log the error, notify the user)
+    // Handle the exception (e.g., log the error, notify the user)
 }
 ```
 
@@ -2854,17 +2858,17 @@ Below is an example demonstrating how to throw and catch a `RequestOverloadExcep
 
 ```kotlin
 fun processRequest() {
-  try {
-    // Simulate checking the load on a model
-    val isOverloaded = true // This would typically be determined dynamically
-    if (isOverloaded) {
-      throw RequestOverloadException()
+    try {
+        // Simulate checking the load on a model
+        val isOverloaded = true // This would typically be determined dynamically
+        if (isOverloaded) {
+            throw RequestOverloadException()
+        }
+        // Proceed with request processing
+    } catch (e: RequestOverloadException) {
+        println("Caught an overload exception: ${e.message}")
+        // Implement retry logic, log the error, or notify the user as necessary
     }
-    // Proceed with request processing
-  } catch (e: RequestOverloadException) {
-    println("Caught an overload exception: ${e.message}")
-    // Implement retry logic, log the error, or notify the user as necessary
-  }
 }
 ```
 
@@ -2931,16 +2935,16 @@ safety guidelines before proceeding with an operation:
 
 ```kotlin
 fun checkContentSafety(content: String) {
-  if (!isContentSafe(content)) {
-    throw SafetyException()
-  }
-  // Proceed with operation as content is safe
+    if (!isContentSafe(content)) {
+        throw SafetyException()
+    }
+    // Proceed with operation as content is safe
 }
 
 fun isContentSafe(content: String): Boolean {
-  // Implementation of safety check
-  // Returns true if content is safe, false otherwise
-  return content.length < 100 // Example condition for simplicity
+    // Implementation of safety check
+    // Returns true if content is safe, false otherwise
+    return content.length < 100 // Example condition for simplicity
 }
 ```
 
@@ -3309,9 +3313,9 @@ class also provides a method to calculate the pricing based on usage.
 
 ```kotlin
 open class CompletionModels(
-  modelName: String,
-  maxTokens: Int,
-  private val tokenPricePerK: Double,
+    modelName: String,
+    maxTokens: Int,
+    private val tokenPricePerK: Double,
 ) : OpenAITextModel(modelName, maxTokens)
 ```
 
@@ -3350,7 +3354,7 @@ Returns a map of model names to their corresponding `CompletionModels` instances
 
 ```kotlin
 companion object {
-  fun values(): Map<String, CompletionModels>
+    fun values(): Map<String, CompletionModels>
 }
 ```
 
@@ -3708,7 +3712,7 @@ implementations must adhere to, ensuring a consistent approach to handling diffe
 
 ```kotlin
 interface OpenAIModel {
-  val modelName: String
+    val modelName: String
 }
 ```
 
@@ -3725,7 +3729,7 @@ defined in the interface. Here is a basic example of how to implement the `OpenA
 
 ```kotlin
 class GPT3Model : OpenAIModel {
-  override val modelName: String = "gpt-3"
+    override val modelName: String = "gpt-3"
 }
 ```
 
@@ -3744,7 +3748,7 @@ as `GPT3Model`, without needing to know the specifics of the model:
 
 ```kotlin
 fun useModel(model: OpenAIModel) {
-  println("Using model: ${model.modelName}")
+    println("Using model: ${model.modelName}")
 }
 ```
 
@@ -4004,7 +4008,7 @@ providers.
 
 ```kotlin
 OpenAIClient(
-  key: Map< APIProvider, String >,
+    key: Map< APIProvider, String >,
 apiBase: Map<APIProvider, String>,
 logLevel: Level,
 logStreams: MutableList<BufferedOutputStream>,
@@ -4106,18 +4110,18 @@ Contains utility functions and properties, including a semaphore for throttling 
 
 ```kotlin
 val client = OpenAIClient(
-  key = mapOf(APIProvider.OpenAI to "your_api_key"),
-  apiBase = mapOf(APIProvider.OpenAI to "https://api.openai.com"),
-  logLevel = Level.INFO,
-  logStreams = mutableListOf(),
-  scheduledPool = HttpClientManager.scheduledPool,
-  workPool = HttpClientManager.workPool,
-  client = HttpClientManager.client
+    key = mapOf(APIProvider.OpenAI to "your_api_key"),
+    apiBase = mapOf(APIProvider.OpenAI to "https://api.openai.com"),
+    logLevel = Level.INFO,
+    logStreams = mutableListOf(),
+    scheduledPool = HttpClientManager.scheduledPool,
+    workPool = HttpClientManager.workPool,
+    client = HttpClientManager.client
 )
 
 val completionRequest = CompletionRequest(
-  prompt = "Once upon a time",
-  max_tokens = 100
+    prompt = "Once upon a time",
+    max_tokens = 100
 )
 
 val response = client.complete(completionRequest, OpenAITextModel.GPT3)
@@ -4147,7 +4151,7 @@ test cases.
 
 ```kotlin
 PromptOptimization(
-  val api : OpenAIClient,
+    val api : OpenAIClient,
 val model: ChatModels,
 private val mutationRate: Double = 0.5,
 private val mutatonTypes: Map<String, Double> = mapOf(...)
@@ -4171,11 +4175,11 @@ private val mutatonTypes: Map<String, Double> = mapOf(...)
 
 ```kotlin
 open fun runGeneticGenerations(
-  systemPrompts: List<String>,
-  testCases: List<TestCase>,
-  selectionSize: Int,
-  populationSize: Int,
-  generations: Int
+    systemPrompts: List<String>,
+    testCases: List<TestCase>,
+    selectionSize: Int,
+    populationSize: Int,
+    generations: Int
 ): List<String>
 ```
 
@@ -4226,8 +4230,8 @@ Evaluates the performance of a system prompt against a test case, returning an a
 
 ```kotlin
 open fun run(
-  systemPrompt: String,
-  testCase: TestCase
+    systemPrompt: String,
+    testCase: TestCase
 ): List<Pair<com.simiacryptus.jopenai.ApiModel.ChatResponse, Double>>
 ```
 
@@ -4325,8 +4329,8 @@ val response = apiClient.chat("Your prompt here")
 
 val expectation = VectorMatch("Expected response content")
 if (expectation.matches(apiClient, response)) {
-  val score = expectation.score(apiClient, response)
-  println("Match Score: $score")
+    val score = expectation.score(apiClient, response)
+    println("Match Score: $score")
 }
 ```
 
@@ -4364,11 +4368,11 @@ valid. If it returns a non-null `String`, it indicates a validation error with t
 
 ```kotlin
 class User(val name: String, val age: Int) : ValidatedObject {
-  override fun validate(): String? {
-    if (name.isBlank()) return "Name cannot be blank"
-    if (age < 0) return "Age cannot be negative"
-    return null // Object is valid
-  }
+    override fun validate(): String? {
+        if (name.isBlank()) return "Name cannot be blank"
+        if (age < 0) return "Age cannot be negative"
+        return null // Object is valid
+    }
 }
 ```
 
@@ -4438,7 +4442,7 @@ deserialization, and basic input/output processing tailored for chat interaction
 
 ```kotlin
 ChatProxy < T : Any > (
-    clazz: Class<out T>,
+        clazz: Class<out T>,
 val api: OpenAIClient,
 var model: ChatModels,
 temperature: Double = 0.5,
@@ -4519,10 +4523,10 @@ response as needed.
 ```kotlin
 val apiClient = OpenAIClient(apiKey = "your_api_key")
 val chatProxy = ChatProxy(
-  clazz = YourResponseClass::class.java,
-  api = apiClient,
-  model = ChatModels.Gpt3_5Turbo,
-  verbose = true
+    clazz = YourResponseClass::class.java,
+    api = apiClient,
+    model = ChatModels.Gpt3_5Turbo,
+    verbose = true
 )
 
 val prompt = ProxyRequest("Your prompt here")
@@ -4605,9 +4609,9 @@ example, to check for errors in an API response:
 ```kotlin
 val apiResponse = "{...}" // JSON response from OpenAI API
 try {
-  ClientUtil.checkError(apiResponse)
+    ClientUtil.checkError(apiResponse)
 } catch (e: Exception) {
-  // Handle specific exceptions
+    // Handle specific exceptions
 }
 ```
 
@@ -4685,14 +4689,14 @@ return types, and a `main` method for testing.
 
 ```kotlin
 class MyGPTProxy : GPTProxyBase<MyInterface>(MyInterface::class.java) {
-  override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
-    // Implementation to interact with an AI model
-  }
+    override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
+        // Implementation to interact with an AI model
+    }
 }
 
 fun main() {
-  val proxy = MyGPTProxy().create()
-  // Use proxy as an instance of MyInterface
+    val proxy = MyGPTProxy().create()
+    // Use proxy as an instance of MyInterface
 }
 ```
 

@@ -2,7 +2,7 @@ package com.simiacryptus.jopenai
 
 import com.simiacryptus.jopenai.models.APIProvider
 import com.simiacryptus.jopenai.models.ApiModel
-import com.simiacryptus.jopenai.models.ChatModels
+import com.simiacryptus.jopenai.models.ChatModel
 import com.simiacryptus.jopenai.util.ClientUtil
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import org.junit.jupiter.api.DynamicNode
@@ -31,15 +31,15 @@ class ModelTests {
 //                APIProvider.Perplexity -> true
 //                APIProvider.ModelsLab -> true
 //                else -> true
-      else -> false
+                else -> false
             }
         }.flatMap { provider ->
             // Generate a dynamic test for each model
-            ChatModels.values()
+            ChatModel.values()
                 .filter { it.value.provider == provider }
                 .values
                 .filter { model ->
-                    when(model) {
+                    when (model) {
 //                        LLaMA38bInstructAWS -> true
 //                        LLaMA370bInstructAWS -> true
 //                        else -> false
@@ -53,7 +53,7 @@ class ModelTests {
         }.toTypedArray()
     }
 
-    private fun testChatWithModel(model: ChatModels) {
+    private fun testChatWithModel(model: ChatModel) {
         val prov = ClientUtil.keyMap[ClientUtil.defaultApiProvider.name] ?: return
         if (prov.isBlank()) return
         val client = ChatClient(ClientUtil.keyMap.mapKeys { APIProvider.valueOf(it.key) })

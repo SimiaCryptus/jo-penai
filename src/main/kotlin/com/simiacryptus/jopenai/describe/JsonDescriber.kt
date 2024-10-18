@@ -185,6 +185,7 @@ open class JsonDescriber(
             ?: listOf())
                 ).toList()
     }
+
     private fun toJson(self: Parameter, stackMax: Int): String {
         if (stackMax <= 0) return "{...}"
         val description = self.getAnnotation(Description::class.java)?.value?.trim()

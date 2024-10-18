@@ -6,7 +6,7 @@ open class CompletionModels(
     modelName: String,
     maxTokens: Int,
     private val tokenPricePerK: Double,
-) : OpenAITextModel(modelName, maxTokens) {
+) : TextModel(modelName, maxTokens) {
     override fun pricing(usage: Usage) = usage.prompt_tokens * tokenPricePerK / 1000.0
 
     companion object {

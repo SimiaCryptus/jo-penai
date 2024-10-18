@@ -9,12 +9,12 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.simiacryptus.jopenai.models.ApiModel.Usage
-import com.simiacryptus.jopenai.models.ChatModels.Companion.values
+import com.simiacryptus.jopenai.models.ChatModel.Companion.values
 
 
 @JsonDeserialize(using = ChatModelsDeserializer::class)
 @JsonSerialize(using = ChatModelsSerializer::class)
-open class ChatModels(
+open class ChatModel(
     val name: String,
     modelName: String,
     maxTotalTokens: Int,
@@ -22,7 +22,7 @@ open class ChatModels(
     override val provider: APIProvider,
     val inputTokenPricePerK: Double,
     val outputTokenPricePerK: Double,
-) : OpenAITextModel(
+) : TextModel(
     modelName = modelName,
     maxTotalTokens = maxTotalTokens,
     maxOutTokens = maxOutTokens
@@ -34,7 +34,10 @@ open class ChatModels(
 
     companion object {
 
-        fun values() = mapOf(
+        fun values() = values.filterValues { it != null }.mapValues { it.value!! }
+        val values: MutableMap<String, ChatModel?> by lazy { defaultValues().toMutableMap() }
+
+        fun defaultValues(): Map<String, ChatModel> = mapOf(
             "GPT35Turbo" to OpenAIModels.GPT35Turbo,
             "GPT4Turbo" to OpenAIModels.GPT4Turbo,
             "GPT4o" to OpenAIModels.GPT4o,
@@ -108,18 +111,18 @@ open class ChatModels(
             "Gemini15ProPreview" to GoogleModels.Gemini15ProPreview,
             "GeminiFlashPreview" to GoogleModels.GeminiFlashPreview,
             "GeminiPro" to GoogleModels.GeminiPro
-        ).toMutableMap()
+        )
     }
 }
 
-class ChatModelsSerializer : StdSerializer<ChatModels>(ChatModels::class.java) {
-    override fun serialize(value: ChatModels, gen: JsonGenerator, provider: SerializerProvider) {
+class ChatModelsSerializer : StdSerializer<ChatModel>(ChatModel::class.java) {
+    override fun serialize(value: ChatModel, gen: JsonGenerator, provider: SerializerProvider) {
         values().entries.find { it.value == value }?.key?.let { gen.writeString(it) }
     }
 }
 
-class ChatModelsDeserializer : JsonDeserializer<ChatModels>() {
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModels {
+class ChatModelsDeserializer : JsonDeserializer<ChatModel>() {
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModel {
         val modelName = p.readValueAs(String::class.java)
         return values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
     }
