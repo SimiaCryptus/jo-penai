@@ -48,7 +48,7 @@ open class ListWrapper<T : Any>(
             } else if (node.isArray) {
                 val contextualType = ctxt.contextualType
                 val contentType = contextualType?.containedType(0) ?: javaType.let {
-                    if(it?.isCollectionLikeType == true) javaType?.containedType(0)
+                    if (it?.isCollectionLikeType == true) javaType?.containedType(0)
                     else javaType
                 }
                 val objectMapper = JsonUtil.objectMapper()

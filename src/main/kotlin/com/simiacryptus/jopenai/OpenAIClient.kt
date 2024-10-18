@@ -45,8 +45,7 @@ open class OpenAIClient(
     logLevel = logLevel,
     logStreams = logStreams,
     scheduledPool = scheduledPool,
-    workPool = workPool,
-    client = client
+    workPool = workPool
 ) {
 
     var user: Any? = null
@@ -101,7 +100,7 @@ open class OpenAIClient(
     )
 
     open fun complete(
-        request: CompletionRequest, model: OpenAITextModel
+        request: CompletionRequest, model: TextModel
     ): CompletionResponse = withReliability {
         withPerformanceLogging {
             if (request.suffix == null) {

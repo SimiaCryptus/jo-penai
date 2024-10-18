@@ -1,3 +1,3 @@
 package com.simiacryptus.jopenai.exceptions
 
-class QuotaException : AIServiceException("Quota exceeded")
+class QuotaException : AIServiceException("Quota exceeded", isFatal = true)

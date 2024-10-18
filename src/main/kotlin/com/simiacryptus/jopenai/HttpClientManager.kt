@@ -3,6 +3,7 @@ package com.simiacryptus.jopenai
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.common.util.concurrent.MoreExecutors
 import com.google.common.util.concurrent.ThreadFactoryBuilder
+import com.simiacryptus.jopenai.exceptions.AIServiceException
 import com.simiacryptus.jopenai.exceptions.InvalidModelException
 import com.simiacryptus.jopenai.exceptions.ModelMaxException
 import com.simiacryptus.jopenai.exceptions.QuotaException
@@ -11,8 +12,8 @@ import org.apache.hc.client5.http.impl.DefaultHttpRequestRetryStrategy
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder
 import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager
-import org.apache.hc.core5.util.Timeout
 import org.apache.hc.core5.http.HttpHeaders
+import org.apache.hc.core5.util.Timeout
 import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.BufferedOutputStream
@@ -29,7 +30,6 @@ open class HttpClientManager(
     private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
     private val workPool: ThreadPoolExecutor = Companion.workPool,
     private val userAgent: String = DEFAULT_USER_AGENT,
-    private val client: CloseableHttpClient = createHttpClient(userAgent),
 ) : API() {
 
     companion object {
@@ -104,11 +104,6 @@ open class HttpClientManager(
 
     }
 
-    /**
-     * The HTTP client will not always respond to interrupts,
-     * So we need to isolate HTTP calls into a separate thread
-     * The caller will then return when interrupted
-     */
     private fun <T> withPool(fn: () -> T): T {
         val future = workPool.submit(Callable {
             return@Callable fn()
@@ -138,33 +133,30 @@ open class HttpClientManager(
         sleepScale: Long = TimeUnit.SECONDS.toMillis(5),
         fn: () -> T
     ): T {
-        var lastException: Exception? = null
+        var lastException: Throwable? = null
         var i = 0
         while (i++ < retryCount) {
             val sleepPeriod = sleepScale * 2.0.pow(i.toDouble()).toLong()
             try {
                 return fn()
             } catch (e: Throwable) {
-                when (val exception = unwrapException(e)) {
-                    is ModelMaxException -> throw exception
-                    is RateLimitException -> {
-                        lastException = exception
-                        i--
-                        this.log(Level.DEBUG, "Rate limited; retrying ($i/$retryCount): " + exception.message)
-                        Thread.sleep((TimeUnit.SECONDS.toMillis(exception.delay)).coerceAtLeast(sleepPeriod))
-                    }
-
-                    is Exception -> {
-                        lastException = exception
-                        this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + exception.message)
-                        Thread.sleep(sleepPeriod)
-                    }
-
-                    else -> throw exception
-                }
+                val exception = unwrapException(e)
+                throwIfNonrecoverable(exception, sleepPeriod)
+                this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + exception.message)
+                Thread.sleep(sleepPeriod)
+                lastException = exception
             }
         }
         throw lastException!!
+    }
+
+    open fun throwIfNonrecoverable(exception: Throwable, sleepPeriod: Long) {
+        when (exception) {
+            is RateLimitException -> Thread.sleep((TimeUnit.SECONDS.toMillis(exception.delay)).coerceAtLeast(sleepPeriod))
+            is AIServiceException -> if (exception.isFatal) throw exception
+            is Exception -> return
+            else -> throw exception
+        }
     }
 
     protected open fun unwrapException(e: Throwable): Throwable {
@@ -181,23 +173,6 @@ open class HttpClientManager(
         return e
     }
 
-
-    fun <T> withCancellationMonitor(fn: () -> T, cancelCheck: () -> Boolean): T {
-        var thread = Thread.currentThread()
-        val start = Date()
-        log(Level.DEBUG, "Request started at ${Date()}; monitoring for cancellation for thread $thread")
-        val cancellationFuture = scheduledPool.scheduleAtFixedRate({
-            if (cancelCheck()) {
-                log(Level.DEBUG, "Request cancelled at ${Date()} (started $start); closing client for thread $thread")
-                thread.interrupt()
-            }
-        }, 0, 100, TimeUnit.MILLISECONDS)
-        try {
-            return withPool { fn() }
-        } finally {
-            cancellationFuture.cancel(false)
-        }
-    }
 
     private fun <T> withTimeout(duration: Duration, fn: () -> T): T {
         var thread = Thread.currentThread()

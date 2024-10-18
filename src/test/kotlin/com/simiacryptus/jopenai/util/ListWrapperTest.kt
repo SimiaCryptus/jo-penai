@@ -17,7 +17,7 @@ class ListWrapperTest {
 
     private val objectMapper = JsonUtil.objectMapper()
 
-//    @Test
+    //    @Test
     fun testSerializationOfComplexObject() {
         val team = Team(ListWrapper(listOf(Person("Alice", 30), Person("Bob", 25))))
         val mapper = objectMapper
@@ -57,10 +57,12 @@ class ListWrapperTest {
         val listWrapper = ListWrapper<Int>(listOf(1, 2, 3))
         val mapper = objectMapper
         val json = mapper.writeValueAsString(listWrapper)
-        println("""
+        println(
+            """
             Serialized JSON:
             $json
-        """.trimIndent())
+        """.trimIndent()
+        )
         val kType = typeOf<ListWrapper<Int>>()
         val javaType = kType.javaType
         val constructType = TypeFactory.defaultInstance().constructType(javaType)
@@ -73,10 +75,12 @@ class ListWrapperTest {
         val listWrapper = ListWrapper(listOf("apple", "banana", "cherry"))
         val mapper = objectMapper
         val json = mapper.writeValueAsString(listWrapper)
-        println("""
+        println(
+            """
             Serialized JSON:
             $json
-        """.trimIndent())
+        """.trimIndent()
+        )
         val kType = typeOf<ListWrapper<String>>()
         val javaType = TypeFactory.defaultInstance().constructCollectionType(ListWrapper::class.java, String::class.java)
         val deserialized = mapper.readValue<ListWrapper<String>>(json, javaType)
@@ -88,10 +92,12 @@ class ListWrapperTest {
         val emptyListWrapper = ListWrapper(emptyList<Int>())
         val mapper = objectMapper
         val json = mapper.writeValueAsString(emptyListWrapper)
-        println("""
+        println(
+            """
             Serialized JSON:
             $json
-        """.trimIndent())
+        """.trimIndent()
+        )
         val deserialized = mapper.readValue<ListWrapper<Int>>(json, TypeFactory.defaultInstance().constructType(typeOf<ListWrapper<Int>>().javaType))
         assertTrue(deserialized.isEmpty())
         assertEquals("[]", deserialized.toString())

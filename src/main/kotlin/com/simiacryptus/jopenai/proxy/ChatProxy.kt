@@ -1,17 +1,17 @@
 package com.simiacryptus.jopenai.proxy
 
+import com.simiacryptus.jopenai.ChatClient
 import com.simiacryptus.jopenai.models.ApiModel
 import com.simiacryptus.jopenai.models.ApiModel.ChatMessage
 import com.simiacryptus.jopenai.models.ApiModel.ChatRequest
-import com.simiacryptus.jopenai.ChatClient
-import com.simiacryptus.jopenai.models.ChatModels
+import com.simiacryptus.jopenai.models.ChatModel
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
 import com.simiacryptus.util.JsonUtil.toJson
 
 open class ChatProxy<T : Any>(
     clazz: Class<out T>,
     val api: ChatClient,
-    var model: ChatModels,
+    var model: ChatModel,
     temperature: Double = 0.5,
     private var verbose: Boolean = false,
     private val moderated: Boolean = false,
@@ -22,7 +22,7 @@ open class ChatProxy<T : Any>(
     constructor(params: LinkedHashMap<String, Any?>) : this(
         clazz = params["clazz"] as Class<T>,
         api = params["api"] as ChatClient? ?: ChatClient(),
-        model = (params["model"] as ChatModels?)!!,
+        model = (params["model"] as ChatModel?)!!,
         temperature = params["temperature"] as Double? ?: 0.7,
         verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,

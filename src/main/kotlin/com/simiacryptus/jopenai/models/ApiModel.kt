@@ -172,6 +172,8 @@ interface ApiModel {
         val response_format: Map<String, Any>? = null,
         val n: Int? = null,
         val functions: List<RequestFunction>? = null,
+        val store: Boolean? = null,
+        val metadata: Map<String, Any?>? = null,
     )
 
     data class GroqChatRequest(

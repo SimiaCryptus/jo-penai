@@ -4,7 +4,7 @@ import com.simiacryptus.jopenai.ChatClient
 import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.describe.Description
 import com.simiacryptus.jopenai.models.ApiModel
-import com.simiacryptus.jopenai.models.ChatModels
+import com.simiacryptus.jopenai.models.ChatModel
 import com.simiacryptus.jopenai.opt.PromptOptimization.GeneticApi.Prompt
 import com.simiacryptus.jopenai.proxy.ChatProxy
 import com.simiacryptus.jopenai.util.ClientUtil.toContentList
@@ -17,7 +17,7 @@ import kotlin.math.pow
 open class PromptOptimization(
     val api: OpenAIClient,
     val chatClient: ChatClient,
-    val model: ChatModels,
+    val model: ChatModel,
     private val mutationRate: Double = 0.5,
     private val mutatonTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,

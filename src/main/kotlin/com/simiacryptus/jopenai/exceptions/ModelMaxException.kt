@@ -5,4 +5,4 @@ class ModelMaxException(
     val request: Int,
     val messages: Int,
     private val completion: Int
-) : AIServiceException("Model max exceeded: $modelMax, request: $request, messages: $messages, completion: $completion")
+) : AIServiceException("Model max exceeded: $modelMax, request: $request, messages: $messages, completion: $completion", isFatal = true)

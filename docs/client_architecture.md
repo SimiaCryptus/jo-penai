@@ -170,7 +170,6 @@ classDiagram
     HttpClientManager <|-- OpenAIClient
 ```
 
-
 ```mermaid
 classDiagram
     class ApiError {

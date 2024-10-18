@@ -83,17 +83,17 @@ dependencies {
     implementation("software.amazon.awssdk:bedrockruntime:$aws_version")
     implementation("software.amazon.awssdk:auth:$aws_version")
 
-    implementation ("io.swagger:swagger-annotations:$swagger_annotations_version")
-    implementation ("com.google.code.findbugs:jsr305:3.0.2")
-    implementation ("org.apache.httpcomponents.client5:httpclient5:$httpclient_version")
-    implementation ("org.openapitools:jackson-databind-nullable:$jackson_databind_nullable_version")
-    implementation ("jakarta.annotation:jakarta.annotation-api:$jakarta_annotation_version")
+    implementation("io.swagger:swagger-annotations:$swagger_annotations_version")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
+    implementation("org.apache.httpcomponents.client5:httpclient5:$httpclient_version")
+    implementation("org.openapitools:jackson-databind-nullable:$jackson_databind_nullable_version")
+    implementation("jakarta.annotation:jakarta.annotation-api:$jakarta_annotation_version")
 
-    implementation ("com.fasterxml.jackson.core:jackson-core:$jackson_version")
-    implementation ("com.fasterxml.jackson.core:jackson-annotations:$jackson_version")
-    implementation ("com.fasterxml.jackson.core:jackson-databind:$jackson_databind_version")
-    implementation ("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version")
-    implementation ("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
+    implementation("com.fasterxml.jackson.core:jackson-core:$jackson_version")
+    implementation("com.fasterxml.jackson.core:jackson-annotations:$jackson_version")
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jackson_databind_version")
+    implementation("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version")
 
 
     implementation(group = "org.slf4j", name = "slf4j-api", version = "2.0.16")
@@ -192,5 +192,5 @@ if (System.getenv("GPG_PRIVATE_KEY") != null && System.getenv("GPG_PASSPHRASE") 
 }
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.compilerOptions {
-  apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
+    apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_1_8)
 }
