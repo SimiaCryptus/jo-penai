@@ -24,7 +24,7 @@ open class AbbrevWhitelistTSDescriber(private vararg val abbreviated: String) : 
             logger.info("Type is an array: {}", self.typeName)
             return isAbbreviated(self.componentType!!)
         }
-        val isAbbreviated = (abbreviated.find { self.typeName.startsWith(it) } != null) || super.isAbbreviated(self)
+        val isAbbreviated = (abbreviated.find { self.typeName.startsWith(it) } == null) || super.isAbbreviated(self)
         logger.info("Type {} is abbreviated: {}", self.typeName, isAbbreviated)
         return isAbbreviated
     }
