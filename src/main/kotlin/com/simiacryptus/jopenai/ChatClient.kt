@@ -15,7 +15,6 @@ import com.simiacryptus.util.JsonUtil
 import com.simiacryptus.util.StringUtil
 import com.simiacryptus.util.runWithPermit
 import org.apache.hc.client5.http.classic.methods.HttpPost
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
@@ -40,8 +39,7 @@ open class ChatClient(
     logLevel: Level = Level.INFO,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
-    workPool: ThreadPoolExecutor = HttpClientManager.workPool,
-    client: CloseableHttpClient = createHttpClient()
+    workPool: ThreadPoolExecutor = HttpClientManager.workPool
 ) : HttpClientManager(
     logLevel = logLevel,
     logStreams = logStreams,

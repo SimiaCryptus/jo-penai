@@ -1,11 +1,18 @@
 package com.simiacryptus.jopenai.models
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
+import javax.imageio.ImageIO
 
 @Suppress("PropertyName", "SpellCheckingInspection")
 interface ApiModel {
+    data class AudioInput(
+        val data: String,
+        val format: String
+    )
 
     data class ApiError(
         val message: String? = null,
@@ -174,6 +181,8 @@ interface ApiModel {
         val functions: List<RequestFunction>? = null,
         val store: Boolean? = null,
         val metadata: Map<String, Any?>? = null,
+        val modalities: List<String>? = null,
+        val audio: Map<String, String>? = null
     )
 
     data class GroqChatRequest(
@@ -203,18 +212,43 @@ interface ApiModel {
         val usage: Usage? = null,
     )
 
-
     data class ChatChoice(
         val message: ChatMessageResponse? = null,
         val index: Int = 0,
         val finish_reason: String? = null,
     )
 
+
     data class ContentPart(
         val type: String,
         val text: String? = null,
-        val image_url: String? = null
-    )
+        val image_url: String? = null,
+        val input_audio: AudioInput? = null
+    ) {
+        companion object {
+            fun text(content: String): ContentPart {
+                return ContentPart(type = "text", text = content)
+            }
+
+            fun jpg(img: BufferedImage): ContentPart {
+                return ContentPart(type = "image_url", image_url = "data:image/jpeg;base64," + toBase64(img, "jpg"))
+            }
+
+            fun png(img: BufferedImage): ContentPart {
+                return ContentPart(type = "image_url", image_url = "data:image/png;base64," + toBase64(img, "png"))
+            }
+            fun audio(data: String, format: String): ContentPart {
+                return ContentPart(type = "input_audio", input_audio = AudioInput(data, format))
+            }
+
+
+            fun toBase64(image: BufferedImage, fmt: String): String {
+                val output = ByteArrayOutputStream()
+                ImageIO.write(image, fmt, output)
+                return Base64.getEncoder().encodeToString(output.toByteArray())
+            }
+        }
+    }
 
     data class ChatMessage(
         val role: Role? = null,

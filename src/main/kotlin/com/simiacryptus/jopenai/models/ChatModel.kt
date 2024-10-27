@@ -106,6 +106,7 @@ open class ChatModel(
             "LLaMA370bInstructAWS" to AWSModels.LLaMA370bInstructAWS,
             "AnthropicClaude3Opus" to AnthropicModels.Claude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicModels.Claude35Sonnet,
+            "AnthropicClaude35Sonnet_2" to AnthropicModels.Claude35Sonnet_2,
             "AnthropicClaude3Sonnet" to AnthropicModels.Claude3Sonnet,
             "AnthropicClaude3Haiku" to AnthropicModels.Claude3Haiku,
             "Gemini15ProPreview" to GoogleModels.Gemini15ProPreview,
