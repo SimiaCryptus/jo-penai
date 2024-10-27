@@ -1,10 +1,13 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.simiacryptus.util.DynamicEnum
 import com.simiacryptus.util.DynamicEnumDeserializer
 import com.simiacryptus.util.DynamicEnumSerializer
+private val logger: Logger = LoggerFactory.getLogger(APIProvider::class.java)
 
 
 @JsonDeserialize(using = APIProviderDeserializer::class)
@@ -21,6 +24,7 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
         val Mistral = APIProvider("Mistral", "https://api.mistral.ai/v1")
 
         init {
+            logger.info("Registering API providers")
             register(APIProvider::class.java, Google)
             register(APIProvider::class.java, OpenAI)
             register(APIProvider::class.java, Anthropic)
@@ -35,7 +39,10 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
         fun valueOf(name: String): APIProvider = valueOf(APIProvider::class.java, name)
 
         @JvmStatic
-        fun values(): Collection<APIProvider> = values(APIProvider::class.java)
+        fun values(): Collection<APIProvider> {
+            logger.debug("Retrieving all APIProvider values")
+            return values(APIProvider::class.java)
+        }
     }
 }
 

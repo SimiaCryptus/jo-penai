@@ -1,4 +1,5 @@
 package com.simiacryptus.jopenai.describe
+import org.slf4j.LoggerFactory
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
@@ -9,21 +10,26 @@ import kotlin.reflect.KTypeParameter
 import kotlin.reflect.full.memberFunctions
 
 object DescriptorUtil {
+    private val logger = LoggerFactory.getLogger(DescriptorUtil::class.java)
 
     fun getAllAnnotations(
         rawType: Class<in Nothing>,
         property: KProperty1<out Any, *>,
     ): List<Annotation> =
         property.annotations + (rawType.kotlin.constructors.firstOrNull()?.parameters?.find { x -> x.name == property.name }?.annotations
-            ?: listOf())
+            ?: listOf()).also {
+            logger.info("Collected annotations for property '${property.name}' in class '${rawType.name}': $it")
+        }
 
     val Type.isArray: Boolean
         get() {
+            logger.trace("Checking if type '$this' is an array")
             return this is Class<*> && this.isArray
         }
 
     val Type.componentType: Type?
         get() {
+            logger.trace("Getting component type for type '$this'")
             return when (this) {
                 is Class<*> -> if (this.isArray) this.componentType else null
                 is ParameterizedType -> this.actualTypeArguments.firstOrNull()
@@ -33,6 +39,7 @@ object DescriptorUtil {
 
 
     fun resolveMethodReturnType(concreteClass: KClass<*>, methodName: String): KType {
+        logger.info("Resolving return type for method '$methodName' in class '${concreteClass.simpleName}'")
         // Get the method from the class by name
         val method = concreteClass.memberFunctions.firstOrNull { it.name == methodName }
             ?: throw IllegalArgumentException("Method $methodName not found in class $concreteClass")
@@ -42,13 +49,16 @@ object DescriptorUtil {
 
         // If the return type is a type parameter, try to resolve it
         if (returnType.classifier is KTypeParameter) {
+            logger.info("Return type is a type parameter, attempting to resolve for method '$methodName'")
             returnType = resolveGenericType(concreteClass, returnType)
         }
+        logger.info("Resolved return type for method '$methodName': $returnType")
 
         return returnType
     }
 
     fun resolveGenericType(concreteClass: KClass<*>, kType: KType): KType {
+        logger.trace("Resolving generic type for '$kType' in class '${concreteClass.simpleName}'")
         val classifier = kType.classifier
 
         // Only proceed if the classifier is a type parameter
@@ -63,8 +73,10 @@ object DescriptorUtil {
                     }?.type
                 }
             // Return the found type argument, or the original type if not found
+            logger.info("Resolved type argument for '$kType': ${typeArgument ?: kType}")
             return typeArgument ?: kType
         }
+        logger.trace("No resolution needed for '$kType'")
 
         return kType
     }

@@ -1,4 +1,5 @@
 package com.simiacryptus.util
+import org.slf4j.LoggerFactory
 
 import java.nio.charset.Charset
 import java.util.*
@@ -9,9 +10,11 @@ import java.util.stream.Stream
 import kotlin.math.abs
 
 object StringUtil {
+    private val logger = LoggerFactory.getLogger(StringUtil::class.java)
 
     @JvmStatic
     fun stripPrefix(text: CharSequence, prefix: CharSequence): CharSequence {
+        logger.debug("stripPrefix called with text of length: {}, prefix of length: {}", text.length, prefix.length)
         val startsWith = text.toString().startsWith(prefix.toString())
         return if (startsWith) {
             text.toString().substring(prefix.length)
@@ -22,18 +25,21 @@ object StringUtil {
 
     @JvmStatic
     fun trimPrefix(text: CharSequence): CharSequence {
+        logger.debug("trimPrefix called with text of length: {}", text.length)
         val prefix = getWhitespacePrefix(text)
         return stripPrefix(text, prefix)
     }
 
     @JvmStatic
     fun trimSuffix(text: CharSequence): String {
+        logger.debug("trimSuffix called with text of length: {}", text.length)
         val suffix = getWhitespaceSuffix(text)
         return stripSuffix(text, suffix)
     }
 
     @JvmStatic
     fun stripSuffix(text: CharSequence, suffix: CharSequence): String {
+        logger.debug("stripSuffix called with text of length: {}, suffix of length: {}", text.length, suffix.length)
         val endsWith = text.toString().endsWith(suffix.toString())
         return if (endsWith) {
             text.toString().substring(0, text.length - suffix.length)
@@ -44,6 +50,7 @@ object StringUtil {
 
     @JvmStatic
     fun lineWrapping(description: CharSequence, width: Int): String {
+        logger.debug("lineWrapping called with description of length: {}, width: {}", description.length, width)
         val output = StringBuilder()
         val lines = description.toString().split("\n".toRegex()).dropLastWhile { it.isEmpty() }
             .toTypedArray()
@@ -68,6 +75,7 @@ object StringUtil {
 
     @JvmStatic
     private fun wrapSentence(line: CharSequence, width: Int, xPointer: AtomicInteger): String {
+        logger.debug("wrapSentence called with line of length: {}, width: {}", line.length, width)
         val sentenceBuffer = StringBuilder()
         val words = line.toString().split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         for (word in words) {
@@ -86,6 +94,7 @@ object StringUtil {
 
     @JvmStatic
     fun toString(ints: IntArray): CharSequence {
+        logger.debug("toString called with int array of size: {}", ints.size)
         val chars = CharArray(ints.size)
         for (i in ints.indices) {
             chars[i] = ints[i].toChar()
@@ -95,6 +104,7 @@ object StringUtil {
 
     @JvmStatic
     fun getWhitespacePrefix(vararg lines: CharSequence): CharSequence {
+        logger.debug("getWhitespacePrefix called with {} lines", lines.size)
         return Arrays.stream(lines)
             .map { l: CharSequence ->
                 toString(
@@ -111,6 +121,7 @@ object StringUtil {
 
     @JvmStatic
     fun getWhitespaceSuffix(vararg lines: CharSequence): String {
+        logger.debug("getWhitespaceSuffix called with {} lines", lines.size)
         return reverse(Arrays.stream(lines)
             .map { obj: CharSequence? -> reverse(obj!!) }
             .map { l: CharSequence ->
@@ -128,11 +139,13 @@ object StringUtil {
 
     @JvmStatic
     private fun reverse(l: CharSequence): CharSequence {
+        logger.debug("reverse called with CharSequence of length: {}", l.length)
         return StringBuffer(l).reverse().toString()
     }
 
     @JvmStatic
     fun trim(items: List<CharSequence>, max: Int, preserveHead: Boolean): List<CharSequence> {
+        logger.debug("trim called with {} items, max: {}, preserveHead: {}", items.size, max, preserveHead)
         var items = items
         items = ArrayList(items)
         val random = Random()
@@ -146,6 +159,7 @@ object StringUtil {
 
     @JvmStatic
     fun getPrefixForContext(text: String, idealLength: Int): CharSequence {
+        logger.debug("getPrefixForContext called with text of length: {}, idealLength: {}", text.length, idealLength)
         return getPrefixForContext(text, idealLength, ".", "\n", ",", ";")
     }
 
@@ -159,16 +173,19 @@ object StringUtil {
      */
     @JvmStatic
     fun getPrefixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence {
+        logger.debug("getPrefixForContext called with text of length: {}, idealLength: {}, delimiters: {}", text.length, idealLength, Arrays.toString(delimiters))
         return getSuffixForContext(text.reversed(), idealLength, *delimiters).reversed()
     }
 
     @JvmStatic
     fun getSuffixForContext(text: String, idealLength: Int): CharSequence {
+        logger.debug("getSuffixForContext called with text of length: {}, idealLength: {}", text.length, idealLength)
         return getSuffixForContext(text, idealLength, ".", "\n", ",", ";")
     }
 
     @JvmStatic
     fun restrictCharacterSet(text: String, charset: Charset): String {
+        logger.debug("restrictCharacterSet called with text of length: {}, charset: {}", text.length, charset)
         val encoder = charset.newEncoder()
         val sb = StringBuilder()
         text.toCharArray().filter(encoder::canEncode).forEach(sb::append)
@@ -187,6 +204,7 @@ object StringUtil {
      */
     @JvmStatic
     fun getSuffixForContext(text: String, idealLength: Int, vararg delimiters: CharSequence?): CharSequence {
+        logger.debug("getSuffixForContext called with text of length: {}, idealLength: {}, delimiters: {}", text.length, idealLength, Arrays.toString(delimiters))
         // Create a list of candidates by splitting the text by each of the delimiters
         val candidates = Stream.of(*delimiters).flatMap { d: CharSequence? ->
             // Create a string builder to store the split strings

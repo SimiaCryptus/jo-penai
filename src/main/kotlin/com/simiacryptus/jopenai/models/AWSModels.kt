@@ -1,6 +1,11 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.LoggerFactory
 
 object AWSModels {
+    private val logger = LoggerFactory.getLogger(AWSModels::class.java)
+    init {
+        logger.info("Initializing AWSModels with predefined chat models.")
+    }
 
     val AWSLLaMA31_405bChat = ChatModel(
         name = "AWSLLaMA31_405bChat",
@@ -203,4 +208,3 @@ object AWSModels {
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
 }
-

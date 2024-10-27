@@ -10,6 +10,8 @@ class PercentileLoudnessWindowBuffer(
     outputBuffer: Deque<ByteArray>,
     continueFn: () -> Boolean,
 ) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn) {
+    // Logger instance for PercentileLoudnessWindowBuffer class
+    private val log = LoggerFactory.getLogger(PercentileLoudnessWindowBuffer::class.java)
 
 
     // Required number of quiet windows
@@ -29,6 +31,11 @@ class PercentileLoudnessWindowBuffer(
 
     // List of consecutive quiet window percentiles
     private val quietWindow = ArrayList<Double>()
+
+    init {
+        log.info("PercentileLoudnessWindowBuffer initialized with quietWindowMax: {}, quietThreshold: {}, flushSeconds: {}, minSeconds: {}",
+            quietWindowMax, quietThreshold, flushSeconds, minSeconds)
+    }
 
     override fun shouldOutput(): Boolean {
         val quietPacket =
@@ -51,6 +58,7 @@ class PercentileLoudnessWindowBuffer(
             rmsHeap.add(loudness)
             // Sort the rmsHeap list
             rmsHeap.sort()
+            log.debug("Buffer size below minimum. Added percentile: {}, loudness: {}", percentile, loudness)
             // Continue to the next iteration of the loop
             return false
         }
@@ -61,24 +69,21 @@ class PercentileLoudnessWindowBuffer(
         // If the percentile is less than the quiet threshold, add the percentile to the quiet window
         if (percentile < quietThreshold) {
             quietWindow.add(percentile)
+            log.debug("Percentile below threshold. Added to quiet window: {}", percentile)
             // Otherwise, clear the quiet window
         } else {
             quietWindow.clear()
+            log.debug("Percentile above threshold. Cleared quiet window")
         }
         // Log the RMS value, percentile, and quiet windows
-        log.debug(
-            "Loudness: %.3f, percentile: %.3f, quiet windows=[%s] (%d samples)".format(
-                loudness,
-                percentile,
-                quietWindow.joinToString(", ") { "%.3f".format(it) },
-                quietPacket.samples.size
-            )
-        )
+        log.debug("Loudness: {}, percentile: {}, quiet windows: [{}] ({} samples)",
+                  loudness, percentile, quietWindow.joinToString(", "), quietPacket.samples.size)
         // Calculate the maximum buffer size
         val maxBufferSize = AudioRecorder.audioFormat.frameRate * AudioRecorder.audioFormat.frameSize * flushSeconds
         // If the buffer size is greater than the maximum buffer size or the quiet window size is greater than or equal to the quiet window max,
         // add the converted raw to wav byte array to the output buffer, reset the buffer, clear the rmsHeap list, and clear the quiet window
         return if (sum > maxBufferSize || quietWindow.size >= quietWindowMax) {
+            log.info("Buffer size exceeded maximum or quiet window max reached. Flushing buffer")
             // Clear the rmsHeap list
             rmsHeap.clear()
             // Clear the quiet window
@@ -90,13 +95,10 @@ class PercentileLoudnessWindowBuffer(
             rmsHeap.add(loudness)
             // Sort the rmsHeap list
             rmsHeap.sort()
+            log.debug("Buffer size within limits. Added loudness: {}", loudness)
             false
         }
     }
 
-    companion object {
-        // Create a Logger instance for the AudioPump class
-        private val log = LoggerFactory.getLogger(PercentileLoudnessWindowBuffer::class.java)
-    }
 
 }

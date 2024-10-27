@@ -20,6 +20,10 @@ open class YamlDescriber : TypeDescriber() {
     companion object {
         val log = LoggerFactory.getLogger(YamlDescriber::class.java)
     }
+    init {
+        log.info("YamlDescriber initialized with markupLanguage: $markupLanguage")
+    }
+
 
     override val markupLanguage: String
         get() = "yaml"
@@ -29,22 +33,25 @@ open class YamlDescriber : TypeDescriber() {
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
+        log.debug("Entering describe method with rawType: ${rawType.name}, stackMax: $stackMax")
+        log.info("Starting description for type: ${rawType.name} with stackMax: $stackMax")
         if (!describedTypes.add(rawType.name) && rawType.simpleName.lowercase() !in primitives) {
             log.debug("Preventing recursion for type: ${rawType.name}")
             return "..."
         } else if (rawType.simpleName.lowercase() in primitives) {
             return "type: ${rawType.simpleName.lowercase()}"
         }
-        log.debug("Describing type: ${rawType.name} with stackMax: $stackMax")
+        log.info("Describing type: ${rawType.name} with stackMax: $stackMax")
         if (isAbbreviated(rawType) || stackMax <= 0) return """
-            |type: object
-            |class: ${rawType.name}
+ type: object
+ class: ${rawType.name}
             """.trimMargin()
         if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
+            log.debug("Type is an enumeration: ${rawType.name}")
             return """
-                |type: enumeration
-                |values:
-                |${getEnumValues(rawType).joinToString("\n") { "  - $it" }}
+ type: enumeration
+ values:
+ ${getEnumValues(rawType).joinToString("\n") { "  - $it" }}
                 """.trimMargin()
         }
         val propertiesYaml = if (rawType.isKotlinClass()) {
@@ -53,14 +60,14 @@ open class YamlDescriber : TypeDescriber() {
                     getAllAnnotations(rawType, it).filterIsInstance<Description>().firstOrNull()
                 if (description != null) {
                     """
-                    |${it.name}:
-                    |  description: "${description.value.trim().replace("\"", "\\\"")}"
-                    |  ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ ${it.name}:
+   description: "${description.value.trim().replace("\"", "\\\"")}"
+   ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
                 } else {
                     """
-                    |${it.name}:
-                    |  ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ ${it.name}:
+   ${toYaml(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
                 }
             }.toTypedArray()
@@ -69,14 +76,14 @@ open class YamlDescriber : TypeDescriber() {
                 val description =
                     it.annotations.find { x -> x is Description } as? Description
                 return@map if (description != null) """
-                    |${it.name}:
-                    |  description: ${description.value.trim()}
-                    |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ ${it.name}:
+   description: ${description.value.trim()}
+   ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimIndent()
                 else
                     """
-                    |${it.name}:
-                    |  ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ ${it.name}:
+   ${toYaml(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
                     """.trimMargin().trim()
             }.toTypedArray()
         }
@@ -87,8 +94,8 @@ open class YamlDescriber : TypeDescriber() {
                         && !it.isOperator && !it.isInfix && !it.isAbstract
             }.map {
                 """
-                |${it.name}:
-                |  ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
+ ${it.name}:
+   ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
                 """.trimMargin().trim()
             }.toTypedArray()
         } else {
@@ -101,8 +108,8 @@ open class YamlDescriber : TypeDescriber() {
                     }
                     .map {
                         """
-                        |${it.name}:
-                        |  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
+ ${it.name}:
+   ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
                         """.trimMargin().trim()
                     }.toTypedArray()
             } else {
@@ -111,28 +118,28 @@ open class YamlDescriber : TypeDescriber() {
         }).toMutableList()
         if (!coverMethods) methodsYaml.clear()
         if (propertiesYaml.isEmpty() && methodsYaml.isEmpty()) return """
-             |type: object
-             |class: "${rawType.name}"
+ type: object
+ class: "${rawType.name}"
             """.trimMargin()
         if (propertiesYaml.isEmpty()) return """
-            |type: object
-            |class: ${rawType.name}
-            |methods:
-            |  ${methodsYaml.joinToString("\n").replace("\n", "\n  ")}
+ type: object
+ class: ${rawType.name}
+ methods:
+   ${methodsYaml.joinToString("\n").replace("\n", "\n  ")}
             """.trimMargin()
         if (methodsYaml.isEmpty()) return """
-            |type: object
-            |class: ${rawType.name}
-            |properties:
-            |  ${propertiesYaml.joinToString("\n").replace("\n", "\n  ")}
+ type: object
+ class: ${rawType.name}
+ properties:
+   ${propertiesYaml.joinToString("\n").replace("\n", "\n  ")}
             """.trimMargin()
         return """
-            |type: object
-            |class: ${rawType.name}
-            |properties:
-            |  ${propertiesYaml.joinToString("\n").replace("\n", "\n  ")}
-            |methods:
-            |  ${methodsYaml.joinToString("\n").replace("\n", "\n  ")}
+ type: object
+ class: ${rawType.name}
+ properties:
+   ${propertiesYaml.joinToString("\n").replace("\n", "\n  ")}
+ methods:
+   ${methodsYaml.joinToString("\n").replace("\n", "\n  ")}
             """.trimMargin()
     }
 
@@ -151,6 +158,8 @@ open class YamlDescriber : TypeDescriber() {
     )
 
     override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
+        log.debug("Describing method: ${self.name} in class: ${clazz?.name}")
+        log.info("Describing method: ${self.name} in class: ${clazz?.name} with stackMax: $stackMax")
         if (stackMax <= 0) return "..."
         if (!coverMethods) return ""
         // If implClass is a Kotlin class, resolve the KFunction and call the other describe method
@@ -164,10 +173,10 @@ open class YamlDescriber : TypeDescriber() {
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
         val description = self.getAnnotation(Description::class.java)?.value?.trim()?.replace("\"", "\\\"")
         val responseYaml = """
-            |responses:
-            |  application/json:
-            |    schema:
-            |      ${returnTypeYaml.replace("\n", "\n      ")}
+ responses:
+   application/json:
+     schema:
+       ${returnTypeYaml.replace("\n", "\n      ")}
             """.trimMargin().trim().filterEmptyLines()
         val buffer = StringBuffer()
         buffer.append("operationId: ${self.name}\n")
@@ -182,14 +191,14 @@ open class YamlDescriber : TypeDescriber() {
     }
 
     private fun toYaml(self: Parameter, stackMax: Int): String {
+        log.debug("Converting parameter to YAML: ${self.name}")
         if (stackMax <= 0) return "..."
         val description = self.getAnnotation(Description::class.java)?.value?.trim()
             ?.let { "description: " + it.replace("\n", "\\n") } ?: ""
         return """
-            |- name: ${self.name}
-            |  ${description}
-            |  ${toYaml(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-            |""".trimMargin().trim().filterEmptyLines()
+   ${description}
+   ${toYaml(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+ """.trimMargin().trim().filterEmptyLines()
     }
 
     private fun describe(
@@ -199,6 +208,8 @@ open class YamlDescriber : TypeDescriber() {
         includeOperationID: Boolean = true,
         describedTypes: MutableSet<String>
     ): String {
+        log.debug("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName}")
+        log.info("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName} with stackMax: $stackMax")
         val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
         if (describedTypes.contains(functionTypeRepresentation) && functionTypeRepresentation !in primitives) return "..."
         describedTypes.add(functionTypeRepresentation)
@@ -211,14 +222,14 @@ open class YamlDescriber : TypeDescriber() {
             ?.let { "description: ${it.value.trim().replace("\n", "\\n")}" } ?: ""
         val operationID = if (includeOperationID) "operationId: ${self.name}" else ""
         return """
-          |${operationID}
-          |${description}
-          |parameters:
-          |  ${parameterYaml.replace("\n", "\n  ")}
-          |responses:
-          |  application/json:
-          |    schema:
-          |      ${returnTypeYaml.replace("\n", "\n      ")}
+ ${operationID}
+ ${description}
+ parameters:
+   ${parameterYaml.replace("\n", "\n  ")}
+ responses:
+   application/json:
+     schema:
+       ${returnTypeYaml.replace("\n", "\n      ")}
           """.trimMargin().filterEmptyLines()
     }
 
@@ -228,6 +239,7 @@ open class YamlDescriber : TypeDescriber() {
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
+        log.debug("Converting KParameter to YAML: ${self.name}")
         val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
         if (describedTypes.contains(parameterTypeRepresentation) && parameterTypeRepresentation !in primitives) return "..."
         describedTypes.add(parameterTypeRepresentation)
@@ -237,84 +249,85 @@ open class YamlDescriber : TypeDescriber() {
             ?.let { "description: " + it.replace("\n", "\\n") } ?: ""
         val defaultValueInfo = if (self.isOptional) "required: false" else "required: true"
         return """
-          |- name: ${self.name}
-          |  ${description}
-          |  ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
-          |  ${defaultValueInfo}
-          |""".trimMargin().trim().filterEmptyLines()
+   ${description}
+   ${toYaml(kType, stackMax - 1).replace("\n", "\n  ")}
+   ${defaultValueInfo}
+ """.trimMargin().trim().filterEmptyLines()
     }
 
 
     private fun toYaml(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
+        log.debug("Converting Type to YAML: ${self.typeName}")
         if (describedTypes.contains(self.toString())) return "..."
         describedTypes.add(self.toString())
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.')
         return if ((isAbbreviated(self) || stackMax <= 0) && typeName !in primitives) """
-          |type: object
-          |class: ${self.typeName}
+ type: object
+ class: ${self.typeName}
           """.trimMargin().filterEmptyLines()
         else if (self is Class<*> && (self.isEnum || DynamicEnum::class.java.isAssignableFrom(self))) {
             val enumConstants = getEnumValues(self).joinToString("\n") { "  - $it" }
             """
-                |type: enum
-                |values:
-                |$enumConstants
+ type: enum
+ values:
+ $enumConstants
             """.trimMargin().filterEmptyLines()
         } else if (typeName in primitives) {
             "type: $typeName"
         } else if (self is Class<*> && (self.isEnum || DynamicEnum::class.java.isAssignableFrom(self))) {
             val enumConstants = getEnumValues(self).joinToString("\n") { "  - $it" }
             """
-                |type: enum
-                |values:
-                |$enumConstants
+ type: enum
+ values:
+ $enumConstants
             """.trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-              |type: array
-              |items:
-              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-              |""".trimMargin().filterEmptyLines()
+ type: array
+ items:
+   ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ """.trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-              |type: map
-              |keys:
-              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-              |values:
-              |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, describedTypes).replace("\n", "\n  ")}
-              |""".trimMargin().filterEmptyLines()
+ type: map
+ keys:
+   ${toYaml(self.actualTypeArguments[0], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ values:
+   ${toYaml(self.actualTypeArguments[1], stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ """.trimMargin().filterEmptyLines()
         } else if (self.isArray) {
             """
-              |type: array
-              |items:
-              |  ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
-              |""".trimMargin().filterEmptyLines()
+ type: array
+ items:
+   ${toYaml(self.componentType!!, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+ """.trimMargin().filterEmptyLines()
         } else {
             describe(TypeToken.of(self).rawType, stackMax, describedTypes)
         }
     }
 
     private fun toYaml(self: KType, stackMax: Int): String {
+        log.debug("Converting KType to YAML: ${self}")
         if (isAbbreviated(self.javaType) || stackMax <= 0) return """
-            |type: object
-            |class: "$self"
+ type: object
+ class: "$self"
             """.trimMargin().filterEmptyLines()
         val typeName = self.toString().substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return if (typeName in primitives) {
             "type: $typeName"
         } else if (self is ParameterizedType && List::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-              |type: array
-              |items:
-              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-              |""".trimMargin().filterEmptyLines()
+ type: array
+ items:
+   ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+ """.trimMargin().filterEmptyLines()
         } else if (self is ParameterizedType && Map::class.java.isAssignableFrom(self.rawType as Class<*>)) {
             """
-              |type: map
-              |keys:
-              |  ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
-              |values:  
-              |  ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+ type: map
+ keys:
+   ${toYaml(self.actualTypeArguments[0], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+ values:  
+   ${toYaml(self.actualTypeArguments[1], stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
              """.trimMargin().filterEmptyLines()
         } else if (self.classifier is KClass<*> && ((self.classifier as KClass<*>).isSubclassOf(Enum::class) || (self.classifier as KClass<*>).isSubclassOf(
                 DynamicEnum::class
@@ -322,15 +335,15 @@ open class YamlDescriber : TypeDescriber() {
         ) {
             val enumConstants = getEnumValues((self.classifier as KClass<*>).java).joinToString("\n") { "  - $it" }
             """
-                |type: enum
-                |values:
-                |$enumConstants
+ type: enum
+ values:
+ $enumConstants
             """.trimMargin().filterEmptyLines()
         } else if (self.javaType.isArray) {
             """
-              |type: array
-              |items:
-              |  ${toYaml(self.javaType.componentType!!, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+ type: array
+ items:
+   ${toYaml(self.javaType.componentType!!, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
             """.trimMargin().filterEmptyLines()
         } else {
             describe(TypeToken.of(self.javaType).rawType, stackMax)
@@ -338,6 +351,7 @@ open class YamlDescriber : TypeDescriber() {
     }
 
     open fun getEnumValues(clazz: Class<*>): List<String> {
+        log.debug("Getting enum values for class: ${clazz.name}")
         return when {
             clazz.isEnum -> clazz.enumConstants.map { it.toString() }
             DynamicEnum::class.java.isAssignableFrom(clazz) -> {

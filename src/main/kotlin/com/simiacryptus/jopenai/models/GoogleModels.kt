@@ -1,6 +1,9 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.LoggerFactory
 
 object GoogleModels {
+    private val logger = LoggerFactory.getLogger(GoogleModels::class.java)
+
 
     val Gemini15ProPreview = ChatModel(
         name = "Gemini15ProPreview",

@@ -1,6 +1,12 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.LoggerFactory
 
 object MistralModels {
+    private val logger = LoggerFactory.getLogger(MistralModels::class.java)
+    init {
+        logger.info("Initializing MistralModels object")
+    }
+
 
     val Mistral7B = ChatModel(
         name = "Mistral7B",
@@ -10,6 +16,13 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    private fun logModelInitialization(model: ChatModel) {
+        logger.info("Initialized ${model.name} model with max tokens: ${model.maxTotalTokens}")
+    }
+    init {
+        logger.info("Initialized Mistral7B model with max tokens: ${Mistral7B.maxTotalTokens}")
+        logModelInitialization(Mistral7B)
+    }
     val Mixtral8x7B = ChatModel(
         name = "Mixtral8x7B",
         modelName = "open-mixtral-8x7b",
@@ -18,6 +31,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(Mixtral8x7B)
+    }
     val Mixtral8x22B = ChatModel(
         name = "Mixtral8x22B",
         modelName = "open-mixtral-8x22b",
@@ -26,6 +42,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(Mixtral8x22B)
+    }
     val MistralSmall = ChatModel(
         name = "MistralSmall",
         modelName = "mistral-small-latest",
@@ -34,6 +53,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(MistralSmall)
+    }
     val MistralMedium = ChatModel(
         name = "MistralMedium",
         modelName = "mistral-medium-latest",
@@ -42,6 +64,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(MistralMedium)
+    }
     val MistralLarge = ChatModel(
         name = "MistralLarge",
         modelName = "mistral-large-latest",
@@ -50,6 +75,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(MistralLarge)
+    }
     val MistralNemo = ChatModel(
         name = "MistralNemo",
         modelName = "open-mistral-nemo",
@@ -58,6 +86,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(MistralNemo)
+    }
     val Codestral = ChatModel(
         name = "Codestral",
         modelName = "codestral-latest",
@@ -66,6 +97,9 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(Codestral)
+    }
     val CodestralMamba = ChatModel(
         name = "CodestralMamba",
         modelName = "open-codestral-mamba",
@@ -74,5 +108,8 @@ object MistralModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    init {
+        logModelInitialization(CodestralMamba)
+    }
 
 }

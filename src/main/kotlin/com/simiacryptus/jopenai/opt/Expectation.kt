@@ -24,8 +24,8 @@ abstract class Expectation {
             val distance = metric.distance(contentEmbedding, promptEmbedding)
             log.info(
                 """Distance = $distance
-                |  from "${example.replace("\n", "\\n")}" 
-                |  to "${promptStr.replace("\n", "\\n")}"
+   from "${example.replace("\n", "\\n")}" 
+   to "${promptStr.replace("\n", "\\n")}"
                 """.trimMargin().trim()
             )
             return -distance
@@ -53,7 +53,7 @@ abstract class Expectation {
 
         private fun _matches(response: ChatResponse): Boolean {
             if (pattern.containsMatchIn(response.choices.first().message?.content ?: "")) return true
-            log.info(
+            log.error(
                 """Failed to match ${
                     pattern.pattern.replace("\n", "\\n")
                 } in ${
