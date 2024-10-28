@@ -32,32 +32,18 @@ class LookbackLoudnessWindowBuffer(
 
         val output =
             percentileRMS < rmsPercentileThreshold && percentileIEC61672 < iec61672PercentileThreshold && outputTime > minimumOutputTimeSeconds
-        if (output) {
-            log.info(
+        log.info(
                 """
-                |Packet RMS: ${thisPacket.rms}
-                |Recent RMS: ${rmsStats}
-                |Percentile RMS: ${percentileRMS}
-                |Recent IEC61672: ${iec61672Stats}
-                |Packet IEC61672: ${thisPacket.iec61672}
-                |Percentile IEC61672: ${percentileIEC61672}
-                |Output Time: ${outputTime}
-                """.trimMargin().trim()
-            )
-        } else {
-            if (log.isDebugEnabled) log.debug(
-                """
-                |Packet RMS: ${thisPacket.rms}
-                |Recent RMS: ${rmsStats}
-                |Percentile RMS: ${percentileRMS}
-                |Recent IEC61672: ${iec61672Stats}
-                |Packet IEC61672: ${thisPacket.iec61672}
-                |Percentile IEC61672: ${percentileIEC61672}
-                |Output Time: ${outputTime}
+ Packet RMS: ${thisPacket.rms}
+ Recent RMS: ${rmsStats}
+ Percentile RMS: ${percentileRMS}
+ Recent IEC61672: ${iec61672Stats}
+ Packet IEC61672: ${thisPacket.iec61672}
+ Percentile IEC61672: ${percentileIEC61672}
+ Output Time: ${outputTime}
                 """.trimMargin().trim()
             )
 
-        }
         return output
     }
 

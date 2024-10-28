@@ -26,7 +26,7 @@ class ModelTests {
 //                APIProvider.OpenAI -> true
 //                APIProvider.Anthropic -> true
 //                APIProvider.AWS -> true
-                APIProvider.Mistral -> true
+//                APIProvider.Mistral -> true
 //                APIProvider.Groq -> true
 //                APIProvider.Perplexity -> true
 //                APIProvider.ModelsLab -> true

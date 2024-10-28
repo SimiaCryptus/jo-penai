@@ -1,4 +1,5 @@
 package com.simiacryptus.jopenai.describe
+import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.module.kotlin.isKotlinClass
 import com.google.common.reflect.TypeToken
@@ -16,12 +17,18 @@ import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaType
 
 open class ApiFunctionDescriber : TypeDescriber() {
+    private val logger = LoggerFactory.getLogger(ApiFunctionDescriber::class.java)
     override val markupLanguage: String get() = ""
+    init {
+        logger.info("ApiFunctionDescriber initialized")
+    }
+
 
     open val includeMethods: Boolean = true
     private val truncation = "..."
 
     override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
+        logger.info("Describing method: ${self.name}, stackMax: $stackMax")
         if (stackMax <= 0) return truncation
         val parameters = self.parameters.joinToString("\n") {
             "  ${describe(it, stackMax - 1).replace("\n", "\n  ")}"
@@ -31,6 +38,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
     }
 
     override fun describe(rawType: Class<in Nothing>, stackMax: Int, describedTypes: MutableSet<String>): String {
+        logger.info("Describing class: ${rawType.simpleName}, stackMax: $stackMax")
         if (isAbbreviated(rawType)) return rawType.simpleName
         if (stackMax <= 0) return truncation
         return if (!rawType.isKotlinClass()) {
@@ -41,11 +49,13 @@ open class ApiFunctionDescriber : TypeDescriber() {
     }
 
     fun describe(self: Parameter, stackMax: Int): String {
+        logger.info("Describing parameter: ${self.name}, stackMax: $stackMax")
         if (stackMax <= 0) return truncation
         return "${self.name}: ${toApiFunctionFormat(self.parameterizedType, stackMax - 1, mutableSetOf())}"
     }
 
     private fun toApiFunctionFormat(self: Type, stackMax: Int = 10, describedTypes: MutableSet<String>): String {
+        logger.info("Converting to API function format: ${self.typeName}, stackMax: $stackMax")
         if (stackMax <= 0) return truncation
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         return when {
@@ -58,6 +68,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
     override val methodBlacklist = setOf("equals", "hashCode", "copy", "toString", "valueOf")
 
     private fun describeKotlinClass(kClass: KClass<out Any>, stackMax: Int): String {
+        logger.info("Describing Kotlin class: ${kClass.simpleName}, stackMax: $stackMax")
         val properties = try {
             kClass.memberProperties.filter { it.visibility == KVisibility.PUBLIC }
                 .joinToString("\n") {
@@ -69,6 +80,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
                     }"
                 }
         } catch (e: Throwable) {
+            logger.warn("Error describing Kotlin class properties", e)
             ""
         }
         val methods = try {
@@ -92,6 +104,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
                 })"
             }
         } catch (e: Throwable) {
+            logger.warn("Error describing Kotlin class methods", e)
             ""
         }
         if (kClass.isData) {
@@ -104,6 +117,7 @@ open class ApiFunctionDescriber : TypeDescriber() {
     }
 
     private fun describeJavaClass(rawType: Class<in Nothing>, stackMax: Int): String {
+        logger.info("Describing Java class: ${rawType.simpleName}, stackMax: $stackMax")
         val typeName = rawType.typeName.substringAfterLast('.').replace('$', '.').lowercase(Locale.getDefault())
         if (typeName in primitives) return typeName
         if (!includeMethods) return rawType.simpleName

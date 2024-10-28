@@ -26,7 +26,7 @@ abstract class GPTProxyBase<T : Any>(
     private var maxRetries: Int = 5,
 ) {
     init {
-        log.debug("Created ${clazz.simpleName} proxy")
+        log.info("Created proxy for class: ${clazz.simpleName}")
     }
 
     open val metrics: Map<String, Any>
@@ -43,6 +43,7 @@ abstract class GPTProxyBase<T : Any>(
 
     fun create() = Proxy.newProxyInstance(clazz.classLoader, arrayOf(clazz)) { _, method, args ->
         if (method.name == "toString") return@newProxyInstance clazz.simpleName
+        log.debug("Invoking method: ${method.name} with arguments: ${args?.joinToString()}")
         requestCounters.computeIfAbsent(method.name) { AtomicInteger(0) }.incrementAndGet()
         val type: Type = if (clazz.isKotlinClass()) {
             val returnType = resolveMethodReturnType(clazz.kotlin, method.name)
@@ -82,6 +83,7 @@ abstract class GPTProxyBase<T : Any>(
             requestCounter.incrementAndGet()
             for (retry in 0 until maxRetries) {
                 attemptCounter.incrementAndGet()
+                log.debug("Attempt $retry for method: ${method.name}")
                 if (retry > 0) {
                     // Increase temperature on retry; this encourages the model to return a different result
                     temperature =
@@ -95,20 +97,22 @@ abstract class GPTProxyBase<T : Any>(
                         if (obj is ValidatedObject) {
                             val validate = obj.validate()
                             if (null != validate) {
-                                log.warn("Invalid response ($validate): $jsonResult")
+                                log.error("Validation failed for method: ${method.name}, reason: $validate")
                                 lastException = ValidatedObject.ValidationError(validate, obj)
                                 continue
                             }
                         }
                     }
+                    log.info("Successfully parsed response for method: ${method.name}")
                     return@newProxyInstance obj
                 } catch (e: Exception) {
-                    log.warn("Failed to parse response: $jsonResult", e)
+                    log.error("Failed to parse response for method: ${method.name}, response: $jsonResult", e)
                     lastException = e
-                    log.info("Retry $retry of $maxRetries")
+                    log.debug("Retry $retry of $maxRetries for method: ${method.name}")
                 }
             }
-            throw lastException ?: RuntimeException("Failed to parse response")
+            log.error("Exhausted retries for method: ${method.name}, throwing exception")
+            throw lastException ?: RuntimeException("Failed to parse response for method: ${method.name}")
         } finally {
             temperature = originalTemp
         }
@@ -225,4 +229,3 @@ abstract class GPTProxyBase<T : Any>(
     }
 
 }
-

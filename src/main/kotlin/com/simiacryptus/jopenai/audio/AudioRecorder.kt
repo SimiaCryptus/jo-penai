@@ -17,7 +17,7 @@ class AudioRecorder(
     fun run() {
         val targetDataLine = openMic()
         try {
-            log.info("Audio recording started")
+            log.info("Audio recording started with packet length: {} bytes", packetLength)
             val buffer = ByteArray(packetLength)
             val circularBuffer = CircularByteBuffer(packetLength * 2)
             while (continueFn()) {
@@ -26,20 +26,23 @@ class AudioRecorder(
                     val endTime = (System.currentTimeMillis() + secondsPerPacket * 1000).toLong()
                     while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
                         bytesRead = targetDataLine.read(buffer, 0, buffer.size)
+                        log.debug("Read {} bytes from microphone", bytesRead)
                         circularBuffer.add(buffer, 0, bytesRead)
                         while (circularBuffer.currentNumberOfBytes >= packetLength) {
                             val array = ByteArray(packetLength)
                             circularBuffer.read(array, 0, packetLength)
                             audioBuffer.add(array)
+                            log.debug("Added packet to audio buffer, buffer size: {}", audioBuffer.size)
                         }
                     }
                 } catch (e: Exception) {
-                    e.printStackTrace()
+                    log.error("Error during audio recording", e)
                 }
             }
-            log.info("Audio recording stopped")
+            log.info("Audio recording stopped, final buffer size: {}", audioBuffer.size)
         } finally {
             targetDataLine.close()
+            log.info("Microphone line closed")
         }
     }
 
@@ -52,6 +55,7 @@ class AudioRecorder(
             val targetDataLine = AudioSystem.getTargetDataLine(audioFormat)
             targetDataLine.open(audioFormat)
             targetDataLine.start()
+            log.info("Microphone line opened with format: {}", audioFormat)
             return targetDataLine
         }
 

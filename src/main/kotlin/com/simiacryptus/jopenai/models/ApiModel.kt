@@ -1,11 +1,19 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.databind.node.ObjectNode
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.*
+import javax.imageio.ImageIO
 
 @Suppress("PropertyName", "SpellCheckingInspection")
 interface ApiModel {
+    data class AudioInput(
+        val data: String,
+        val format: String
+    )
 
     data class ApiError(
         val message: String? = null,
@@ -21,7 +29,9 @@ interface ApiModel {
         val top_logprobs: List<ObjectNode> = ArrayList(),
         val text_offset: IntArray = IntArray(0),
     ) {
+        private val logger = LoggerFactory.getLogger(LogProbs::class.java)
         override fun equals(other: Any?): Boolean {
+            logger.info("Comparing LogProbs objects")
             if (this === other) return true
             if (javaClass != other?.javaClass) return false
             other as LogProbs
@@ -33,6 +43,7 @@ interface ApiModel {
         }
 
         override fun hashCode(): Int {
+            logger.info("Calculating hashCode for LogProbs")
             var result = tokens.hashCode()
             result = 31 * result + token_logprobs.contentHashCode()
             result = 31 * result + top_logprobs.hashCode()
@@ -110,6 +121,7 @@ interface ApiModel {
         val no_speech_prob: Double? = 0.0,
         val transient: Boolean? = false
     ) {
+        private val logger = LoggerFactory.getLogger(TranscriptionPacket::class.java)
         override fun equals(other: Any?) = when {
             this === other -> true
             javaClass != other?.javaClass -> false
@@ -139,6 +151,7 @@ interface ApiModel {
         }
 
         override fun hashCode(): Int {
+            logger.info("Calculating hashCode for TranscriptionPacket")
             var result = id ?: 0
             result = 31 * result + (seek ?: 0)
             result = 31 * result + (start?.hashCode() ?: 0)
@@ -174,6 +187,8 @@ interface ApiModel {
         val functions: List<RequestFunction>? = null,
         val store: Boolean? = null,
         val metadata: Map<String, Any?>? = null,
+        val modalities: List<String>? = null,
+        val audio: Map<String, String>? = null
     )
 
     data class GroqChatRequest(
@@ -203,18 +218,49 @@ interface ApiModel {
         val usage: Usage? = null,
     )
 
-
     data class ChatChoice(
         val message: ChatMessageResponse? = null,
         val index: Int = 0,
         val finish_reason: String? = null,
     )
 
+
     data class ContentPart(
         val type: String,
         val text: String? = null,
-        val image_url: String? = null
-    )
+        val image_url: String? = null,
+        val input_audio: AudioInput? = null
+    ) {
+        companion object {
+            private val logger = LoggerFactory.getLogger(ContentPart::class.java)
+            fun text(content: String): ContentPart {
+                logger.info("Creating text ContentPart")
+                return ContentPart(type = "text", text = content)
+            }
+
+            fun jpg(img: BufferedImage): ContentPart {
+                logger.info("Creating jpg ContentPart")
+                return ContentPart(type = "image_url", image_url = "data:image/jpeg;base64," + toBase64(img, "jpg"))
+            }
+
+            fun png(img: BufferedImage): ContentPart {
+                logger.info("Creating png ContentPart")
+                return ContentPart(type = "image_url", image_url = "data:image/png;base64," + toBase64(img, "png"))
+            }
+            fun audio(data: String, format: String): ContentPart {
+                logger.info("Creating audio ContentPart")
+                return ContentPart(type = "input_audio", input_audio = AudioInput(data, format))
+            }
+
+
+            fun toBase64(image: BufferedImage, fmt: String): String {
+                logger.info("Converting image to Base64")
+                val output = ByteArrayOutputStream()
+                ImageIO.write(image, fmt, output)
+                return Base64.getEncoder().encodeToString(output.toByteArray())
+            }
+        }
+    }
 
     data class ChatMessage(
         val role: Role? = null,
@@ -282,7 +328,9 @@ interface ApiModel {
         val embedding: DoubleArray? = null,
         val index: Int? = null
     ) {
+        private val logger = LoggerFactory.getLogger(EmbeddingData::class.java)
         override fun equals(other: Any?): Boolean {
+            logger.info("Comparing EmbeddingData objects")
             when {
                 this === other -> return true
                 javaClass != other?.javaClass -> return false
@@ -306,6 +354,7 @@ interface ApiModel {
         }
 
         override fun hashCode(): Int {
+            logger.info("Calculating hashCode for EmbeddingData")
             var result = `object`?.hashCode() ?: 0
             result = 31 * result + (embedding?.contentHashCode() ?: 0)
             result = 31 * result + (index ?: 0)

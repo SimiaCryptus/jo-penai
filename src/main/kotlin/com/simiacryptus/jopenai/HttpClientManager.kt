@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.event.Level
 import java.io.BufferedOutputStream
 import java.io.IOException
+import org.slf4j.Logger
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.*
@@ -33,6 +34,7 @@ open class HttpClientManager(
 ) : API() {
 
     companion object {
+        private val logger: Logger = LoggerFactory.getLogger(HttpClientManager::class.java)
 
         val scheduledPool: ListeningScheduledExecutorService =
             MoreExecutors.listeningDecorator(
@@ -64,7 +66,6 @@ open class HttpClientManager(
             .setDefaultHeaders(listOf(org.apache.hc.core5.http.message.BasicHeader(HttpHeaders.USER_AGENT, userAgent)))
             .build()
 
-        private val log = LoggerFactory.getLogger(HttpClientManager::class.java)
         val startTime by lazy { System.currentTimeMillis() }
 
         fun modelMaxException(e: Throwable?): ModelMaxException? = when {
@@ -145,7 +146,7 @@ open class HttpClientManager(
                 this.log(Level.DEBUG, "Request failed; retrying ($i/$retryCount): " + exception.message)
                 Thread.sleep(sleepPeriod)
                 lastException = exception
-            }
+            } 
         }
         throw lastException!!
     }
@@ -179,7 +180,7 @@ open class HttpClientManager(
         val start = Date()
         val cancellationFuture = scheduledPool.schedule({
             log(
-                Level.DEBUG,
+                Level.WARN,
                 "Request timed out after $duration at ${Date()} (started $start); closing client for thread $thread"
             )
             thread.interrupt()
@@ -198,7 +199,7 @@ open class HttpClientManager(
         val start = Date()
         try {
             return fn()
-        } finally {
+        } finally { 
             log(Level.DEBUG, "Request completed in ${Date().time - start.time}ms")
         }
     }
@@ -222,12 +223,12 @@ open class HttpClientManager(
             stream.flush()
         }
         when (level) {
-            Level.ERROR -> log.error(message)
-            Level.WARN -> log.warn(message)
-            Level.INFO -> log.info(message)
-            Level.DEBUG -> log.debug(message)
-            Level.TRACE -> log.debug(message)
-            else -> log.debug(message)
+            Level.ERROR -> logger.error(message)
+            Level.WARN -> logger.warn(message)
+            Level.INFO -> logger.info(message)
+            Level.DEBUG -> logger.debug(message)
+            Level.TRACE -> logger.trace(message)
+            else -> logger.debug(message)
         }
     }
 

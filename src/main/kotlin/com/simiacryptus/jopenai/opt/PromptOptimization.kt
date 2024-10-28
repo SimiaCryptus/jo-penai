@@ -19,7 +19,7 @@ open class PromptOptimization(
     val chatClient: ChatClient,
     val model: ChatModel,
     private val mutationRate: Double = 0.5,
-    private val mutatonTypes: Map<String, Double> = mapOf(
+    private val mutationTypes: Map<String, Double> = mapOf(
         "Rephrase" to 1.0,
         "Randomize" to 1.0,
         "Summarize" to 1.0,
@@ -48,16 +48,18 @@ open class PromptOptimization(
                     evaluate(prompt, testCase)
                 }.average()
             }
-            scores.sortedByDescending { it.second }.forEach {
-                log.info("""Scored ${it.second}: ${it.first.replace("\n", "\\n")}""")
+            if (log.isDebugEnabled) {
+                scores.sortedByDescending { it.second }.forEach {
+                    log.debug("Scored {}: {}", it.second, it.first.replace("\n", "\\n"))
+                }
             }
             if (generation == generations) {
-                log.info("Final generation: ${topPrompts.first()}")
+                log.info("Final generation: {}", topPrompts.first())
                 break
             } else {
                 val survivors = scores.sortedByDescending { it.second }.take(selectionSize).map { it.first }
                 topPrompts = regenerate(survivors, populationSize)
-                log.info("Generation $generation: ${topPrompts.first()}")
+                log.info("Generation {}: {}", generation, topPrompts.first())
             }
         }
         return topPrompts
@@ -92,26 +94,19 @@ open class PromptOptimization(
             try {
                 val child = geneticApi(temperature.pow(1.0 / (retry + 1))).recombine(Prompt(a), Prompt(b)).prompt
                 if (child.contentEquals(a) || child.contentEquals(b)) {
-                    log.info("Recombine failure: retry $retry")
+                    log.info("Recombine failure: retry {}", retry)
                     continue
                 }
-                log.info(
-                    "Recombined Prompts\n\t${
-                        a.replace("\n", "\n\t")
-                    }\n\t-- + --\n\t${
-                        b.replace("\n", "\n\t")
-                    }\n\t-- -> --\n\t${child.replace("\n", "\n\t")}"
-                )
                 if (Math.random() < mutationRate) {
                     return mutate(child)
                 } else {
                     return child
                 }
             } catch (e: Exception) {
-                log.warn("Failed to recombine $a + $b", e)
+                log.warn("Failed to recombine {} + {}", a, b, e)
             }
         }
-        return mutate(a)
+        return a // Return the original prompt if recombination fails
     }
 
     open fun mutate(selected: String): String {
@@ -121,35 +116,27 @@ open class PromptOptimization(
                 val directive = getMutationDirective()
                 val mutated = geneticApi(temperature.pow(1.0 / (retry + 1))).mutate(Prompt(selected), directive).prompt
                 if (mutated.contentEquals(selected)) {
-                    log.info("Mutate failure $retry ($directive): ${selected.replace("\n", "\\n")}")
+                    log.info("Mutate failure {} ({}): {}", retry, directive, selected.replace("\n", "\\n"))
                     continue
                 }
-                log.info(
-                    "Mutated Prompt\n\t${selected.replace("\n", "\n\t")}\n\t-- -> --\n\t${
-                        mutated.replace(
-                            "\n",
-                            "\n\t"
-                        )
-                    }"
-                )
                 return mutated
             } catch (e: Exception) {
-                log.warn("Failed to mutate $selected", e)
+                log.warn("Failed to mutate {}", selected, e)
             }
         }
-        throw RuntimeException("Failed to mutate $selected")
+        throw RuntimeException("Failed to mutate $selected after multiple retries", )
     }
 
     open fun getMutationDirective(): String {
-        val fate = mutatonTypes.values.sum() * Math.random()
+    val fate = mutationTypes.values.sum() * Math.random()
         var cumulative = 0.0
-        for ((key, value) in mutatonTypes) {
+    for ((key, value) in mutationTypes) {
             cumulative += value
             if (fate < cumulative) {
                 return key
             }
         }
-        return mutatonTypes.keys.random()
+        return mutationTypes.keys.random()
     }
 
     protected interface GeneticApi {
@@ -213,14 +200,9 @@ open class PromptOptimization(
                     break
                 } else {
                     chatRequest = chatRequest.copy(temperature = startTemp.coerceAtLeast(0.1).pow(1.0 / (retry + 1)))
-                    log.info(
-                        "Retry $retry (T=${"%.3f".format(chatRequest.temperature)}): ${
-                            systemPrompt.replace(
-                                "\n",
-                                "\\n"
-                            )
-                        } / ${turn.userMessage}\n\t${response.choices.first().message?.content?.replace("\n", "\n\t")}"
-                    )
+                    log.info("Retry {} (T={}): {} / {}\n\t{}", retry, "%.3f".format(chatRequest.temperature),
+                        systemPrompt.replace("\n", "\\n"), turn.userMessage,
+                        response.choices.first().message?.content?.replace("\n", "\n\t"))
                 }
             }
             chatRequest = chatRequest.copy(
@@ -238,5 +220,3 @@ open class PromptOptimization(
     }
 
 }
-
-

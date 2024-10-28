@@ -31,7 +31,7 @@ open class ChatProxy<T : Any>(
     )
 
     override fun complete(prompt: ProxyRequest, vararg examples: RequestResponse): String {
-        if (verbose) log.info(prompt.toString())
+        log.info("Starting completion with prompt: {}", prompt.toString())
         var request = ChatRequest()
         val exampleMessages = examples.flatMap {
             listOf(
@@ -50,15 +50,15 @@ open class ChatProxy<T : Any>(
                 listOf(
                     ChatMessage(
                         ApiModel.Role.system, """
-                |You are a JSON-RPC Service
-                |Responses are in JSON format
-                |Do not include explaining text outside the JSON
-                |All input arguments are optional
-                |Outputs are based on inputs, with any missing information filled randomly
-                |You will respond to the following method
+ You are a JSON-RPC Service
+ Responses are in JSON format
+ Do not include explaining text outside the JSON
+ All input arguments are optional
+ Outputs are based on inputs, with any missing information filled randomly
+ You will respond to the following method
                 |
-                |${prompt.apiYaml}
-                |""".trimMargin().trim().toContentList()
+ ${prompt.apiYaml}
+ """.trimMargin().trim().toContentList()
                     )
                 ) +
                         exampleMessages +
@@ -73,12 +73,17 @@ open class ChatProxy<T : Any>(
         request = request.copy(model = model.modelName)
         request = request.copy(temperature = temperature)
         val json = toJson(request)
-        if (moderated) api.moderate(json)
+        log.debug("Request JSON: {}", json)
+        if (moderated) {
+            log.info("Moderating request")
+            api.moderate(json)
+        }
 
         val completion = api.chat(request, model).choices.first().message?.content.orEmpty()
-        if (verbose) log.info(completion)
+        log.info("Received completion: {}", completion)
         val trimPrefix = trimPrefix(completion)
         val trimSuffix = trimSuffix(trimPrefix)
+        log.info("Trimmed completion: {}", trimSuffix)
         return trimSuffix
     }
 

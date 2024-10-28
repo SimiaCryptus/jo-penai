@@ -20,7 +20,7 @@ open class JsonDescriber(
     ).toMutableSet()
 ) : TypeDescriber() {
     companion object {
-        val log = LoggerFactory.getLogger(JsonDescriber::class.java)
+        private val log = LoggerFactory.getLogger(JsonDescriber::class.java)
     }
 
     override val markupLanguage: String
@@ -31,7 +31,9 @@ open class JsonDescriber(
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
+        log.info("Starting description of type: ${rawType.name} with stackMax: $stackMax")
         if (!whitelist.contains(rawType.name)) {
+            log.error("Type ${rawType.name} is not in the whitelist")
             return """{
                  "type": "object",
                  "class": "${rawType.name}",
@@ -39,7 +41,7 @@ open class JsonDescriber(
                }""".trimIndent()
         }
         if (!describedTypes.add(rawType.name) && rawType.name !in primitives) {
-//      log.debug("Preventing recursion for type: ${rawType.name}")
+            log.warn("Recursion detected for type: ${rawType.name}, returning placeholder")
             return "{...}"
         } else if (rawType.simpleName.lowercase() in primitives) {
             return """
@@ -47,13 +49,15 @@ open class JsonDescriber(
               "type": "${rawType.simpleName.lowercase()}"
             }""".trimIndent()
         }
-//    log.debug("Describing type: ${rawType.name} with stackMax: $stackMax")
-        if (isAbbreviated(rawType) || stackMax <= 0) return """{
+        if (isAbbreviated(rawType) || stackMax <= 0) {
+            log.warn("Abbreviating description for type: ${rawType.name} due to stackMax: $stackMax")
+            return """{
             {
               "type": "object",
               "class": "${rawType.name}"
             }
             """.trimIndent()
+        }
         if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
             return """
             {
@@ -155,10 +159,12 @@ open class JsonDescriber(
             )
         }
         jsonBody.append("\n}")
+        log.info("Completed description for type: ${rawType.name}")
         return jsonBody.toString()
     }
 
     override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
+        log.info("Describing method: ${self.name} in class: ${clazz?.name}")
         val returnType = self.returnType
         clazz ?: return "..."
         val description = getAllAnnotations(clazz, self).find { x -> x is Description } as? Description

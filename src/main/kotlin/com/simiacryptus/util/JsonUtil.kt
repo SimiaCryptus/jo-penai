@@ -1,4 +1,5 @@
 package com.simiacryptus.util
+import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
@@ -13,11 +14,13 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule
 import java.lang.reflect.Type
 
 object JsonUtil {
+    private val log = LoggerFactory.getLogger(JsonUtil::class.java.name)
     // Hack to pass the target type to the deserializer
     val _initForReading: ThreadLocal<JavaType?> = ThreadLocal.withInitial { null }
     open fun objectMapper(): ObjectMapper {
         return object : ObjectMapper() {
             override fun _initForReading(p: JsonParser?, targetType: JavaType?): JsonToken {
+                log.info("Initializing for reading with targetType: {}", targetType)
                 _initForReading.set(targetType)
                 return super._initForReading(p, targetType)
             }
@@ -56,14 +59,16 @@ object JsonUtil {
     }
 
     open fun toJson(data: Any): String {
+        log.debug("Serializing object to JSON: {}", data)
         return objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data)
     }
 
     open fun <T> fromJson(data: String, type: Type): T {
+        log.debug("Deserializing JSON to object of type: {}", type)
         if (type is Class<*> && type.isAssignableFrom(String::class.java)) return data as T
         val objectMapper = objectMapper()
         val value = objectMapper.readValue(data, objectMapper.typeFactory.constructType(type)) as T
-        //log.debug("Deserialized $data to $value")
+        log.info("Deserialized JSON to object: {}", value)
         return value
     }
 //    companion object : JsonUtil()

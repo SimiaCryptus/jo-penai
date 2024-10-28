@@ -1,4 +1,5 @@
 package com.simiacryptus.jopenai.models
+import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -27,12 +28,14 @@ open class ChatModel(
     maxTotalTokens = maxTotalTokens,
     maxOutTokens = maxOutTokens
 ) {
+    private val logger = LoggerFactory.getLogger(ChatModel::class.java)
     override fun toString() = modelName
 
     override fun pricing(usage: Usage) =
         (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
 
     companion object {
+        private val logger = LoggerFactory.getLogger(ChatModel::class.java)
 
         fun values() = values.filterValues { it != null }.mapValues { it.value!! }
         val values: MutableMap<String, ChatModel?> by lazy { defaultValues().toMutableMap() }
@@ -106,6 +109,7 @@ open class ChatModel(
             "LLaMA370bInstructAWS" to AWSModels.LLaMA370bInstructAWS,
             "AnthropicClaude3Opus" to AnthropicModels.Claude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicModels.Claude35Sonnet,
+            "AnthropicClaude35Sonnet_2" to AnthropicModels.Claude35Sonnet_2,
             "AnthropicClaude3Sonnet" to AnthropicModels.Claude3Sonnet,
             "AnthropicClaude3Haiku" to AnthropicModels.Claude3Haiku,
             "Gemini15ProPreview" to GoogleModels.Gemini15ProPreview,
@@ -116,14 +120,18 @@ open class ChatModel(
 }
 
 class ChatModelsSerializer : StdSerializer<ChatModel>(ChatModel::class.java) {
+    private val logger = LoggerFactory.getLogger(ChatModelsSerializer::class.java)
     override fun serialize(value: ChatModel, gen: JsonGenerator, provider: SerializerProvider) {
+        logger.debug("Serializing ChatModel: {}", value.name)
         values().entries.find { it.value == value }?.key?.let { gen.writeString(it) }
     }
 }
 
 class ChatModelsDeserializer : JsonDeserializer<ChatModel>() {
+    private val logger = LoggerFactory.getLogger(ChatModelsDeserializer::class.java)
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModel {
         val modelName = p.readValueAs(String::class.java)
+        logger.debug("Deserializing ChatModel with name: {}", modelName)
         return values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
     }
 }
