@@ -13,7 +13,7 @@ object AnthropicModels {
     )
     val Claude35Sonnet_2 = ChatModel(
         name = "AnthropicClaude35Sonnet_2",
-        modelName = "claude-3-5-sonnet-20241122",
+        modelName = "claude-3-5-sonnet-20241022",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
