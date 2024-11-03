@@ -46,7 +46,7 @@ open class HttpClientManager(
 
         val workPool: ThreadPoolExecutor =
             ThreadPoolExecutor(
-                2,
+                16,
                 128,
                 500,
                 TimeUnit.MILLISECONDS,
