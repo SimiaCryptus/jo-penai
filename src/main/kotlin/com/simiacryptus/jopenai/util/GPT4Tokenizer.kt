@@ -194,9 +194,9 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
     }
 
     private fun bpe(token: String): String {
-        logger.debug("Performing BPE on token: {}", token)
+        //logger.debug("Performing BPE on token: {}", token)
         if (this.cache.containsKey(token)) {
-            logger.debug("Token found in cache")
+            //logger.debug("Token found in cache")
             return this.cache[token]!!
         }
 
@@ -205,7 +205,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
         var pairs = this.getPairs(word)
 
         if (pairs.isEmpty()) {
-            logger.debug("No pairs found, returning token")
+            //logger.debug("No pairs found, returning token")
             return token
         }
 
@@ -258,7 +258,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
 
         val finalWord = word.joinToString(separator = " ")
         this.cache[token] = finalWord
-        logger.debug("BPE result: {}", finalWord)
+        //logger.debug("BPE result: {}", finalWord)
 
         return finalWord
     }
