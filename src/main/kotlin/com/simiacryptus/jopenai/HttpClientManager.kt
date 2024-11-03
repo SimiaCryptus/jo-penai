@@ -39,16 +39,16 @@ open class HttpClientManager(
         val scheduledPool: ListeningScheduledExecutorService =
             MoreExecutors.listeningDecorator(
                 ScheduledThreadPoolExecutor(
-                    4,
+                    0,
                     ThreadFactoryBuilder().setNameFormat("API Scheduler %d").build()
                 )
             )
 
         val workPool: ThreadPoolExecutor =
             ThreadPoolExecutor(
-                8,
-                16,
-                0,
+                2,
+                128,
+                500,
                 TimeUnit.MILLISECONDS,
                 LinkedBlockingQueue(),
                 ThreadFactoryBuilder().setNameFormat("API Thread %d").build()

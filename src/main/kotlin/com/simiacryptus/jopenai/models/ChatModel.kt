@@ -41,16 +41,22 @@ open class ChatModel(
         val values: MutableMap<String, ChatModel?> by lazy { defaultValues().toMutableMap() }
 
         fun defaultValues(): Map<String, ChatModel> = mapOf(
+
+
             "GPT35Turbo" to OpenAIModels.GPT35Turbo,
             "GPT4Turbo" to OpenAIModels.GPT4Turbo,
             "GPT4o" to OpenAIModels.GPT4o,
             "GPT4oMini" to OpenAIModels.GPT4oMini,
             "O1Preview" to OpenAIModels.O1Preview,
             "O1Mini" to OpenAIModels.O1Mini,
+
+
             "SonarSmallChat128k" to PerplexityModels.SonarSmallChat128k,
             "SonarSmallOnline128k" to PerplexityModels.SonarSmallOnline128k,
             "SonarLargeChat128k" to PerplexityModels.SonarLargeChat128k,
             "SonarLargeOnline128k" to PerplexityModels.SonarLargeOnline128k,
+
+
             "Mistral7B" to MistralModels.Mistral7B,
             "Mixtral8x7B" to MistralModels.Mixtral8x7B,
             "Mixtral8x22B" to MistralModels.Mixtral8x22B,
@@ -60,6 +66,8 @@ open class ChatModel(
             "MistralNemo" to MistralModels.MistralNemo,
             "Codestral" to MistralModels.Codestral,
             "CodestralMamba" to MistralModels.CodestralMamba,
+
+
             "LaMA38b" to GroqModels.LaMA38b,
             "LLaMA370b" to GroqModels.LLaMA370b,
             "Llama_31_405B" to GroqModels.Llama_31_405B,
@@ -70,6 +78,20 @@ open class ChatModel(
             "Mixtral8x7bInstructV01" to GroqModels.Mixtral8x7bInstructV01,
             "Gemma7bIt" to GroqModels.Gemma7bIt,
             "Gemma2_9bIt" to GroqModels.Gemma2_9bIt,
+            "Llama3Groq70b8192ToolUsePreview" to GroqModels.Llama3Groq70b8192ToolUsePreview,
+            "Llama3Groq8b8192ToolUsePreview" to GroqModels.Llama3Groq8b8192ToolUsePreview,
+            "Llama31_70bVersatile" to GroqModels.Llama31_70bVersatile,
+            "Llama31_8bInstant" to GroqModels.Llama31_8bInstant,
+            "Llama32_1bPreview" to GroqModels.Llama32_1bPreview,
+            "Llama32_3bPreview" to GroqModels.Llama32_3bPreview,
+            "Llama32_11bVisionPreview" to GroqModels.Llama32_11bVisionPreview,
+            "Llama32_90bVisionPreview" to GroqModels.Llama32_90bVisionPreview,
+            "LlamaGuard38b" to GroqModels.LlamaGuard38b,
+            "Llama370b8192" to GroqModels.Llama370b8192,
+            "Llama38b8192" to GroqModels.Llama38b8192,
+            "Mixtral8x7b32768" to GroqModels.Mixtral8x7b32768,
+
+
             "Zephyr7bBeta" to ModelsLabModels.Zephyr7bBeta,
             "DialoGPTLarge" to ModelsLabModels.DialoGPTLarge,
             "YarnMistral7b128k" to ModelsLabModels.YarnMistral7b128k,
@@ -83,6 +105,8 @@ open class ChatModel(
             "Mistral7BOpenOrca" to ModelsLabModels.Mistral7BOpenOrca,
             "DeepseekCoder67bInstruct" to ModelsLabModels.DeepseekCoder67bInstruct,
             "Phi15" to ModelsLabModels.Phi15,
+
+
             "Zephyr7bAlpha" to ModelsLabModels.Zephyr7bAlpha,
             "AWSLLaMA31_405bChat" to AWSModels.AWSLLaMA31_405bChat,
             "AWSLLaMA31_70bChat" to AWSModels.AWSLLaMA31_70bChat,
@@ -107,14 +131,19 @@ open class ChatModel(
             "ClaudeV2Instant" to AWSModels.ClaudeV2Instant,
             "LLaMA38bInstructAWS" to AWSModels.LLaMA38bInstructAWS,
             "LLaMA370bInstructAWS" to AWSModels.LLaMA370bInstructAWS,
+
+
             "AnthropicClaude3Opus" to AnthropicModels.Claude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicModels.Claude35Sonnet,
             "AnthropicClaude35Sonnet_2" to AnthropicModels.Claude35Sonnet_2,
             "AnthropicClaude3Sonnet" to AnthropicModels.Claude3Sonnet,
             "AnthropicClaude3Haiku" to AnthropicModels.Claude3Haiku,
-            "Gemini15ProPreview" to GoogleModels.Gemini15ProPreview,
-            "GeminiFlashPreview" to GoogleModels.GeminiFlashPreview,
-            "GeminiPro" to GoogleModels.GeminiPro
+
+
+            "GeminiPro_15" to GoogleModels.GeminiPro_15,
+            "GeminiFlash_15" to GoogleModels.GeminiFlash_15,
+            "GeminiFlash_15_8B" to GoogleModels.GeminiFlash_15_8B,
+            "GeminiPro" to GoogleModels.GeminiPro_10,
         )
     }
 }

@@ -1,46 +1,41 @@
 package com.simiacryptus.jopenai.models
-import org.slf4j.LoggerFactory
 
 object GoogleModels {
-    private val logger = LoggerFactory.getLogger(GoogleModels::class.java)
 
-
-    val Gemini15ProPreview = ChatModel(
-        name = "Gemini15ProPreview",
-        modelName = "models/gemini-1.5-pro-latest",
+    val GeminiPro_15 = ChatModel(
+        name = "GeminiPro_15",
+        modelName = "models/gemini-1.5-pro",
+        maxTotalTokens = 2097152,
+        maxOutTokens = 8192,
+        provider = APIProvider.Google,
+        inputTokenPricePerK = 0.00025, // Pricing not provided, using a placeholder
+        outputTokenPricePerK = 0.0005  // Pricing not provided, using a placeholder
+    )
+    val GeminiPro_10 = ChatModel(
+        name = "GeminiPro_10",
+        modelName = "models/gemini-1.0-pro",
+        maxTotalTokens = 2097152,
+        maxOutTokens = 8192,
+        provider = APIProvider.Google,
+        inputTokenPricePerK = 0.00025, // Pricing not provided, using a placeholder
+        outputTokenPricePerK = 0.0005  // Pricing not provided, using a placeholder
+    )
+    val GeminiFlash_15 = ChatModel(
+        name = "GeminiFlash_15",
+        modelName = "models/gemini-1.5-flash",
         maxTotalTokens = 1048576,
         maxOutTokens = 8192,
         provider = APIProvider.Google,
-        inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
-        outputTokenPricePerK = 0.021
+        inputTokenPricePerK = 0.0001, // Pricing not provided, using a placeholder
+        outputTokenPricePerK = 0.0002 // Pricing not provided, using a placeholder
     )
-    val GeminiFlashPreview = ChatModel(
-        name = "GeminiFlashPreview",
-        modelName = "gemini-1.5-flash-latest",
+    val GeminiFlash_15_8B = ChatModel(
+        name = "GeminiFlash_15_8B",
+        modelName = "models/gemini-1.5-flash-8b",
         maxTotalTokens = 1048576,
         maxOutTokens = 8192,
         provider = APIProvider.Google,
-        inputTokenPricePerK = 0.007, // Assuming pricing, adjust as necessary
-        outputTokenPricePerK = 0.021
+        inputTokenPricePerK = 0.00005, // Pricing not provided, using a placeholder
+        outputTokenPricePerK = 0.0001  // Pricing not provided, using a placeholder
     )
-    val GeminiPro = ChatModel(
-        name = "GeminiPro",
-        modelName = "models/gemini-pro",
-        maxTotalTokens = 30720,
-        maxOutTokens = 2048,
-        provider = APIProvider.Google,
-        inputTokenPricePerK = 0.0005,
-        outputTokenPricePerK = 0.0015
-    )
-//    val Gemini10ProVision = ChatModels(
-//      name = "Gemini10ProVision",
-//      modelName = "models/gemini-pro-vision",
-//      maxTotalTokens = 12288,
-//      maxOutTokens = 4096,
-//      provider = APIProvider.Google,
-//      inputTokenPricePerK = 0.002, // Assuming pricing, adjust as necessary
-//      outputTokenPricePerK = 0.004 // Assuming pricing, adjust as necessary
-//    )
-
-
 }
