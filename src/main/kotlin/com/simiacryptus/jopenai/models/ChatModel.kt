@@ -164,3 +164,7 @@ class ChatModelsDeserializer : JsonDeserializer<ChatModel>() {
         return values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
     }
 }
+
+fun String.chatModel() = values().entries.find {
+    it.key.equals(this, true) || it.value.modelName.equals(this, true)
+}?.value ?: throw IllegalArgumentException("Unknown model: $this")
