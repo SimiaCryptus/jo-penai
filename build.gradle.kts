@@ -77,9 +77,6 @@ val aws_version = "2.25.60"
 
 dependencies {
 
-//    compileOnly("software.amazon.awssdk:bedrock:2.25.7")
-//    compileOnly("software.amazon.awssdk:bedrockagent:2.25.7")
-//    compileOnly("software.amazon.awssdk:bedrockagentruntime:2.25.7")
     implementation("software.amazon.awssdk:bedrockruntime:$aws_version")
     implementation("software.amazon.awssdk:auth:$aws_version")
 
