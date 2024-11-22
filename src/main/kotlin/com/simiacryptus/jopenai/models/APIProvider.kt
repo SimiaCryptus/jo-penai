@@ -22,6 +22,7 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
         val Perplexity = APIProvider("Perplexity", "https://api.perplexity.ai")
         val ModelsLab = APIProvider("ModelsLab", "https://modelslab.com/api/v6")
         val Mistral = APIProvider("Mistral", "https://api.mistral.ai/v1")
+        val DeepSeek = APIProvider("DeepSeek", "https://api.deepseek.com")
 
         init {
             logger.info("Registering API providers")
@@ -33,6 +34,7 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
             register(APIProvider::class.java, Perplexity)
             register(APIProvider::class.java, ModelsLab)
             register(APIProvider::class.java, Mistral)
+            register(APIProvider::class.java, DeepSeek)
         }
 
         @JvmStatic

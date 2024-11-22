@@ -135,10 +135,12 @@ open class ChatModel(
 
             "AnthropicClaude3Opus" to AnthropicModels.Claude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicModels.Claude35Sonnet,
-            "AnthropicClaude35Sonnet_2" to AnthropicModels.Claude35Sonnet_2,
+            "AnthropicClaude35Haiku" to AnthropicModels.Claude35Haiku,
             "AnthropicClaude3Sonnet" to AnthropicModels.Claude3Sonnet,
             "AnthropicClaude3Haiku" to AnthropicModels.Claude3Haiku,
 
+            "DeepSeekChat" to DeepSeekModels.DeepSeekChat,
+            "DeepSeekCoder" to DeepSeekModels.DeepSeekCoder,
 
             "GeminiPro_15" to GoogleModels.GeminiPro_15,
             "GeminiFlash_15" to GoogleModels.GeminiFlash_15,

@@ -135,7 +135,17 @@ open class ChatClient(
         return post(request)
     }
 
-    private fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
+    private fun post(request: HttpPost): String = withClient {
+        log(
+            level = Level.DEBUG,
+            msg = String.format(
+                "POST %s\nPrefix:\n\t%s\n",
+                request.uri,
+                EntityUtils.toString(request.entity).replace("\n", "\n\t")
+            )
+        )
+        EntityUtils.toString(it.execute(request).entity)
+    }
 
     @Throws(IOException::class)
     protected open fun authorize(request: HttpRequest, apiProvider: APIProvider) {
@@ -202,14 +212,6 @@ open class ChatClient(
                             }), model)
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(geminiChatRequest)
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         fromGemini(
                             post(
                                 "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}",
@@ -223,14 +225,6 @@ open class ChatClient(
                         val anthropicChatRequest = mapToAnthropicChatRequest(chatRequest, model)
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(anthropicChatRequest)
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         val request = HttpPost("${apiBase[apiProvider]}/messages")
                         request.addHeader("Content-Type", "application/json")
                         request.addHeader("Accept", "application/json")
@@ -245,42 +239,18 @@ open class ChatClient(
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(chatRequest.copy(stop = null))
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.Mistral -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
                     apiProvider == APIProvider.Groq -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
 
@@ -289,14 +259,6 @@ open class ChatClient(
                             val json =
                                 JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                     .writeValueAsString(toModelsLab(chatRequest))
-                            log(
-                                level = Level.DEBUG,
-                                msg = String.format(
-                                    "Chat Request %s\nPrefix:\n\t%s\n",
-                                    requestID,
-                                    json.replace("\n", "\n\t")
-                                )
-                            )
                             fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
                         }
                     }
@@ -308,13 +270,6 @@ open class ChatClient(
                             .credentialsProvider(awsCredentials(awsAuth))
                             .region(Region.of(awsAuth.region))
                             .build()
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID, JsonUtil.toJson(chatRequest).replace("\n", "\n\t")
-                            )
-                        )
                         val invokeModelResponse = bedrockRuntimeClient
                             .invokeModel(invokeModelRequest)
                         val responseBody = invokeModelResponse.body().asString(Charsets.UTF_8)
@@ -324,14 +279,6 @@ open class ChatClient(
                     else -> {
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-                        log(
-                            level = Level.DEBUG,
-                            msg = String.format(
-                                "Chat Request %s\nPrefix:\n\t%s\n",
-                                requestID,
-                                json.replace("\n", "\n\t")
-                            )
-                        )
                         post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
                     }
                 }
