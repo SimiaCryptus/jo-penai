@@ -139,6 +139,9 @@ open class ChatModel(
             "AnthropicClaude3Sonnet" to AnthropicModels.Claude3Sonnet,
             "AnthropicClaude3Haiku" to AnthropicModels.Claude3Haiku,
 
+            "DeepSeekChat" to DeepSeekModels.DeepSeekChat,
+            "DeepSeekCoder" to DeepSeekModels.DeepSeekCoder,
+
             "GeminiPro_15" to GoogleModels.GeminiPro_15,
             "GeminiFlash_15" to GoogleModels.GeminiFlash_15,
             "GeminiFlash_15_8B" to GoogleModels.GeminiFlash_15_8B,
