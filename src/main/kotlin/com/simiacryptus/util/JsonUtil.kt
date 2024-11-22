@@ -59,16 +59,16 @@ object JsonUtil {
     }
 
     open fun toJson(data: Any): String {
-        log.debug("Serializing object to JSON: {}", data)
+//        log.debug("Serializing object to JSON: {}", data)
         return objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(data)
     }
 
     open fun <T> fromJson(data: String, type: Type): T {
-        log.debug("Deserializing JSON to object of type: {}", type)
+//        log.debug("Deserializing JSON to object of type: {}", type)
         if (type is Class<*> && type.isAssignableFrom(String::class.java)) return data as T
         val objectMapper = objectMapper()
         val value = objectMapper.readValue(data, objectMapper.typeFactory.constructType(type)) as T
-        log.info("Deserialized JSON to object: {}", value)
+//        log.info("Deserialized JSON to object: {}", value)
         return value
     }
 //    companion object : JsonUtil()

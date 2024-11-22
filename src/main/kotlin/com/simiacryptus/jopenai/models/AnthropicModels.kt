@@ -4,21 +4,21 @@ object AnthropicModels {
 
     val Claude35Sonnet = ChatModel(
         name = "AnthropicClaude35Sonnet",
-        modelName = "claude-3-5-sonnet-20240620",
+        modelName = "claude-3-5-sonnet-latest",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
         inputTokenPricePerK = 3.0 / 1000.0,
         outputTokenPricePerK = 15.0 / 1000.0
     )
-    val Claude35Sonnet_2 = ChatModel(
-        name = "AnthropicClaude35Sonnet_2",
-        modelName = "claude-3-5-sonnet-20241022",
+    val Claude35Haiku = ChatModel(
+        name = "Claude3Haiku",
+        modelName = "claude-3-5-haiku-latest",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
-        inputTokenPricePerK = 3.0 / 1000.0,
-        outputTokenPricePerK = 15.0 / 1000.0
+        inputTokenPricePerK = 15.0 / 1000.0,
+        outputTokenPricePerK = 75.0 / 1000.0
     )
     val Claude3Opus = ChatModel(
         name = "Claude3Opus",
