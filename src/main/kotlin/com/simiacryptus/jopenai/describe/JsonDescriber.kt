@@ -31,9 +31,9 @@ open class JsonDescriber(
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
-        log.info("Starting description of type: ${rawType.name} with stackMax: $stackMax")
+//        log.info("Starting description of type: ${rawType.name} with stackMax: $stackMax")
         if (!whitelist.contains(rawType.name)) {
-            log.error("Type ${rawType.name} is not in the whitelist")
+//            log.error("Type ${rawType.name} is not in the whitelist")
             return """{
                  "type": "object",
                  "class": "${rawType.name}",
@@ -41,7 +41,7 @@ open class JsonDescriber(
                }""".trimIndent()
         }
         if (!describedTypes.add(rawType.name) && rawType.name !in primitives) {
-            log.warn("Recursion detected for type: ${rawType.name}, returning placeholder")
+//            log.warn("Recursion detected for type: ${rawType.name}, returning placeholder")
             return "{...}"
         } else if (rawType.simpleName.lowercase() in primitives) {
             return """
@@ -50,7 +50,7 @@ open class JsonDescriber(
             }""".trimIndent()
         }
         if (isAbbreviated(rawType) || stackMax <= 0) {
-            log.warn("Abbreviating description for type: ${rawType.name} due to stackMax: $stackMax")
+//            log.warn("Abbreviating description for type: ${rawType.name} due to stackMax: $stackMax")
             return """{
             {
               "type": "object",
@@ -159,12 +159,12 @@ open class JsonDescriber(
             )
         }
         jsonBody.append("\n}")
-        log.info("Completed description for type: ${rawType.name}")
+//        log.info("Completed description for type: ${rawType.name}")
         return jsonBody.toString()
     }
 
     override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
-        log.info("Describing method: ${self.name} in class: ${clazz?.name}")
+//        log.info("Describing method: ${self.name} in class: ${clazz?.name}")
         val returnType = self.returnType
         clazz ?: return "..."
         val description = getAllAnnotations(clazz, self).find { x -> x is Description } as? Description

@@ -184,12 +184,6 @@ open class ChatClient(
             )
             log.debug("Adjusted chat request for model: ${model.modelName}")
         }
-        if (chatRequest.messages.any { it.content?.any { it.text?.contains("<div id=") == true } == true }) {
-            log.warn(
-                "HTML content detected: ${chatRequest.messages.filter { it.content?.any { it.text?.contains("<div id=") == true } == true }}",
-                RuntimeException()
-            )
-        }
         val requestID = UUID.randomUUID().toString()
         log.info("Chat request ID: $requestID with ${chatRequest.messages.size} messages")
         if (chatRequest.messages.isEmpty()) {
