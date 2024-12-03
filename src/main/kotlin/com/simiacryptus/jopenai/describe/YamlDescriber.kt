@@ -33,21 +33,21 @@ open class YamlDescriber : TypeDescriber() {
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
-        log.debug("Entering describe method with rawType: ${rawType.name}, stackMax: $stackMax")
-        log.info("Starting description for type: ${rawType.name} with stackMax: $stackMax")
+//        log.debug("Entering describe method with rawType: ${rawType.name}, stackMax: $stackMax")
+//        log.info("Starting description for type: ${rawType.name} with stackMax: $stackMax")
         if (!describedTypes.add(rawType.name) && rawType.simpleName.lowercase() !in primitives) {
-            log.debug("Preventing recursion for type: ${rawType.name}")
+//            log.debug("Preventing recursion for type: ${rawType.name}")
             return "..."
         } else if (rawType.simpleName.lowercase() in primitives) {
             return "type: ${rawType.simpleName.lowercase()}"
         }
-        log.info("Describing type: ${rawType.name} with stackMax: $stackMax")
+//        log.info("Describing type: ${rawType.name} with stackMax: $stackMax")
         if (isAbbreviated(rawType) || stackMax <= 0) return """
 type: object
 class: ${rawType.name}
             """.trim()
         if (rawType.isEnum || DynamicEnum::class.java.isAssignableFrom(rawType)) {
-            log.debug("Type is an enumeration: ${rawType.name}")
+//            log.debug("Type is an enumeration: ${rawType.name}")
             return """
 type: enumeration
 values:
@@ -158,8 +158,8 @@ methods:
     )
 
     override fun describe(self: Method, clazz: Class<*>?, stackMax: Int): String {
-        log.debug("Describing method: ${self.name} in class: ${clazz?.name}")
-        log.info("Describing method: ${self.name} in class: ${clazz?.name} with stackMax: $stackMax")
+//        log.debug("Describing method: ${self.name} in class: ${clazz?.name}")
+//        log.info("Describing method: ${self.name} in class: ${clazz?.name} with stackMax: $stackMax")
         if (stackMax <= 0) return "..."
         if (!coverMethods) return ""
         // If implClass is a Kotlin class, resolve the KFunction and call the other describe method
@@ -191,7 +191,7 @@ responses:
     }
 
     private fun toYaml(self: Parameter, stackMax: Int): String {
-        log.debug("Converting parameter to YAML: ${self.name}")
+//        log.debug("Converting parameter to YAML: ${self.name}")
         if (stackMax <= 0) return "..."
         val description = self.getAnnotation(Description::class.java)?.value?.trim()
             ?.let { "description: " + it.replace("\n", "\\n") } ?: ""
@@ -209,8 +209,8 @@ responses:
         includeOperationID: Boolean = true,
         describedTypes: MutableSet<String>
     ): String {
-        log.debug("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName}")
-        log.info("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName} with stackMax: $stackMax")
+//        log.debug("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName}")
+//        log.info("Describing Kotlin function: ${self.name} in class: ${concreteClass.qualifiedName} with stackMax: $stackMax")
         val functionTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}"
         if (describedTypes.contains(functionTypeRepresentation) && functionTypeRepresentation !in primitives) return "..."
         describedTypes.add(functionTypeRepresentation)
@@ -240,7 +240,7 @@ responses:
         stackMax: Int,
         describedTypes: MutableSet<String>
     ): String {
-        log.debug("Converting KParameter to YAML: ${self.name}")
+//        log.debug("Converting KParameter to YAML: ${self.name}")
         val parameterTypeRepresentation = "${concreteClass.qualifiedName}::${self.name}/${self.type}"
         if (describedTypes.contains(parameterTypeRepresentation) && parameterTypeRepresentation !in primitives) return "..."
         describedTypes.add(parameterTypeRepresentation)
@@ -259,7 +259,7 @@ responses:
 
 
     private fun toYaml(self: Type, stackMax: Int, describedTypes: MutableSet<String>): String {
-        log.debug("Converting Type to YAML: ${self.typeName}")
+//        log.debug("Converting Type to YAML: ${self.typeName}")
         if (describedTypes.contains(self.toString())) return "..."
         describedTypes.add(self.toString())
         val typeName = self.typeName.substringAfterLast('.').replace('$', '.')
@@ -353,7 +353,7 @@ items:
     }
 
     open fun getEnumValues(clazz: Class<*>): List<String> {
-        log.debug("Getting enum values for class: ${clazz.name}")
+//        log.debug("Getting enum values for class: ${clazz.name}")
         return when {
             clazz.isEnum -> clazz.enumConstants.map { it.toString() }
             DynamicEnum::class.java.isAssignableFrom(clazz) -> {

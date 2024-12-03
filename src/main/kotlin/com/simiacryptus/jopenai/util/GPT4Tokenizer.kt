@@ -264,7 +264,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
     }
 
     fun encode(text: String): MutableList<Int> {
-        logger.debug("Encoding text: {}", text)
+//        logger.debug("Encoding text: {}", text)
         val bpeTokens: MutableList<Int> = mutableListOf()
         val matches = bpeRegex.toRegex().findAll(text).flatMap { it.groupValues }.toList().toTypedArray()
 
@@ -284,7 +284,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
                 bpeTokens.add(newTokens[i])
             }
         }
-        logger.info("Encoding complete: $bpeTokens")
+//        logger.info("Encoding complete: $bpeTokens")
 
         return bpeTokens
     }
@@ -300,7 +300,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
     }
 
     fun decode(tokens: List<Int>): String {
-        logger.debug("Decoding tokens: {}", tokens)
+//        logger.debug("Decoding tokens: {}", tokens)
         val text = tokens.map { x -> this.decodings[x] }.joinToString(separator = "")
         return String(
             text.toCharArray().map { this.byteDecoder[it.toString()]?.toByte() ?: 0 }.toTypedArray().toByteArray(),
@@ -309,7 +309,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
     }
 
     fun estimateTokenCount(input: String): Int {
-        logger.debug("Estimating token count for input")
+//        logger.debug("Estimating token count for input")
         var count: Int = 0
         val matches = bpeRegex.toRegex().findAll(input).flatMap { it.groupValues }.toList().toTypedArray()
         for (token in matches) {
@@ -319,12 +319,12 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
             val newTokens = this.bpe(newToken).split(" ")
             count += newTokens.size
         }
-        logger.info("Estimated token count: $count")
+//        logger.info("Estimated token count: $count")
         return count
     }
 
     fun chunkText(text: String, maxTokensPerChunk: Int): MutableList<Map<String, Any>> {
-        logger.debug("Chunking text into pieces with max tokens per chunk: {}", maxTokensPerChunk)
+//        logger.debug("Chunking text into pieces with max tokens per chunk: {}", maxTokensPerChunk)
         val encoded = this.encode(text)
         val chunks: MutableList<Map<String, Any>> = mutableListOf()
         for (i in encoded.indices step maxTokensPerChunk) {
@@ -337,7 +337,7 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
             )
             // do whatever
         }
-        logger.debug("Chunking complete: {} chunks created", chunks.size)
+//        logger.debug("Chunking complete: {} chunks created", chunks.size)
         return chunks
     }
 }

@@ -19,7 +19,6 @@ import org.apache.hc.client5.http.classic.methods.HttpPost
 import org.apache.hc.client5.http.entity.mime.FileBody
 import org.apache.hc.client5.http.entity.mime.HttpMultipartMode
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient
 import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
@@ -40,9 +39,8 @@ open class OpenAIClient(
     protected val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to (it.base ?: "") },
     logLevel: Level = Level.INFO,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
-    scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
-    workPool: ThreadPoolExecutor = HttpClientManager.workPool,
-    client: CloseableHttpClient = createHttpClient()
+    scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
+    workPool: ThreadPoolExecutor = Companion.workPool
 ) : HttpClientManager(
     logLevel = logLevel,
     logStreams = logStreams,
