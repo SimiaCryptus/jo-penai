@@ -3,7 +3,6 @@ configuration-cache/
 buildOutputCleanup/
 .gradle/
 *.log*
-.*
 reports/
 openai.key
 *.key

@@ -49,25 +49,23 @@ open class ChatProxy<T : Any>(
             messages = ArrayList(
                 listOf(
                     ChatMessage(
-                        ApiModel.Role.system, """
- You are a JSON-RPC Service
- Responses are in JSON format
- Do not include explaining text outside the JSON
- All input arguments are optional
- Outputs are based on inputs, with any missing information filled randomly
- You will respond to the following method
-                |
- ${prompt.apiYaml}
- """.trimMargin().trim().toContentList()
+                        ApiModel.Role.system, ("""
+                          You are a JSON-RPC Service
+                          Responses are in JSON format
+                          Do not include explaining text outside the JSON
+                          All input arguments are optional
+                          Outputs are based on inputs, with any missing information filled randomly
+                          You will respond to the following method
+                          """.trimIndent() + prompt.apiYaml
+                        ).trim().toContentList()
                     )
-                ) +
-                        exampleMessages +
-                        listOf(
-                            ChatMessage(
-                                ApiModel.Role.user,
-                                argsToString(prompt.argList).toContentList()
-                            )
-                        )
+                ) + exampleMessages +
+                listOf(
+                    ChatMessage(
+                        ApiModel.Role.user,
+                        argsToString(prompt.argList).toContentList()
+                    )
+                )
             )
         )
         request = request.copy(model = model.modelName)

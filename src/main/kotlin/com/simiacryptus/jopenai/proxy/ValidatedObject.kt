@@ -8,16 +8,7 @@ interface ValidatedObject {
     fun validate(): String? = validateFields(this)
 
     class ValidationError(message: String, val obj: Any) : RuntimeException(
-        """
- Error validating object: 
- ```text
- ${message}
-    |```
-    |
-    |```json
-    |${toJson(obj)}
-    |```
-    """.trimMargin()
+        " Error validating object: \n ```text\n${message}\n```\n\n```json\n${toJson(obj)}\n```"
     )
 
     companion object {
