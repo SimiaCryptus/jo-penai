@@ -19,44 +19,44 @@ class YamlDescriberTest : TypeDescriberTestBase() {
         get() =
             //language=yaml
             """
-            |type: object
-            |class: com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}DataClassExample
-            |properties:
-            |  a:
-            |    description: "This is an integer"
-            |    type: int
-            |  b:
-            |    type: string
-            |  c:
-            |    type: array
-            |    items:
-         |      ...
-            |  d:
-            |    type: map
-            |    keys:
-         |      ...
-            |    values:
-            |      type: integer
-            """.trimMargin()
+             type: object
+             class: com.simiacryptus.jopenai.TypeDescriberTestBase${"$"}DataClassExample
+             properties:
+               a:
+                 description: "This is an integer"
+                 type: int
+               b:
+                 type: string
+               c:
+                 type: array
+                 items:
+                   ...
+               d:
+                 type: map
+                 keys:
+                   ...
+                 values:
+                   type: integer
+                """.trimIndent()
 
     override val methodDescription
         get() =
             //language=yaml
             """
-            |operationId: methodExample
-            |description: This is a method
-            |parameters:
-            |  - name: p1
-            |    description: This is a parameter
-            |    type: int
-            |  - name: p2
-            |    type: string
-            |responses:
-            |  application/json:
-            |    schema:
-            |      type: string
-            |
-            """.trimMargin()
+            operationId: methodExample
+            description: This is a method
+            parameters:
+              - name: p1
+                description: This is a parameter
+                type: int
+              - name: p2
+                type: string
+            responses:
+              application/json:
+                schema:
+                  type: string
+            
+            """.trimIndent()
 
     @Test
     override fun testDescribeRecursiveType() {
@@ -107,12 +107,12 @@ properties:
     @Test
     fun testDescribeEnumType() {
         val expectedDescription = """
-     |type: enumeration
-     |values:
-     |  - FIRST_OPTION
-     |  - SECOND_OPTION
-     |  - THIRD_OPTION
-     """.trimMargin()
+         type: enumeration
+         values:
+           - FIRST_OPTION
+           - SECOND_OPTION
+           - THIRD_OPTION
+         """.trimIndent()
         val actualDescription = typeDescriber.describe(TestEnum::class.java)
         Assertions.assertEquals(expectedDescription, actualDescription)
     }

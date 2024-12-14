@@ -23,10 +23,7 @@ abstract class Expectation {
             val promptEmbedding = createEmbedding(api, promptStr)
             val distance = metric.distance(contentEmbedding, promptEmbedding)
             log.info(
-                """Distance = $distance
-   from "${example.replace("\n", "\\n")}" 
-   to "${promptStr.replace("\n", "\\n")}"
-                """.trimMargin().trim()
+                "Distance = $distance\n   from \"${example.replace("\n", "\\n")}\" \n   to \"${promptStr.replace("\n", "\\n")}\""
             )
             return -distance
         }

@@ -172,12 +172,7 @@ methods:
         val parameterYaml = self.parameters.map { toYaml(it, stackMax - 1) }.toTypedArray().joinToString("\n").trim()
         val returnTypeYaml = toYaml(self.genericReturnType, stackMax - 1, mutableSetOf()).trim()
         val description = self.getAnnotation(Description::class.java)?.value?.trim()?.replace("\"", "\\\"")
-        val responseYaml = """
-responses:
-  application/json:
-    schema:
-      ${returnTypeYaml.replace("\n", "\n      ")}
-          """.trimMargin().trim().filterEmptyLines()
+        val responseYaml = "responses:\n  application/json:\n    schema:\n      ${returnTypeYaml.replace("\n", "\n      ")}".trim().filterEmptyLines()
       val buffer = StringBuffer()
       buffer.append("operationId: ${self.name}\n")
       if (description != null) {
