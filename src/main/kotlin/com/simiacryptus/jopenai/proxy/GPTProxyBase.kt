@@ -119,7 +119,7 @@ abstract class GPTProxyBase<T : Any>(
     } as T
 
     open val describer: TypeDescriber = object : AbbrevWhitelistYamlDescriber(
-        "com.simiacryptus", "com.github.simiacryptus"
+        "com.simiacryptus", "com.simiacryptus"
     ) {
         override val includeMethods: Boolean get() = false
     }
