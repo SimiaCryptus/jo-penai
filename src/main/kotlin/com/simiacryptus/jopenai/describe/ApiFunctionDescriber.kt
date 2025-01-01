@@ -23,7 +23,6 @@ open class ApiFunctionDescriber : TypeDescriber() {
         logger.info("ApiFunctionDescriber initialized")
     }
 
-
     open val includeMethods: Boolean = true
     private val truncation = "..."
 
