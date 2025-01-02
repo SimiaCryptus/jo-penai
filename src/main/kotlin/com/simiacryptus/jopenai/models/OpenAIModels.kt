@@ -46,6 +46,15 @@ object OpenAIModels {
         outputTokenPricePerK = 0.0015
     )
 
+    val O1 = ChatModel(
+        name = "O1",
+        modelName = "o1",
+        maxTotalTokens = 200 * 1024,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
+        outputTokenPricePerK = 0.0015
+    )
+
     val O1Mini = ChatModel(
         name = "O1Mini",
         modelName = "o1-mini",
