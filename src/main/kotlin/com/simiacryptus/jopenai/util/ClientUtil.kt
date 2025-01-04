@@ -107,22 +107,17 @@ object ClientUtil {
 
     fun checkError(result: String) {
         try {
-            val jsonObject = Gson().fromJson(
-                result,
-                JsonObject::class.java
-            )
-            if (null == jsonObject) return
+            val jsonObject = Gson().fromJson(result, JsonObject::class.java) ?: return
             if (jsonObject.has("error")) {
                 val errorObject = jsonObject.getAsJsonObject("error")
                 val errorMessage = errorObject["message"].asString
                 errorPatterns.forEach { errorPattern ->
                     errorPattern.match(errorMessage)?.let { throw it }
                 }
-
                 throw IOException(errorMessage)
             }
         } catch (e: com.google.gson.JsonSyntaxException) {
-            throw IOException("Invalid JSON response: $result")
+            throw IOException("Invalid JSON response: $result", e)
         }
     }
 
@@ -135,7 +130,6 @@ object ClientUtil {
             if (null != resourceAsStream) return resourceAsStream.readAllBytes().toString(Charsets.UTF_8).trim()
             val keyFile = File(File(System.getProperty("user.home")), "openai.key.json")
             if (keyFile.exists()) return keyFile.readText().trim()
-            //if (System.getenv().containsKey("OPENAI_KEY")) return System.getenv("OPENAI_KEY").trim()
             return ""
         }
         set(value) {

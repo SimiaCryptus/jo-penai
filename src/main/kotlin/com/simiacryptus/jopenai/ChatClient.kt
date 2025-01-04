@@ -193,6 +193,11 @@ open class ChatClient(
             withPerformanceLogging {
                 val apiProvider = model.provider
                 val result = when {
+                    apiProvider == APIProvider.DeepSeek -> {
+                        val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
+                            .writeValueAsString(toDeepSeek(chatRequest))
+                        post("${apiBase[apiProvider]}/v1/chat/completions", json, apiProvider)
+                    }
 
                     apiProvider == APIProvider.Google -> {
                         val geminiChatRequest =
@@ -294,6 +299,20 @@ open class ChatClient(
         }
     }
 
+    private fun toDeepSeek(chatRequest: ChatRequest): Map<String, Any> {
+        return mapOf(
+            "model" to (chatRequest.model ?: throw RuntimeException("Model not specified")),
+            "messages" to chatRequest.messages.map { message ->
+                mapOf(
+                    "role" to message.role.toString(),
+                    "content" to (message.content?.joinToString("\n") { it.text ?: "" } ?: "")
+                )
+            },
+            "temperature" to chatRequest.temperature,
+            "max_tokens" to (chatRequest.max_tokens ?: 2048)
+        )
+    }
+
     private fun awsCredentials(awsAuth: AWSAuth): AwsCredentialsProviderChain? =
         AwsCredentialsProviderChain.builder().credentialsProviders(
             InstanceProfileCredentialsProvider.create(),
@@ -318,25 +337,6 @@ open class ChatClient(
 
     private fun toGeminiChatRequest(chatRequest: ChatRequest, model: TextModel): GenerateContentRequest {
         return GenerateContentRequest(
-//      model = model.modelName,
-            /*
-                  system_instruction = chatRequest.messages.filter { it.role == Role.system }?.reduceOrNull {
-                    acc, chatMessage ->
-                    ChatMessage(
-                      role = Role.system,
-                      content = acc.content?.plus(chatMessage.content ?: emptyList())
-                        ?: chatMessage.content
-                    )
-                  }?.content?.let {
-                    Content(
-                      parts = it.map {
-                        Part(
-                          text = it.text ?: ""
-                        )
-                      }
-                    )
-                  },
-            */
             contents = collectRoleSequences(chatRequest.messages.filter {
                 when (it.role) {
                     //        Role.system -> false
