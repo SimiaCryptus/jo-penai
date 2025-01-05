@@ -63,6 +63,6 @@ abstract class TypeDescriber {
             "char",
             "object"
         )
-        private val logger = LoggerFactory.getLogger(TypeDescriber::class.java)
+        private val log = LoggerFactory.getLogger(TypeDescriber::class.java)
     }
 }

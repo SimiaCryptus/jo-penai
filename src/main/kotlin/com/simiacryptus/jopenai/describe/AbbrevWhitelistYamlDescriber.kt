@@ -8,7 +8,7 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 open class AbbrevWhitelistYamlDescriber(private vararg val abbreviated: String) : YamlDescriber() {
-    private val logger: Logger = LoggerFactory.getLogger(AbbrevWhitelistYamlDescriber::class.java)
+    private val log = LoggerFactory.getLogger(AbbrevWhitelistYamlDescriber::class.java)
     override fun isAbbreviated(self: Type): Boolean {
 //        logger.info("Checking if type is abbreviated: {}", self.typeName)
         if (self.typeName in primitives) {

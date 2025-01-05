@@ -1,7 +1,6 @@
 package com.simiacryptus.jopenai
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.common.util.concurrent.ListeningScheduledExecutorService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -23,9 +22,9 @@ import org.apache.hc.core5.http.ContentType
 import org.apache.hc.core5.http.HttpRequest
 import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.entity.StringEntity
-import org.slf4j.event.Level
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.slf4j.event.Level
 import java.awt.image.BufferedImage
 import java.io.BufferedOutputStream
 import java.io.IOException
@@ -96,14 +95,6 @@ open class OpenAIClient(
         authorize(request, apiProvider)
         EntityUtils.toString(it.execute(request).entity)
     }
-
-    fun listEngines(): List<Engine> = JsonUtil.objectMapper().readValue(
-        JsonUtil.objectMapper().readValue(
-            get("${apiBase[defaultApiProvider]}/engines", defaultApiProvider), ObjectNode::class.java
-        )["data"]?.toString() ?: "{}", JsonUtil.objectMapper().typeFactory.constructCollectionType(
-            List::class.java, Engine::class.java
-        )
-    )
 
     open fun complete(
         request: CompletionRequest, model: TextModel

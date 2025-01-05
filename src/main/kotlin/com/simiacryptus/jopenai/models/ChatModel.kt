@@ -1,5 +1,4 @@
 package com.simiacryptus.jopenai.models
-import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.fasterxml.jackson.databind.ser.std.StdSerializer
 import com.simiacryptus.jopenai.models.ApiModel.Usage
 import com.simiacryptus.jopenai.models.ChatModel.Companion.values
+import org.slf4j.LoggerFactory
 
 
 @JsonDeserialize(using = ChatModelsDeserializer::class)
@@ -28,14 +28,14 @@ open class ChatModel(
     maxTotalTokens = maxTotalTokens,
     maxOutTokens = maxOutTokens
 ) {
-    private val logger = LoggerFactory.getLogger(ChatModel::class.java)
+  private val log = LoggerFactory.getLogger(ChatModel::class.java)
     override fun toString() = modelName
 
     override fun pricing(usage: Usage) =
         (usage.prompt_tokens * inputTokenPricePerK + usage.completion_tokens * outputTokenPricePerK) / 1000.0
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ChatModel::class.java)
+      private val log = LoggerFactory.getLogger(ChatModel::class.java)
 
         fun values() = values.filterValues { it != null }.mapValues { it.value!! }
         val values: MutableMap<String, ChatModel?> by lazy { defaultValues().toMutableMap() }

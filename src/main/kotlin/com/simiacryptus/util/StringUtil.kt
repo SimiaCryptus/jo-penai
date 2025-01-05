@@ -3,7 +3,6 @@ import org.slf4j.LoggerFactory
 
 import java.nio.charset.Charset
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import java.util.stream.Collectors
 import java.util.stream.Stream
@@ -46,50 +45,6 @@ object StringUtil {
         } else {
             text.toString()
         }
-    }
-
-    @JvmStatic
-    fun lineWrapping(description: CharSequence, width: Int): String {
-        logger.debug("lineWrapping called with description of length: {}, width: {}", description.length, width)
-        val output = StringBuilder()
-        val lines = description.toString().split("\n".toRegex()).dropLastWhile { it.isEmpty() }
-            .toTypedArray()
-        var lineLength = 0
-        for (line in lines) {
-            val sentenceLength = AtomicInteger(lineLength)
-            var sentenceBuffer = wrapSentence(line, width, sentenceLength)
-            if (lineLength + sentenceBuffer.length > width && sentenceBuffer.length < width) {
-                output.append("\n")
-                lineLength = 0
-                sentenceLength.set(lineLength)
-                sentenceBuffer = wrapSentence(line, width, sentenceLength)
-            } else {
-                output.append(" ")
-                sentenceLength.addAndGet(1)
-            }
-            output.append(sentenceBuffer)
-            lineLength = sentenceLength.get()
-        }
-        return output.toString()
-    }
-
-    @JvmStatic
-    private fun wrapSentence(line: CharSequence, width: Int, xPointer: AtomicInteger): String {
-        logger.debug("wrapSentence called with line of length: {}, width: {}", line.length, width)
-        val sentenceBuffer = StringBuilder()
-        val words = line.toString().split(" ".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-        for (word in words) {
-            if (xPointer.get() + word.length > width) {
-                sentenceBuffer.append("\n")
-                xPointer.set(0)
-            } else {
-                sentenceBuffer.append(" ")
-                xPointer.addAndGet(1)
-            }
-            sentenceBuffer.append(word)
-            xPointer.addAndGet(word.length)
-        }
-        return sentenceBuffer.toString()
     }
 
     @JvmStatic

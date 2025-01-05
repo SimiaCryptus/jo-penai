@@ -13,7 +13,6 @@ open class ChatProxy<T : Any>(
     val api: ChatClient,
     var model: ChatModel,
     temperature: Double = 0.5,
-    private var verbose: Boolean = false,
     private val moderated: Boolean = false,
     val deserializerRetries: Int = 2,
     validation: Boolean = true
@@ -24,7 +23,6 @@ open class ChatProxy<T : Any>(
         api = params["api"] as ChatClient? ?: ChatClient(),
         model = (params["model"] as ChatModel?)!!,
         temperature = params["temperature"] as Double? ?: 0.7,
-        verbose = params["verbose"] as Boolean? ?: false,
         moderated = params["moderated"] as Boolean? ?: true,
         deserializerRetries = params["deserializerRetries"] as Int? ?: 5,
         validation = params["validation"] as Boolean? ?: true,

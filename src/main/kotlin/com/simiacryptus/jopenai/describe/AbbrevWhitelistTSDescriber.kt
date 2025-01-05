@@ -7,7 +7,7 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
 open class AbbrevWhitelistTSDescriber(private vararg val abbreviated: String) : TypeScriptDescriber() {
-    private val logger = LoggerFactory.getLogger(AbbrevWhitelistTSDescriber::class.java)
+    private val log = LoggerFactory.getLogger(AbbrevWhitelistTSDescriber::class.java)
 
     override fun isAbbreviated(self: Type): Boolean {
 //        logger.info("Checking if type is abbreviated: {}", self.typeName)
