@@ -49,6 +49,7 @@ open class ChatModel(
             "GPT4oMini" to OpenAIModels.GPT4oMini,
             "O1Preview" to OpenAIModels.O1Preview,
             "O1Mini" to OpenAIModels.O1Mini,
+            "O1" to OpenAIModels.O1,
 
 
             "SonarSmallChat128k" to PerplexityModels.SonarSmallChat128k,
