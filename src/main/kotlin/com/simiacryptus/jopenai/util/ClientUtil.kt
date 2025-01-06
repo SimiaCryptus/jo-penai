@@ -6,6 +6,7 @@ import com.simiacryptus.jopenai.OpenAIClient
 import com.simiacryptus.jopenai.exceptions.*
 import com.simiacryptus.jopenai.models.APIProvider
 import com.simiacryptus.jopenai.models.ApiModel
+import com.simiacryptus.jopenai.models.TextModel
 import com.simiacryptus.util.JsonUtil.fromJson
 import java.io.File
 import java.io.IOException
@@ -104,8 +105,7 @@ object ClientUtil {
         }
     )
 
-
-    fun checkError(result: String) {
+    fun checkError(result: String, model: TextModel? = null) {
         try {
             val jsonObject = Gson().fromJson(result, JsonObject::class.java) ?: return
             if (jsonObject.has("error")) {
@@ -117,7 +117,7 @@ object ClientUtil {
                 throw IOException(errorMessage)
             }
         } catch (e: com.google.gson.JsonSyntaxException) {
-            throw IOException("Invalid JSON response: $result", e)
+            throw IOException("Invalid JSON response: $result" + (if(null == model) "" else "\nChat Model: ${model}"), e)
         }
     }
 
