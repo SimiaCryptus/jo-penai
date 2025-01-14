@@ -16,8 +16,8 @@ open class TextModel(
     override val modelName: String = "",
     val maxTotalTokens: Int = -1,
     val maxOutTokens: Int = maxTotalTokens,
+    val provider: APIProvider = APIProvider.OpenAI,
 ) : OpenAIModel {
-    open val provider: APIProvider = APIProvider.OpenAI
 
     open fun pricing(usage: Usage): Double = 0.0
 }

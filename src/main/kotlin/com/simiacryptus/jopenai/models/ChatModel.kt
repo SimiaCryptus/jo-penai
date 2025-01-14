@@ -20,15 +20,15 @@ open class ChatModel(
     modelName: String,
     maxTotalTokens: Int,
     maxOutTokens: Int = maxTotalTokens,
-    override val provider: APIProvider,
+    provider: APIProvider,
     val inputTokenPricePerK: Double,
     val outputTokenPricePerK: Double,
 ) : TextModel(
     modelName = modelName,
     maxTotalTokens = maxTotalTokens,
-    maxOutTokens = maxOutTokens
+    maxOutTokens = maxOutTokens,
+    provider = provider,
 ) {
-  private val log = LoggerFactory.getLogger(ChatModel::class.java)
     override fun toString() = modelName
 
     override fun pricing(usage: Usage) =
@@ -40,9 +40,7 @@ open class ChatModel(
         fun values() = values.filterValues { it != null }.mapValues { it.value!! }
         val values: MutableMap<String, ChatModel?> by lazy { defaultValues().toMutableMap() }
 
-        fun defaultValues(): Map<String, ChatModel> = mapOf(
-
-
+        private fun defaultValues(): Map<String, ChatModel> = mapOf(
             "GPT35Turbo" to OpenAIModels.GPT35Turbo,
             "GPT4Turbo" to OpenAIModels.GPT4Turbo,
             "GPT4o" to OpenAIModels.GPT4o,
@@ -154,7 +152,7 @@ open class ChatModel(
 class ChatModelsSerializer : StdSerializer<ChatModel>(ChatModel::class.java) {
     private val logger = LoggerFactory.getLogger(ChatModelsSerializer::class.java)
     override fun serialize(value: ChatModel, gen: JsonGenerator, provider: SerializerProvider) {
-        logger.debug("Serializing ChatModel: {}", value.name)
+        //logger.debug("Serializing ChatModel: {}", value.name)
         values().entries.find { it.value == value }?.key?.let { gen.writeString(it) }
     }
 }
@@ -163,7 +161,7 @@ class ChatModelsDeserializer : JsonDeserializer<ChatModel>() {
     private val logger = LoggerFactory.getLogger(ChatModelsDeserializer::class.java)
     override fun deserialize(p: JsonParser, ctxt: DeserializationContext): ChatModel {
         val modelName = p.readValueAs(String::class.java)
-        logger.debug("Deserializing ChatModel with name: {}", modelName)
+        //logger.debug("Deserializing ChatModel with name: {}", modelName)
         return values()[modelName] ?: throw IllegalArgumentException("Unknown model name: $modelName")
     }
 }
