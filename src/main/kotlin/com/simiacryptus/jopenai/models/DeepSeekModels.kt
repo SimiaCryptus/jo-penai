@@ -7,8 +7,8 @@ object DeepSeekModels {
         maxTotalTokens = 64000,
         maxOutTokens = 4096,
         provider = APIProvider.DeepSeek,
-        inputTokenPricePerK = 0.014 / 1000.0,
-        outputTokenPricePerK = 0.14 / 1000.0
+        inputTokenPricePerK = 0.14 / 1000.0,
+        outputTokenPricePerK = 0.28 / 1000.0
     )
     val DeepSeekCoder = ChatModel(
         name = "DeepSeekCoder",
@@ -16,7 +16,16 @@ object DeepSeekModels {
         maxTotalTokens = 64000,
         maxOutTokens = 4096,
         provider = APIProvider.DeepSeek,
-        inputTokenPricePerK = 0.014 / 1000.0,
-        outputTokenPricePerK = 0.14 / 1000.0
+        inputTokenPricePerK = 0.14 / 1000.0,
+        outputTokenPricePerK = 0.28 / 1000.0
+    )
+    val DeepSeekReasoner = ChatModel(
+        name = "DeepSeekReasoner",
+        modelName = "deepseek-reasoner",
+        maxTotalTokens = 64000,
+        maxOutTokens = 4096,
+        provider = APIProvider.DeepSeek,
+        inputTokenPricePerK = 0.55 / 1000.0,
+        outputTokenPricePerK = 2.19 / 1000.0
     )
 }
