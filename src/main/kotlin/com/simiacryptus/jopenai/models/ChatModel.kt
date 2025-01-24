@@ -119,7 +119,6 @@ open class ChatModel(
             "LLaMA38bInstructAWS" to AWSModels.LLaMA38bInstructAWS,
             "LLaMA370bInstructAWS" to AWSModels.LLaMA370bInstructAWS,
 
-
             "AnthropicClaude3Opus" to AnthropicModels.Claude3Opus,
             "AnthropicClaude35Sonnet" to AnthropicModels.Claude35Sonnet,
             "AnthropicClaude35Haiku" to AnthropicModels.Claude35Haiku,

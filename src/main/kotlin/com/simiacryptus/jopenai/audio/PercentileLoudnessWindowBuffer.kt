@@ -4,12 +4,14 @@ package com.simiacryptus.jopenai.audio
 
 import org.slf4j.LoggerFactory
 import java.util.*
+import javax.sound.sampled.AudioFormat
 
 class PercentileLoudnessWindowBuffer(
-    inputBuffer: Deque<ByteArray>,
-    outputBuffer: Deque<ByteArray>,
-    continueFn: () -> Boolean,
-) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn) {
+  inputBuffer: Deque<ByteArray>,
+  outputBuffer: Deque<ByteArray>,
+  continueFn: () -> Boolean,
+  audioFormat: AudioFormat,
+) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn, audioFormat) {
     // Logger instance for PercentileLoudnessWindowBuffer class
     private val log = LoggerFactory.getLogger(PercentileLoudnessWindowBuffer::class.java)
 
@@ -48,7 +50,7 @@ class PercentileLoudnessWindowBuffer(
         // Calculate the percentile of the RMS value
         val percentile = index.toDouble() / rmsHeap.size
         // Calculate the minimum buffer size
-        val minBufferSize = AudioRecorder.audioFormat.frameRate * AudioRecorder.audioFormat.frameSize * minSeconds
+        val minBufferSize = audioFormat.frameRate * audioFormat.frameSize * minSeconds
         // If the buffer size is less than the minimum buffer size, add the percentile to the quiet window and add the RMS value to the rmsHeap list
         val sum = synchronized(outputPacketBuffer) { outputPacketBuffer.map { it.size }.sum() }
         if (minBufferSize > sum) {
@@ -79,7 +81,7 @@ class PercentileLoudnessWindowBuffer(
         log.debug("Loudness: {}, percentile: {}, quiet windows: [{}] ({} samples)",
                   loudness, percentile, quietWindow.joinToString(", "), quietPacket.samples.size)
         // Calculate the maximum buffer size
-        val maxBufferSize = AudioRecorder.audioFormat.frameRate * AudioRecorder.audioFormat.frameSize * flushSeconds
+        val maxBufferSize = audioFormat.frameRate * audioFormat.frameSize * flushSeconds
         // If the buffer size is greater than the maximum buffer size or the quiet window size is greater than or equal to the quiet window max,
         // add the converted raw to wav byte array to the output buffer, reset the buffer, clear the rmsHeap list, and clear the quiet window
         return if (sum > maxBufferSize || quietWindow.size >= quietWindowMax) {

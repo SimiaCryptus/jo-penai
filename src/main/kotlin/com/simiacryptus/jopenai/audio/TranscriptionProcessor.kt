@@ -13,11 +13,11 @@ open class TranscriptionProcessor(
 ) {
     private val logger = LoggerFactory.getLogger(TranscriptionProcessor::class.java)
     fun run() {
-        logger.info("TranscriptionProcessor started.")
+        logger.debug("TranscriptionProcessor started.")
         while (this.continueFn() || audioBuffer.isNotEmpty()) {
             val recordAudio = audioBuffer.poll()
             if (null == recordAudio) {
-                logger.warn("Audio buffer is empty, sleeping for 1ms.")
+                logger.trace("Audio buffer is empty, sleeping for 1ms.")
                 Thread.sleep(1)
             } else {
                 logger.debug("Processing audio buffer of size: ${recordAudio.size}.")
@@ -25,11 +25,11 @@ open class TranscriptionProcessor(
                 if (prompt.isNotEmpty()) text = "$text"
                 val newPrompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
                 prompt = newPrompt
-                logger.info("Updated prompt: $prompt")
+                logger.debug("Updated prompt: $prompt")
                 onText(text)
                 logger.debug("Transcribed text: $text")
             }
         }
-        logger.info("TranscriptionProcessor finished.")
+        logger.debug("TranscriptionProcessor finished.")
     }
 }

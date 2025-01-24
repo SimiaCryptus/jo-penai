@@ -7,15 +7,17 @@ import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.TargetDataLine
 
-class AudioRecorder(
+open class AudioRecorder(
     private val audioBuffer: Deque<ByteArray>,
     private val secondsPerPacket: Double,
     val continueFn: () -> Boolean,
+    private val selectedMicLine: String? = null
 ) {
-    private val packetLength = (audioFormat.frameRate * audioFormat.frameSize * secondsPerPacket).toInt()
 
     fun run() {
         val targetDataLine = openMic()
+        val audioFormat = targetDataLine.format
+        val packetLength = (audioFormat.frameRate * audioFormat.frameSize * secondsPerPacket).toInt()
         try {
             log.info("Audio recording started with packet length: {} bytes", packetLength)
             val buffer = ByteArray(packetLength)
@@ -46,18 +48,22 @@ class AudioRecorder(
         }
     }
 
+    open fun openMic(): TargetDataLine {
+        val mixerInfo = AudioSystem.getMixerInfo()
+        val micLine = (selectedMicLine ?: "Microphone").let { selectedMicLine ->
+            mixerInfo.firstOrNull { it.toString().contains(selectedMicLine, true) }
+        } ?: throw IllegalStateException("No microphone line found; available lines: ${mixerInfo.joinToString { it.name }}, selected: $selectedMicLine")
+        val audioFormat : AudioFormat = AudioFormat(16000f, 16, 1, true, false)
+        return AudioSystem.getTargetDataLine(audioFormat, micLine).apply {
+            open(audioFormat)
+            start()
+            log.info("Microphone line opened with format: {}", audioFormat)
+        }
+    }
+
     companion object {
         private val log = LoggerFactory.getLogger(AudioRecorder::class.java)
 
-        val audioFormat = AudioFormat(16000f, 16, 1, true, false)
-
-        fun openMic(): TargetDataLine {
-            val targetDataLine = AudioSystem.getTargetDataLine(audioFormat)
-            targetDataLine.open(audioFormat)
-            targetDataLine.start()
-            log.info("Microphone line opened with format: {}", audioFormat)
-            return targetDataLine
-        }
 
     }
 
