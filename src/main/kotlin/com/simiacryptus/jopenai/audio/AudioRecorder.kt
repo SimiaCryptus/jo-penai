@@ -3,15 +3,14 @@ package com.simiacryptus.jopenai.audio
 import org.apache.commons.io.input.buffer.CircularByteBuffer
 import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sound.sampled.AudioFormat
-import javax.sound.sampled.AudioSystem
-import javax.sound.sampled.TargetDataLine
+import javax.sound.sampled.*
 
 open class AudioRecorder(
     private val audioBuffer: Deque<ByteArray>,
     private val secondsPerPacket: Double,
     val continueFn: () -> Boolean,
-    private val selectedMicLine: String? = null
+    private val selectedMicLine: String? = null,
+    val audioFormat : AudioFormat = AudioFormat(16000f, 16, 1, true, false)
 ) {
 
     fun run() {
@@ -28,13 +27,13 @@ open class AudioRecorder(
                     val endTime = (System.currentTimeMillis() + secondsPerPacket * 1000).toLong()
                     while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
                         bytesRead = targetDataLine.read(buffer, 0, buffer.size)
-                        log.debug("Read {} bytes from microphone", bytesRead)
+                        //log.debug("Read {} bytes from microphone", bytesRead)
                         circularBuffer.add(buffer, 0, bytesRead)
                         while (circularBuffer.currentNumberOfBytes >= packetLength) {
                             val array = ByteArray(packetLength)
                             circularBuffer.read(array, 0, packetLength)
                             audioBuffer.add(array)
-                            log.debug("Added packet to audio buffer, buffer size: {}", audioBuffer.size)
+                            //log.debug("Added packet to audio buffer, buffer size: {}", audioBuffer.size)
                         }
                     }
                 } catch (e: Exception) {
@@ -53,7 +52,17 @@ open class AudioRecorder(
         val micLine = (selectedMicLine ?: "Microphone").let { selectedMicLine ->
             mixerInfo.firstOrNull { it.toString().contains(selectedMicLine, true) }
         } ?: throw IllegalStateException("No microphone line found; available lines: ${mixerInfo.joinToString { it.name }}, selected: $selectedMicLine")
-        val audioFormat : AudioFormat = AudioFormat(16000f, 16, 1, true, false)
+        try {
+            val targetLineInfo = AudioSystem.getMixer(micLine).lineInfo
+            log.info(" Audio Mixer Target Line: $targetLineInfo (${targetLineInfo.javaClass.canonicalName})")
+            if (targetLineInfo is DataLine.Info) {
+                targetLineInfo.formats.forEach { format ->
+                    log.info("  Audio Mixer Target Line Format: $format; Channels: ${format.channels}; Sample Rate: ${format.sampleRate}")
+                }
+            }
+        } catch (e: Exception) {
+            log.error("Error getting audio mixer target line", e)
+        }
         return AudioSystem.getTargetDataLine(audioFormat, micLine).apply {
             open(audioFormat)
             start()
@@ -63,7 +72,6 @@ open class AudioRecorder(
 
     companion object {
         private val log = LoggerFactory.getLogger(AudioRecorder::class.java)
-
 
     }
 

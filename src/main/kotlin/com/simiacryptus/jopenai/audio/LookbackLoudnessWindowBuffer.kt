@@ -21,23 +21,18 @@ class LookbackLoudnessWindowBuffer(
 
     override fun shouldOutput(): Boolean {
 
-
         val thisPacket = outputPacketBuffer.takeLast(1).get(0)
         onRmsUpdate(thisPacket)
         onIec61672Update(thisPacket)
 
         val recentRMS = recentPacketBuffer.map { it.rms }.toDoubleArray().sortedArray()
-        val rmsStats = statistics(recentRMS)
         val percentileRMS = percentile(thisPacket.rms, recentRMS)
 
         val recentIEC61672 = recentPacketBuffer.map { it.iec61672 }.toDoubleArray().sortedArray()
-        val iec61672Stats = statistics(recentIEC61672)
         val percentileIEC61672 = percentile(thisPacket.iec61672, recentIEC61672)
 
         val outputTime = outputPacketBuffer.map { it.duration }.sum()
-
         val output = percentileRMS < rmsPercentileThreshold && percentileIEC61672 < iec61672PercentileThreshold && outputTime > minimumOutputTimeSeconds
-        log.debug(" Packet RMS: ${thisPacket.rms}\n Recent RMS: ${rmsStats}\n Percentile RMS: ${percentileRMS}\n Recent IEC61672: ${iec61672Stats}\n Packet IEC61672: ${thisPacket.iec61672}\n Percentile IEC61672: ${percentileIEC61672}\n Output Time: ${outputTime}")
 
         return output
     }

@@ -9,7 +9,7 @@ open class TranscriptionProcessor(
     private var audioBuffer: Deque<ByteArray>,
     var continueFn: () -> Boolean,
     var prompt: String = "",
-    var onText: (String) -> Unit,
+    var onTranscriptionUpdate: (String) -> Unit,
 ) {
     private val logger = LoggerFactory.getLogger(TranscriptionProcessor::class.java)
     fun run() {
@@ -26,7 +26,7 @@ open class TranscriptionProcessor(
                 val newPrompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
                 prompt = newPrompt
                 logger.debug("Updated prompt: $prompt")
-                onText(text)
+                onTranscriptionUpdate(text)
                 logger.debug("Transcribed text: $text")
             }
         }

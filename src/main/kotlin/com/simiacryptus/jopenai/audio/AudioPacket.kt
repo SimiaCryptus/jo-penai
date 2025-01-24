@@ -160,6 +160,8 @@ data class AudioPacket(
             fft.realForward(output)
             return output
         }
+
+        fun fromByteArray(packet: ByteArray, audioFormat: AudioFormat) = AudioPacket(convertRaw(packet, audioFormat), audioFormat)
     }
 
 }

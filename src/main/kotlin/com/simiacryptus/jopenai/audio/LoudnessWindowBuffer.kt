@@ -29,7 +29,7 @@ abstract class LoudnessWindowBuffer(
                 //log.debug("Input buffer is empty, sleeping for 1 millisecond.")
                 Thread.sleep(1)
             } else {
-                log.debug("Processing byte array of size: ${bytes.size}.")
+                //log.debug("Processing byte array of size: ${bytes.size}.")
                 val packet = AudioPacket(AudioPacket.convertRaw(bytes, audioFormat), audioFormat)
                 synchronized(outputPacketBuffer) { outputPacketBuffer.add(packet) }
                 synchronized(recentPacketBuffer) {
