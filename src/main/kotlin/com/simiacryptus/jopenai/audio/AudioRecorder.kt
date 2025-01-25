@@ -6,7 +6,7 @@ import java.util.*
 import javax.sound.sampled.*
 
 open class AudioRecorder(
-    private val audioBuffer: Deque<ByteArray>,
+    private val audioBuffer: Queue<ByteArray>,
     private val secondsPerPacket: Double,
     val continueFn: () -> Boolean,
     private val selectedMicLine: String? = null,

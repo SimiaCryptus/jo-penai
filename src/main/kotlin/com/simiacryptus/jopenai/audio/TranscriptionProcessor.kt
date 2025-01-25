@@ -6,7 +6,7 @@ import java.util.*
 
 open class TranscriptionProcessor(
     var client: OpenAIClient,
-    private var audioBuffer: Deque<ByteArray>,
+    private var audioBuffer: Queue<ByteArray>,
     var continueFn: () -> Boolean,
     var prompt: String = "",
     var onTranscriptionUpdate: (String) -> Unit,
@@ -24,7 +24,7 @@ open class TranscriptionProcessor(
                 var text = client.transcription(recordAudio, prompt)
                 if (prompt.isNotEmpty()) text = "$text"
                 val newPrompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
-                prompt = newPrompt
+                prompt = newPrompt.takeLast(1024)
                 logger.debug("Updated prompt: $prompt")
                 onTranscriptionUpdate(text)
                 logger.debug("Transcribed text: $text")

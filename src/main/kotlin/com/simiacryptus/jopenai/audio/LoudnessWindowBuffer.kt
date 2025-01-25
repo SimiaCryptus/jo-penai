@@ -7,8 +7,8 @@ import java.util.*
 import javax.sound.sampled.AudioFormat
 
 abstract class LoudnessWindowBuffer(
-    private val inputBuffer: Deque<ByteArray>,
-    private val outputBuffer: Deque<ByteArray>,
+    private val inputBuffer: Queue<ByteArray>,
+    private val outputBuffer: Queue<ByteArray>,
     var continueFn: () -> Boolean,
     val audioFormat: AudioFormat,
 ) {

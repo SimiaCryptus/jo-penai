@@ -7,8 +7,8 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 class LookbackLoudnessWindowBuffer(
-    inputBuffer: Deque<ByteArray>,
-    outputBuffer: Deque<ByteArray>,
+    inputBuffer: Queue<ByteArray>,
+    outputBuffer: Queue<ByteArray>,
     private val onRmsUpdate: (AudioPacket) -> Unit,
     private val onIec61672Update: (AudioPacket) -> Unit,
     continueFn: () -> Boolean,
@@ -16,8 +16,8 @@ class LookbackLoudnessWindowBuffer(
 ) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn, audioFormat) {
 
     private var minimumOutputTimeSeconds = 5.0
-    private var rmsPercentileThreshold = 0.5
-    private var iec61672PercentileThreshold = 0.25
+    var rmsPercentileThreshold = 0.5
+    var iec61672PercentileThreshold = 0.25
 
     override fun shouldOutput(): Boolean {
 
