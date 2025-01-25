@@ -30,7 +30,6 @@ open class HttpClientManager(
     val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
     private val workPool: ThreadPoolExecutor = Companion.workPool,
-    private val userAgent: String = DEFAULT_USER_AGENT,
 ) : API() {
 
     companion object {
@@ -54,7 +53,8 @@ open class HttpClientManager(
                 ThreadFactoryBuilder().setNameFormat("API Thread %d").build()
             )
 
-        const val DEFAULT_USER_AGENT = "JOpenAI/1.0"
+        private const val DEFAULT_USER_AGENT = "JOpenAI/1.0"
+        val client by lazy { createHttpClient(DEFAULT_USER_AGENT) }
         fun createHttpClient(userAgent: String = DEFAULT_USER_AGENT): CloseableHttpClient = HttpClientBuilder.create()
             .setRetryStrategy(DefaultHttpRequestRetryStrategy(0, Timeout.ofSeconds(1)))
             .setConnectionManager(with(PoolingHttpClientConnectionManager()) {
@@ -204,10 +204,7 @@ open class HttpClientManager(
         }
     }
 
-    fun <T> withClient(fn: Function<CloseableHttpClient, T>): T {
-        val client = createHttpClient(userAgent)
-        return fn.apply(client)
-    }
+    fun <T> withClient(fn: Function<CloseableHttpClient, T>): T = fn.apply(client)
 
     protected open fun log(level: Level = logLevel, msg: String) {
         val message = msg.trim().replace("\n", "\n\t")

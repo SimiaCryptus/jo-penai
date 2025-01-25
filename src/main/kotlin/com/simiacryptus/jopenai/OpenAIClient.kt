@@ -36,7 +36,7 @@ import javax.imageio.ImageIO
 open class OpenAIClient(
     protected var key: Map<APIProvider, String> = keyMap.mapKeys { APIProvider.valueOf(it.key) },
     protected val apiBase: Map<APIProvider, String> = APIProvider.values().associate { it to (it.base ?: "") },
-    logLevel: Level = Level.INFO,
+    logLevel: Level = Level.TRACE,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
     workPool: ThreadPoolExecutor = Companion.workPool
@@ -147,7 +147,7 @@ open class OpenAIClient(
 
     open fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
         withPerformanceLogging {
-            val url = "$apiBase/audio/transcriptions"
+            val url = "${apiBase[defaultApiProvider]}/audio/transcriptions"
             val request = HttpPost(url)
             request.addHeader("Accept", "application/json")
             authorize(request, defaultApiProvider)
