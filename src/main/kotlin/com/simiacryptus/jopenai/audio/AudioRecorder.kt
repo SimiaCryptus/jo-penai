@@ -7,16 +7,16 @@ import javax.sound.sampled.*
 
 open class AudioRecorder(
     private val audioBuffer: Queue<ByteArray>,
-    private val secondsPerPacket: Double,
+    private val msPerPacket: Long,
     val continueFn: () -> Boolean,
     private val selectedMicLine: String? = null,
-    val audioFormat : AudioFormat = AudioFormat(16000f, 16, 1, true, false)
+    val audioFormat: AudioFormat = AudioFormat(16000f, 16, 1, true, false)
 ) {
 
     fun run() {
         val targetDataLine = openMic()
         val audioFormat = targetDataLine.format
-        val packetLength = (audioFormat.frameRate * audioFormat.frameSize * secondsPerPacket).toInt()
+        val packetLength = (audioFormat.frameRate * audioFormat.frameSize * (msPerPacket / 1000.0)).toInt()
         try {
             log.info("Audio recording started with packet length: {} bytes", packetLength)
             val buffer = ByteArray(packetLength)
@@ -24,7 +24,7 @@ open class AudioRecorder(
             while (continueFn()) {
                 try {
                     var bytesRead = 0
-                    val endTime = (System.currentTimeMillis() + secondsPerPacket * 1000).toLong()
+                    val endTime = System.currentTimeMillis() + msPerPacket
                     while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
                         bytesRead = targetDataLine.read(buffer, 0, buffer.size)
                         //log.debug("Read {} bytes from microphone", bytesRead)

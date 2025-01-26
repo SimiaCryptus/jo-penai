@@ -12,7 +12,8 @@ abstract class WindowBuffer(
     private val outputBuffer: Queue<ByteArray>,
     var continueFn: () -> Boolean,
     private val audioFormat: AudioFormat,
-    var size: Int = 100,
+    var memoryPackets: Int = 60,
+    val onPacket: (AudioPacket) -> Unit
 ) {
     protected var outputPacketBuffer = ArrayList<AudioPacket>()
     protected var lastOutputBuffer : ArrayList<AudioPacket>? = null
@@ -27,8 +28,9 @@ abstract class WindowBuffer(
                 val packet = AudioPacket(AudioPacket.convertRaw(bytes, audioFormat), audioFormat)
                 synchronized(this.outputPacketBuffer) {
                     this.outputPacketBuffer.add(packet)
-                    while (this.outputPacketBuffer.size > size) this.outputPacketBuffer.removeAt(0)
+                    while (this.outputPacketBuffer.size > memoryPackets) this.outputPacketBuffer.removeAt(0)
                 }
+                onPacket(packet)
                 if (shouldOutput()) {
                     val reduced = this.outputPacketBuffer.reduce { a, b -> a + b }
                     outputBuffer.add(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat))
