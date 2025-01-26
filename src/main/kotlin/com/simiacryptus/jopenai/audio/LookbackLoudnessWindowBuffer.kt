@@ -3,8 +3,6 @@ package com.simiacryptus.jopenai.audio
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sound.sampled.AudioFormat
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 class LookbackLoudnessWindowBuffer(
     inputBuffer: Queue<ByteArray>,
@@ -16,12 +14,11 @@ class LookbackLoudnessWindowBuffer(
 ) : LoudnessWindowBuffer(inputBuffer, outputBuffer, continueFn, audioFormat) {
 
     private var minimumOutputTimeSeconds = 5.0
-    var rmsPercentileThreshold = 0.5
-    var iec61672PercentileThreshold = 0.25
+    var rmsThreshold = 0.5
+    var iec61672Threshold = 0.25
 
     override fun shouldOutput(): Boolean {
-
-        val thisPacket = outputPacketBuffer.takeLast(1).get(0)
+        val thisPacket = outputPacketBuffer.takeLast(1).firstOrNull() ?: return false
         onRmsUpdate(thisPacket)
         onIec61672Update(thisPacket)
 
@@ -32,8 +29,15 @@ class LookbackLoudnessWindowBuffer(
         val percentileIEC61672 = percentile(thisPacket.iec61672, recentIEC61672)
 
         val outputTime = outputPacketBuffer.map { it.duration }.sum()
-        val output = percentileRMS < rmsPercentileThreshold && percentileIEC61672 < iec61672PercentileThreshold && outputTime > minimumOutputTimeSeconds
-
+        val output = percentileRMS < rmsThreshold && percentileIEC61672 < iec61672Threshold && outputTime > minimumOutputTimeSeconds
+        log.debug(
+            listOf(
+                "RMS: ${thisPacket.rms.format("%.2f")} (${(percentileRMS*100.0).format("%.2f")}%) > ${rmsThreshold.format("%.2f")}",
+                "IEC61672: ${thisPacket.iec61672.format("%.2f")} (${(percentileIEC61672*100.0).format("%.2f")}%) > ${iec61672Threshold.format("%.2f")}",
+                "Output Time: $outputTime > $minimumOutputTimeSeconds",
+                "Output: $output"
+            ).joinToString(" | ")
+        )
         return output
     }
 
@@ -43,15 +47,12 @@ class LookbackLoudnessWindowBuffer(
         return index.toDouble() / values.size
     }
 
-    private fun statistics(values: DoubleArray): List<Double> {
-        val mean = values.average()
-        val variance = values.map { (it - mean).pow(2) }.average()
-        val stdDev = sqrt(variance)
-        return listOf(mean, stdDev)
-    }
-
     companion object {
         private val log = LoggerFactory.getLogger(LookbackLoudnessWindowBuffer::class.java)
     }
 
+}
+
+private fun Number.format(s: String): String {
+    return String.format(s, this)
 }

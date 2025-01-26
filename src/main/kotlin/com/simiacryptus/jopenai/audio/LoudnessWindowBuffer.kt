@@ -37,13 +37,10 @@ abstract class LoudnessWindowBuffer(
                     while (recentPacketBuffer.size > packetLookback) recentPacketBuffer.removeAt(0)
                 }
                 if (shouldOutput()) {
-                    log.info("Output condition met, preparing to output.")
-                    // Add the converted raw to wav byte array to the output buffer
                     val reduced = synchronized(outputPacketBuffer) { outputPacketBuffer.reduce { a, b -> a + b } }
-                    log.debug("Reduced packet size: ${reduced.samples.size}.")
                     outputBuffer.add(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat))
                     synchronized(outputPacketBuffer) { outputPacketBuffer.clear() }
-                    log.info("Output buffer updated and outputPacketBuffer cleared.")
+                    log.debug("Output packet size: ${reduced.samples.size}.")
                 }
             }
         }

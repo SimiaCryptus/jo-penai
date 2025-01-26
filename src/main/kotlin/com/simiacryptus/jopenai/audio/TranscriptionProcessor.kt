@@ -17,17 +17,13 @@ open class TranscriptionProcessor(
         while (this.continueFn() || audioBuffer.isNotEmpty()) {
             val recordAudio = audioBuffer.poll()
             if (null == recordAudio) {
-                logger.trace("Audio buffer is empty, sleeping for 1ms.")
                 Thread.sleep(1)
             } else {
                 logger.debug("Processing audio buffer of size: ${recordAudio.size}.")
-                var text = client.transcription(recordAudio, prompt)
-                if (prompt.isNotEmpty()) text = "$text"
-                val newPrompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
-                prompt = newPrompt.takeLast(1024)
-                logger.debug("Updated prompt: $prompt")
+                val text = client.transcription(recordAudio, prompt)
+                prompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
                 onTranscriptionUpdate(text)
-                logger.debug("Transcribed text: $text")
+                logger.debug("Transcribed text: `$text` - New Prompt: `$prompt`")
             }
         }
         logger.debug("TranscriptionProcessor finished.")
