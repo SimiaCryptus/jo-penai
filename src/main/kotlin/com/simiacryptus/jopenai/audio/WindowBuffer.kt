@@ -5,6 +5,7 @@ package com.simiacryptus.jopenai.audio
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sound.sampled.AudioFormat
+import kotlin.collections.ArrayList
 
 abstract class WindowBuffer(
     private val inputBuffer: Queue<ByteArray>,
@@ -13,7 +14,8 @@ abstract class WindowBuffer(
     private val audioFormat: AudioFormat,
     var size: Int = 100,
 ) {
-    val outputPacketBuffer = ArrayList<AudioPacket>()
+    protected var outputPacketBuffer = ArrayList<AudioPacket>()
+    protected var lastOutputBuffer : ArrayList<AudioPacket>? = null
 
     fun run() {
         log.info("Starting LoudnessWindowBuffer processing loop.")
@@ -28,9 +30,10 @@ abstract class WindowBuffer(
                     while (this.outputPacketBuffer.size > size) this.outputPacketBuffer.removeAt(0)
                 }
                 if (shouldOutput()) {
-                    val reduced = synchronized(this.outputPacketBuffer) { this.outputPacketBuffer.reduce { a, b -> a + b } }
+                    val reduced = this.outputPacketBuffer.reduce { a, b -> a + b }
                     outputBuffer.add(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat))
-                    synchronized(this.outputPacketBuffer) { this.outputPacketBuffer.clear() }
+                    lastOutputBuffer = this.outputPacketBuffer
+                    this.outputPacketBuffer = ArrayList()
                     log.debug("Output packet size: ${reduced.samples.size}.")
                 }
             }

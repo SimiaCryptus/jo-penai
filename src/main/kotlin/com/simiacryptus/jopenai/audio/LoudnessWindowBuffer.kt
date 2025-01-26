@@ -19,7 +19,9 @@ class LoudnessWindowBuffer(
 
     private var minimumOutputTimeSeconds = 5.0
     var rmsThreshold = 0.5
+    var minRMS = 0.1
     var iec61672Threshold = 0.25
+    var minIEC61672 = 0.1
 
     override fun shouldOutput(): Boolean {
         val thisPacket = this.outputPacketBuffer.takeLast(1).firstOrNull() ?: return false
@@ -29,7 +31,7 @@ class LoudnessWindowBuffer(
         val percentileRMS = percentile(thisPacket.rms, recentRMS)
         val recentIEC61672 = recent.map { it.iec61672 }.toDoubleArray().sortedArray()
         val percentileIEC61672 = percentile(thisPacket.iec61672, recentIEC61672)
-        val outputTime = recent.map { it.duration }.sum()
+        val outputTime = recent.sumOf { it.duration }
         val output = percentileRMS < rmsThreshold && percentileIEC61672 < iec61672Threshold && outputTime > minimumOutputTimeSeconds
         log.debug(
             listOf(
@@ -51,7 +53,6 @@ class LoudnessWindowBuffer(
     companion object {
         private val log = LoggerFactory.getLogger(LoudnessWindowBuffer::class.java)
     }
-
 }
 
 private fun Number.format(s: String): String {
