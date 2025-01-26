@@ -1,59 +1,59 @@
-@file:Suppress("unused")
-
 package com.simiacryptus.jopenai.audio
 
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sound.sampled.AudioFormat
 
-abstract class LoudnessWindowBuffer(
-    private val inputBuffer: Queue<ByteArray>,
-    private val outputBuffer: Queue<ByteArray>,
-    var continueFn: () -> Boolean,
-    val audioFormat: AudioFormat,
+class LoudnessWindowBuffer(
+    inputBuffer: Queue<ByteArray>,
+    outputBuffer: Queue<ByteArray>,
+    private val onPacket: (AudioPacket) -> Unit,
+    continueFn: () -> Boolean,
+    audioFormat: AudioFormat,
+) : WindowBuffer(
+    inputBuffer = inputBuffer,
+    outputBuffer = outputBuffer,
+    continueFn = continueFn,
+    audioFormat = audioFormat
 ) {
 
-    val outputPacketBuffer = ArrayList<AudioPacket>()
-    val recentPacketBuffer = ArrayList<AudioPacket>()
-    private val packetLookback = 100
+    private var minimumOutputTimeSeconds = 5.0
+    var rmsThreshold = 0.5
+    var iec61672Threshold = 0.25
 
-    // Main function of the AudioPump class
-    fun run() {
-        log.info("Starting LoudnessWindowBuffer processing loop.")
-        // Loop until the continueFn returns false
-        while (this.continueFn() || inputBuffer.isNotEmpty()) {
-            // Poll the input buffer for a byte array
-            val bytes = inputBuffer.poll()
-            // If the byte array is null, sleep for 1 millisecond and continue
-            if (null == bytes) {
-                //log.debug("Input buffer is empty, sleeping for 1 millisecond.")
-                Thread.sleep(1)
-            } else {
-                //log.debug("Processing byte array of size: ${bytes.size}.")
-                val packet = AudioPacket(AudioPacket.convertRaw(bytes, audioFormat), audioFormat)
-                synchronized(outputPacketBuffer) { outputPacketBuffer.add(packet) }
-                synchronized(recentPacketBuffer) {
-                    recentPacketBuffer.add(packet)
-                    while (recentPacketBuffer.size > packetLookback) recentPacketBuffer.removeAt(0)
-                }
-                if (shouldOutput()) {
-                    val reduced = synchronized(outputPacketBuffer) { outputPacketBuffer.reduce { a, b -> a + b } }
-                    outputBuffer.add(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat))
-                    synchronized(outputPacketBuffer) { outputPacketBuffer.clear() }
-                    log.debug("Output packet size: ${reduced.samples.size}.")
-                }
-            }
-        }
-        log.info("LoudnessWindowBuffer processing loop ended.")
+    override fun shouldOutput(): Boolean {
+        val thisPacket = this.outputPacketBuffer.takeLast(1).firstOrNull() ?: return false
+        onPacket(thisPacket)
+        val recent = outputPacketBuffer.takeLast(10)
+        val recentRMS = recent.map { it.rms }.toDoubleArray().sortedArray()
+        val percentileRMS = percentile(thisPacket.rms, recentRMS)
+        val recentIEC61672 = recent.map { it.iec61672 }.toDoubleArray().sortedArray()
+        val percentileIEC61672 = percentile(thisPacket.iec61672, recentIEC61672)
+        val outputTime = recent.map { it.duration }.sum()
+        val output = percentileRMS < rmsThreshold && percentileIEC61672 < iec61672Threshold && outputTime > minimumOutputTimeSeconds
+        log.debug(
+            listOf(
+                "RMS: ${thisPacket.rms.format("%.2f")} (${(percentileRMS*100.0).format("%.2f")}%) > ${rmsThreshold.format("%.2f")}",
+                "IEC61672: ${thisPacket.iec61672.format("%.2f")} (${(percentileIEC61672*100.0).format("%.2f")}%) > ${iec61672Threshold.format("%.2f")}",
+                "Output Time: $outputTime > $minimumOutputTimeSeconds",
+                "Output: $output"
+            ).joinToString(" | ")
+        )
+        return output
     }
 
-
-    abstract fun shouldOutput(): Boolean
+    private fun percentile(value: Double, values: DoubleArray): Double {
+        var index = values.binarySearch(value)
+        if (index < 0) index = -index - 1
+        return index.toDouble() / values.size
+    }
 
     companion object {
-        // Create a Logger instance for the AudioPump class
         private val log = LoggerFactory.getLogger(LoudnessWindowBuffer::class.java)
-
     }
 
+}
+
+private fun Number.format(s: String): String {
+    return String.format(s, this)
 }
