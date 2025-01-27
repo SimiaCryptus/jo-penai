@@ -8,8 +8,8 @@ import javax.sound.sampled.AudioFormat
 import kotlin.collections.ArrayList
 
 abstract class WindowBuffer(
-    private val inputBuffer: Queue<ByteArray>,
-    private val outputBuffer: Queue<ByteArray>,
+    private val inputBuffer: Queue<AudioPacket>,
+    private val outputBuffer: Queue<AudioPacket>,
     var continueFn: () -> Boolean,
     private val audioFormat: AudioFormat,
     var memoryPackets: Int = 60,
@@ -25,7 +25,7 @@ abstract class WindowBuffer(
             if (null == bytes) {
                 Thread.sleep(1)
             } else {
-                val packet = AudioPacket(AudioPacket.convertRaw(bytes, audioFormat), audioFormat)
+                val packet = bytes // AudioPacket(AudioPacket.convertRaw(, audioFormat), audioFormat)
                 synchronized(this.outputPacketBuffer) {
                     this.outputPacketBuffer.add(packet)
                     while (this.outputPacketBuffer.size > memoryPackets) this.outputPacketBuffer.removeAt(0)
@@ -33,7 +33,7 @@ abstract class WindowBuffer(
                 onPacket(packet)
                 if (shouldOutput()) {
                     val reduced = this.outputPacketBuffer.reduce { a, b -> a + b }
-                    outputBuffer.add(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat))
+                    outputBuffer.add(reduced) // AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(reduced.samples), audioFormat)
                     lastOutputBuffer = this.outputPacketBuffer
                     this.outputPacketBuffer = ArrayList()
                     log.debug("Output packet size: ${reduced.samples.size}.")

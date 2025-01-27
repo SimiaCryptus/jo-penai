@@ -5,8 +5,8 @@ import java.util.*
 import javax.sound.sampled.AudioFormat
 
 class LoudnessWindowBuffer(
-    inputBuffer: Queue<ByteArray>,
-    outputBuffer: Queue<ByteArray>,
+    inputBuffer: Queue<AudioPacket>,
+    outputBuffer: Queue<AudioPacket>,
     onPacket: (AudioPacket) -> Unit,
     continueFn: () -> Boolean,
     audioFormat: AudioFormat,
@@ -21,16 +21,20 @@ class LoudnessWindowBuffer(
     var minimumTalkSeconds = 2.0
     var minRMS = 0.1
     var minIEC61672 = 0.1
+    var minSpectralEntropy = 0.5
     var lookbackPackets = 20
-    val talkTime: Double get() = outputPacketBuffer.takeLast(lookbackPackets).filter(::isQuiet).sumOf { it.duration }
+    var quietWindowPackets = 3
+    val talkTime: Double get() = outputPacketBuffer.takeLast(lookbackPackets).filter{ isQuiet(it) }.sumOf { it.duration }
 
     override fun shouldOutput(): Boolean {
-        val thisPacket = this.outputPacketBuffer.takeLast(1).firstOrNull() ?: return false
-        val output = isQuiet(thisPacket) && talkTime > minimumTalkSeconds
+        val packets = this.outputPacketBuffer.takeLast(quietWindowPackets)
+        val output = isQuiet(*packets.toTypedArray()) && talkTime > minimumTalkSeconds
+        val thisPacket = packets.last()
         log.debug(
             listOf(
                 "RMS: ${compare(thisPacket.rms, minRMS)}",
                 "IEC61672: ${compare(thisPacket.iec61672, minIEC61672)}",
+                //"Spectral Entropy: ${compare(thisPacket.spectralEntropy, minSpectralEntropy)}",
                 "Talk Time: ${compare(talkTime, minimumTalkSeconds)}",
                 "Output: $output"
             ).joinToString(" | ")
@@ -44,7 +48,13 @@ class LoudnessWindowBuffer(
         else -> "${a.format("%.2f")} = ${b.format("%.2f")}"
     }
 
-    fun isQuiet(it: AudioPacket) = it.rms > minRMS && it.iec61672 > minIEC61672
+    fun isQuiet(vararg packets: AudioPacket) = packets.all { packet ->
+        listOf(
+            packet.rms < minRMS,
+            packet.iec61672 < minIEC61672,
+            //packet.spectralEntropy < minSpectralEntropy
+        ).all { it }
+    }
 
     companion object {
         private val log = LoggerFactory.getLogger(LoudnessWindowBuffer::class.java)

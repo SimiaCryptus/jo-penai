@@ -15,6 +15,7 @@ import kotlin.math.sqrt
 data class AudioPacket(
     val samples: FloatArray,
     val audioFormat: AudioFormat,
+    val createdOn : Long = System.currentTimeMillis()
 ) {
     private val logger = LoggerFactory.getLogger(AudioPacket::class.java)
     val duration: Double by lazy { samples.size.toDouble() / audioFormat.sampleRate }
@@ -69,7 +70,11 @@ data class AudioPacket(
 
     operator fun plus(packet: AudioPacket): AudioPacket {
         logger.trace("Combining audio packets")
-        return AudioPacket(this.samples + packet.samples, audioFormat)
+        return AudioPacket(this.samples + packet.samples, audioFormat, createdOn.coerceAtMost(packet.createdOn))
+    }
+
+    override fun toString(): String {
+        return "AudioPacket(createdOn=$createdOn, audioFormat=$audioFormat)"
     }
 
     companion object {

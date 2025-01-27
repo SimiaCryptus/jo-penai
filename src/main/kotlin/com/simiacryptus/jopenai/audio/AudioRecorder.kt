@@ -6,7 +6,7 @@ import java.util.*
 import javax.sound.sampled.*
 
 open class AudioRecorder(
-    private val audioBuffer: Queue<ByteArray>,
+    private val audioBuffer: Queue<AudioPacket>,
     private val msPerPacket: Long,
     val continueFn: () -> Boolean,
     private val selectedMicLine: String? = null,
@@ -32,7 +32,7 @@ open class AudioRecorder(
                         while (circularBuffer.currentNumberOfBytes >= packetLength) {
                             val array = ByteArray(packetLength)
                             circularBuffer.read(array, 0, packetLength)
-                            audioBuffer.add(array)
+                            audioBuffer.add(AudioPacket(AudioPacket.convertRaw(array, audioFormat), audioFormat))
                             //log.debug("Added packet to audio buffer, buffer size: {}", audioBuffer.size)
                         }
                     }
