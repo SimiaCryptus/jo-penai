@@ -10,6 +10,7 @@ open class TranscriptionProcessor(
     var continueFn: () -> Boolean,
     var prompt: String = "",
     var onTranscriptionUpdate: (TranscriptionResult) -> Unit,
+    var verbose: Boolean = false
 ) {
     data class TranscriptionResult(
         val text: String,
@@ -21,24 +22,33 @@ open class TranscriptionProcessor(
             return "TranscriptionResult(text='$text', prompt='$prompt', processingTime=$processingTime)"
         }
     }
-    private val logger = LoggerFactory.getLogger(TranscriptionProcessor::class.java)
+    private val log = LoggerFactory.getLogger(TranscriptionProcessor::class.java)
     fun run() {
-        logger.debug("TranscriptionProcessor started.")
+        log.debug("TranscriptionProcessor started.")
         while (this.continueFn() || audioBuffer.isNotEmpty()) {
             val recordAudio = audioBuffer.poll()
             if (null == recordAudio) {
                 Thread.sleep(1)
             } else {
-                logger.debug("Processing audio buffer of size: ${recordAudio.size}.")
                 val startTime = System.currentTimeMillis()
                 val text = client.transcription(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(recordAudio.samples), recordAudio.audioFormat)!!, prompt)
                 val processingTime = System.currentTimeMillis() - startTime
-                prompt = (prompt + text).split(" ").takeLast(32).joinToString(" ")
                 val transcriptionResult = TranscriptionResult(text, prompt, recordAudio, processingTime)
+                prompt = updatePrompt(text)
                 onTranscriptionUpdate(transcriptionResult)
-                logger.debug("Transcribed text: ${transcriptionResult}")
+                if(verbose) log.debug("""Transcription details:
+                    |Text: ${transcriptionResult.text}
+                    |Prompt: ${transcriptionResult.prompt}
+                    |Processing time: ${transcriptionResult.processingTime}ms
+                    |Audio duration: ${recordAudio.samples.size / recordAudio.audioFormat.sampleRate.toFloat()}s
+                    |""".trimMargin())
             }
         }
-        logger.debug("TranscriptionProcessor finished.")
+        log.info("TranscriptionProcessor finished.")
+    }
+
+    protected open fun updatePrompt(text: String): String {
+        //return (prompt + text).split(" ").takeLast(32).joinToString(" ")
+        return prompt
     }
 }

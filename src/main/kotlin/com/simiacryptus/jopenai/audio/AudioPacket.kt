@@ -1,7 +1,7 @@
 package com.simiacryptus.jopenai.audio
-import org.slf4j.LoggerFactory
 
 import edu.emory.mathcs.jtransforms.fft.FloatFFT_1D
+import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.sound.sampled.AudioFileFormat
@@ -20,22 +20,21 @@ data class AudioPacket(
     private val logger = LoggerFactory.getLogger(AudioPacket::class.java)
     val duration: Double by lazy { samples.size.toDouble() / audioFormat.sampleRate }
     private val fft: FloatArray by lazy { fft(samples) }
-    val rms: Double by lazy { rms(samples) }
+    val rms: Double by lazy { rms(samples).toDouble() }
     val size: Int by lazy { samples.size }
     val spectralEntropy: Double by lazy { spectralEntropy(fft) }
+    val iec61672 get() = aWeighting
 
     @Suppress("unused")
     val zeroCrossings: Int by lazy {
         logger.trace("Calculating zero crossings")
         samples.toList().windowed(2).count { (a, b) -> a > 0 && b < 0 || a < 0 && b > 0 }
     }
-    val iec61672: Double by lazy {
-        logger.trace("Calculating IEC 61672 weighting")
-        aWeightingFilter(
-            fft, audioFormat.sampleRate.toInt(), arrayOf(
-                12200.0.pow(2), 20.6.pow(2), 107.7.pow(2), 737.9.pow(2)
-            )
-        ).map { it * it }.toFloatArray().average()
+    val aWeighting: Double by lazy {
+        logger.trace("Calculating A-weighting based on IEC 61672")
+        val aWeightingFilter = aWeightingFilter(fft, audioFormat.sampleRate.toInt())
+        val weightedPower = aWeightingFilter.map { it * it }.average()
+        weightedPower
     }
 
     @Suppress("unused")
@@ -48,22 +47,24 @@ data class AudioPacket(
 
     private fun aWeightingFilter(
         fft: FloatArray,
-        sampleRate: Int,
-        aWeightingConstants: Array<Double>,
+        sampleRate: Int
     ): FloatArray {
         logger.trace("Applying A-weighting filter")
         val aWeightingFilter = FloatArray(fft.size) { 0f }
+        // Precomputed A-weighting constants based on IEC 61672
+        val a0 = 12200.0f.pow(2)
+        val a1 = 20.6f.pow(2)
+        val a2 = 107.7f.pow(2)
+        val a3 = 737.9f.pow(2)
         for (i in fft.indices) {
             val frequency = i * sampleRate.toFloat() / fft.size
-             val numerator = aWeightingConstants[0] * frequency.pow(4.0f)
-             val denominator = (frequency.pow(2.0f) + aWeightingConstants[1]) *
-                    sqrt(
-                         (frequency.pow(2.0f) + aWeightingConstants[2]) *
-                                 (frequency.pow(2.0f) + aWeightingConstants[3])
-                    ) *
-                     (frequency.pow(2.0f) + aWeightingConstants[0])
-            val aWeight = numerator / denominator
-            aWeightingFilter[i] = (fft[i] * aWeight.toFloat())
+            val numerator = a0 * frequency.pow(4)
+            val denominator = (frequency.pow(2) + a1) *
+                    sqrt((frequency.pow(2) + a2) * (frequency.pow(2) + a3)) *
+                    (frequency.pow(2) + a0)
+            // Prevent division by zero
+            val aWeight = if (denominator != 0f) numerator / denominator else 0f
+            aWeightingFilter[i] = fft[i] * aWeight
         }
         return aWeightingFilter
     }
@@ -121,23 +122,42 @@ data class AudioPacket(
             return sum.toFloatArray()
         }
 
+        /**
+         * Calculates the spectral entropy of the given float array representing audio samples.
+         *
+         * @param floats The audio samples.
+         * @return The spectral entropy value.
+         */
         fun spectralEntropy(floats: FloatArray): Double {
             logger.trace("Calculating spectral entropy")
-            val fft = fft(floats)
-            val fftSize = fft.size / 2
-            var sum = 0.0
-            for (i in 0 until fftSize) {
-                sum += fft[i].toDouble().pow(2.0)
+
+            val fftResult = fft(floats)
+            val fftSize = fftResult.size / 2
+            // Calculate power spectrum correctly by considering real and imaginary parts
+            val powerSpectrum = FloatArray(fftSize + 1) { i ->
+                when (i) {
+                    0 -> fftResult[0].pow(2) // DC component
+                    fftSize -> fftResult[1].pow(2) // Nyquist frequency (if N is even)
+                    else -> {
+                        val real = fftResult[i]
+                        val imag = fftResult[fftResult.size - i]
+                        real.pow(2) + imag.pow(2)
+                    }
             }
-            var entropy = 0.0
-            for (i in 0 until fftSize) {
-                val p = fft[i].toDouble().pow(2.0) / sum
-                entropy -= p * ln(p)
             }
+
+            val sum = powerSpectrum.sum().toDouble()
+            if (sum == 0.0) return 0.0 // Prevent division by zero
+
+            // Calculate entropy
+            val entropy = powerSpectrum.map { it.toDouble() / sum }
+                .filter { it > 0.0 }
+                .sumOf { -it * ln(it) }
+
             return entropy
         }
 
-        fun rms(samples: FloatArray) = sqrt(samples.sum() / (samples.size / 2.0))
+        fun rms(samples: FloatArray): Float = sqrt(samples.map { it * it }.sum() / samples.size)
 
 
         fun convertFloatsToRaw(audio: FloatArray): ByteArray {

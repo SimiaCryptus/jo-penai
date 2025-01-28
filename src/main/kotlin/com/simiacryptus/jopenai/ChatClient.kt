@@ -170,7 +170,7 @@ open class ChatClient(
     ): ChatResponse {
         var chatRequest = chatRequest
         log.info("Starting chat with model: ${model.modelName}")
-        if (model.modelName in listOf("o1-preview", "o1-mini")) {
+        if (!model.hasTemperature) {
             chatRequest = chatRequest.copy(
                 messages = chatRequest.messages.map { message ->
                     if (message.role == Role.system) {

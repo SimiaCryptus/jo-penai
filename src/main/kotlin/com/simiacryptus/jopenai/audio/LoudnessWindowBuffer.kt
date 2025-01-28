@@ -2,39 +2,60 @@ package com.simiacryptus.jopenai.audio
 
 import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sound.sampled.AudioFormat
 
-class LoudnessWindowBuffer(
+open class LoudnessWindowBuffer(
     inputBuffer: Queue<AudioPacket>,
     outputBuffer: Queue<AudioPacket>,
     onPacket: (AudioPacket) -> Unit,
     continueFn: () -> Boolean,
-    audioFormat: AudioFormat,
+    var isVerbose: Boolean = false
 ) : WindowBuffer(
     inputBuffer = inputBuffer,
     outputBuffer = outputBuffer,
     continueFn = continueFn,
-    audioFormat = audioFormat,
     onPacket = onPacket
 ) {
 
     var minimumTalkSeconds = 2.0
-    var minRMS = 0.1
-    var minIEC61672 = 0.1
-    var minSpectralEntropy = 0.5
-    var lookbackPackets = 20
+    var minRMSPercentile = 0.1
+    var minIEC61672Percentile = 0.1
+    var minSpectralEntropyPercentile = 0.5
+    var lookbackPackets = 50
     var quietWindowPackets = 3
-    val talkTime: Double get() = outputPacketBuffer.takeLast(lookbackPackets).filter{ isQuiet(it) }.sumOf { it.duration }
+
+    protected val rmsPercentileTool by lazy { newPercentile() }
+    protected val iec61672PercentileTool by lazy { newPercentile() }
+    protected val spectralEntropyPercentileTool by lazy { newPercentile() }
+    protected open fun newPercentile() = PercentileTool(10000)
+
+    val talkTime: Double
+        get() = outputPacketBuffer.takeLast(lookbackPackets).filter { !isQuiet(it) }.sumOf { it.duration }
+
+    override fun processPacket(packet: AudioPacket) {
+        rmsPercentileTool.add(packet.rms)
+        iec61672PercentileTool.add(packet.aWeighting)
+        spectralEntropyPercentileTool.add(packet.spectralEntropy)
+        super.processPacket(packet)
+    }
 
     override fun shouldOutput(): Boolean {
         val packets = this.outputPacketBuffer.takeLast(quietWindowPackets)
+        val talkTime = talkTime
         val output = isQuiet(*packets.toTypedArray()) && talkTime > minimumTalkSeconds
         val thisPacket = packets.last()
-        log.debug(
+
+//        val currentRMSThreshold = rmsPercentileTool.getPercentile(minRMSPercentile)
+//        val currentIEC61672Threshold = iec61672PercentileTool.getPercentile(minIEC61672Percentile)
+//        val currentSpectralEntropyThreshold = spectralEntropyPercentileTool.getPercentile(minSpectralEntropyPercentile)
+        val currentRMSThreshold = rmsPercentileTool.findEntropyThreshold()
+        val currentIEC61672Threshold = iec61672PercentileTool.findEntropyThreshold()
+        val currentSpectralEntropyThreshold = spectralEntropyPercentileTool.findEntropyThreshold()
+
+        if(isVerbose) log.debug(
             listOf(
-                "RMS: ${compare(thisPacket.rms, minRMS)}",
-                "IEC61672: ${compare(thisPacket.iec61672, minIEC61672)}",
-                //"Spectral Entropy: ${compare(thisPacket.spectralEntropy, minSpectralEntropy)}",
+                "RMS: ${compare(thisPacket.rms, currentRMSThreshold)}",
+                "IEC61672: ${compare(thisPacket.aWeighting, currentIEC61672Threshold)}",
+                "SpctEnt: ${compare(thisPacket.spectralEntropy, currentSpectralEntropyThreshold)}",
                 "Talk Time: ${compare(talkTime, minimumTalkSeconds)}",
                 "Output: $output"
             ).joinToString(" | ")
@@ -49,11 +70,25 @@ class LoudnessWindowBuffer(
     }
 
     fun isQuiet(vararg packets: AudioPacket) = packets.all { packet ->
+//        val currentRMSThreshold = rmsPercentileTool.getPercentile(minRMSPercentile)
+//        val currentIEC61672Threshold = iec61672PercentileTool.getPercentile(minIEC61672Percentile)
+        val currentRMSThreshold = rmsPercentileTool.findEntropyThreshold()
+        val currentIEC61672Threshold = iec61672PercentileTool.findEntropyThreshold()
+
         listOf(
-            packet.rms < minRMS,
-            packet.iec61672 < minIEC61672,
-            //packet.spectralEntropy < minSpectralEntropy
+            packet.rms < currentRMSThreshold,
+            packet.aWeighting < currentIEC61672Threshold,
+            //packet.spectralEntropy < currentSpectralEntropyThreshold
         ).all { it }
+    }
+
+    override fun flushOutput(): AudioPacket {
+        val reduced = super.outputPacketBuffer.dropWhile {
+            isQuiet(it)
+        }.reduce { a, b -> a + b }
+        super.lastOutputBuffer = super.outputPacketBuffer
+        super.outputPacketBuffer = ArrayList()
+        return reduced
     }
 
     companion object {
@@ -64,3 +99,4 @@ class LoudnessWindowBuffer(
 private fun Number.format(s: String): String {
     return String.format(s, this)
 }
+

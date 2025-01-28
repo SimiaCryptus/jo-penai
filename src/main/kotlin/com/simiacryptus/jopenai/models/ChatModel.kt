@@ -23,11 +23,13 @@ open class ChatModel(
     provider: APIProvider,
     val inputTokenPricePerK: Double,
     val outputTokenPricePerK: Double,
+    hasTemperature: Boolean = true,
 ) : TextModel(
     modelName = modelName,
     maxTotalTokens = maxTotalTokens,
     maxOutTokens = maxOutTokens,
     provider = provider,
+    hasTemperature = hasTemperature,
 ) {
     override fun toString() = modelName
 
