@@ -8,14 +8,12 @@ import javax.sound.sampled.AudioFileFormat
 import javax.sound.sampled.AudioFormat
 import javax.sound.sampled.AudioInputStream
 import javax.sound.sampled.AudioSystem
-import kotlin.math.ln
-import kotlin.math.pow
-import kotlin.math.sqrt
+import kotlin.math.*
 
 data class AudioPacket(
     val samples: FloatArray,
     val audioFormat: AudioFormat,
-    val createdOn : Long = System.currentTimeMillis()
+    val createdOn: Long = System.currentTimeMillis()
 ) {
     private val logger = LoggerFactory.getLogger(AudioPacket::class.java)
     val duration: Double by lazy { samples.size.toDouble() / audioFormat.sampleRate }
@@ -24,12 +22,47 @@ data class AudioPacket(
     val size: Int by lazy { samples.size }
     val spectralEntropy: Double by lazy { spectralEntropy(fft) }
     val iec61672 get() = aWeighting
+    val spectralCentroid: Double by lazy { spectralCentroid(fft, audioFormat.sampleRate.toDouble()) }
+    val spectralFlatness: Double by lazy { spectralFlatness(fft) }
 
     @Suppress("unused")
     val zeroCrossings: Int by lazy {
         logger.trace("Calculating zero crossings")
         samples.toList().windowed(2).count { (a, b) -> a > 0 && b < 0 || a < 0 && b > 0 }
     }
+
+    /**
+     * Calculates the spectral centroid of the FFT result.
+     *
+     * @param fft The FFT result.
+     * @param sampleRate The sample rate of the audio.
+     * @return The spectral centroid in Hz.
+     */
+    private fun spectralCentroid(fft: FloatArray, sampleRate: Double): Double {
+        logger.trace("Calculating spectral centroid")
+        val magnitudes = fft.map { (it * it).toDouble() }.toDoubleArray()
+        val frequencies = magnitudes.indices.map { it * sampleRate / fft.size }.toDoubleArray()
+        val sumMagnitudes = magnitudes.sum()
+        if (sumMagnitudes == 0.0) return 0.0
+        val centroid = magnitudes.zip(frequencies) { mag, freq -> mag * freq }.sum() / sumMagnitudes
+        return centroid
+    }
+
+    /**
+     * Calculates the spectral flatness of the FFT result.
+     *
+     * @param fft The FFT result.
+     * @return The spectral flatness (0.0 to 1.0).
+     */
+    private fun spectralFlatness(fft: FloatArray): Double {
+        logger.trace("Calculating spectral flatness")
+        val magnitudes = fft.map { it.absoluteValue.toDouble() + 1e-12 } // Avoid log(0)
+        val logMean = magnitudes.map { log10(it) }.average()
+        val mean = magnitudes.average()
+        return 10.0.pow(logMean) / mean
+    }
+
+    // Update spectralEntropy to include new metrics if necessary
     val aWeighting: Double by lazy {
         logger.trace("Calculating A-weighting based on IEC 61672")
         val aWeightingFilter = aWeightingFilter(fft, audioFormat.sampleRate.toInt())
@@ -98,6 +131,7 @@ data class AudioPacket(
                 return wavBuffer.toByteArray()
             }
         }
+
         fun convertRaw(audio: ByteArray, audioFormat: AudioFormat): FloatArray {
             Companion.logger.trace("Converting raw audio bytes to float array")
             // Create a ByteArrayInputStream from the raw audio data
@@ -143,7 +177,7 @@ data class AudioPacket(
                         val imag = fftResult[fftResult.size - i]
                         real.pow(2) + imag.pow(2)
                     }
-            }
+                }
             }
 
             val sum = powerSpectrum.sum().toDouble()
@@ -186,7 +220,13 @@ data class AudioPacket(
             return output
         }
 
-        fun fromByteArray(packet: ByteArray, audioFormat: AudioFormat) = AudioPacket(convertRaw(packet, audioFormat), audioFormat)
+        fun fromByteArray(packet: ByteArray, audioFormat: AudioFormat) =
+            AudioPacket(convertRaw(packet, audioFormat), audioFormat)
+
+        fun empty(): AudioPacket {
+            return AudioPacket(floatArrayOf(), AudioFormat(0f, 0, 0, true, false))
+        }
     }
 
 }
+
