@@ -8,6 +8,33 @@ class PercentileTool(
 ) {
     companion object {
         private val log = org.slf4j.LoggerFactory.getLogger(PercentileTool::class.java)
+
+        /**
+         * Compute the KL-divergence between two sorted lists of values.
+         */
+        fun computeKLDivergence(a: DoubleArray, b: DoubleArray): Double {
+            var klDiv = 0.0
+            val maxValue = kotlin.math.max(a.lastOrNull() ?: 0.0, b.lastOrNull() ?: 0.0)
+            if (maxValue == 0.0) return 0.0
+            val aList = a.map { it/maxValue }.toMutableList()
+            val bList = b.map { it/maxValue }.toMutableList()
+            while (aList.isNotEmpty() && bList.isNotEmpty()) {
+                val aV = aList.first()
+                val bV = bList.first()
+                when {
+                    aV < bV -> {
+                        klDiv += if (aV > 0.0 && bV > 0.0) aV * kotlin.math.ln(aV / bV) else 0.0
+                        aList.removeAt(0)
+                    }
+
+                    else -> {
+                        klDiv += if (aV > 0.0 && bV > 0.0) bV * kotlin.math.ln(bV / aV) else 0.0
+                        bList.removeAt(0)
+                    }
+                }
+            }
+            return klDiv / (a.size + b.size)
+        }
     }
 
     internal var memory = ArrayList<Double>() // Maintains sorted order
@@ -335,5 +362,13 @@ class PercentileTool(
 
     fun clear() {
         memory.clear()
+    }
+
+    fun rms(): Double {
+        return memory.average()
+    }
+
+    fun computeKLDivergence(other: PercentileTool): Double {
+        return computeKLDivergence(memory.toDoubleArray(), other.memory.toDoubleArray())
     }
 }

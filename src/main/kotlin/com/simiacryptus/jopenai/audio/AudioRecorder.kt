@@ -3,15 +3,20 @@ package com.simiacryptus.jopenai.audio
 import org.apache.commons.io.input.buffer.CircularByteBuffer
 import org.slf4j.LoggerFactory
 import java.util.*
-import javax.sound.sampled.*
+import javax.sound.sampled.AudioFormat
+import javax.sound.sampled.AudioSystem
+import javax.sound.sampled.DataLine
+import javax.sound.sampled.TargetDataLine
 
 open class AudioRecorder(
-    private val audioBuffer: Queue<AudioPacket>,
-    private val msPerPacket: Long,
-    val continueFn: () -> Boolean,
-    private val selectedMicLine: String? = null,
-    val audioFormat: AudioFormat = AudioFormat(16000f, 16, 1, true, false)
+    val audioBuffer: Queue<AudioPacket> = LinkedList(),
+    val msPerPacket: Long = 100,
+    val continueFn: () -> Boolean = { true },
+    val selectedMicLine: String? = null,
+    val audioFormat: AudioFormat = AudioFormat(16000f, 16, 1, true, false),
 ) {
+    private var totalBytesRecorded: Long = 0L
+    private var startTimeNanos: Long = System.nanoTime()
 
     fun run() {
         val targetDataLine = openMic()
@@ -21,19 +26,29 @@ open class AudioRecorder(
             log.info("Audio recording started with packet length: {} bytes", packetLength)
             val buffer = ByteArray(packetLength)
             val circularBuffer = CircularByteBuffer(packetLength * 2)
+            startTimeNanos = System.nanoTime()
             while (continueFn()) {
                 try {
                     var bytesRead = 0
                     val endTime = System.currentTimeMillis() + msPerPacket
                     while (bytesRead != -1 && System.currentTimeMillis() < endTime) {
                         bytesRead = targetDataLine.read(buffer, 0, buffer.size)
-                        //log.debug("Read {} bytes from microphone", bytesRead)
                         circularBuffer.add(buffer, 0, bytesRead)
+                        totalBytesRecorded += bytesRead
                         while (circularBuffer.currentNumberOfBytes >= packetLength) {
                             val array = ByteArray(packetLength)
                             circularBuffer.read(array, 0, packetLength)
-                            audioBuffer.add(AudioPacket(AudioPacket.convertRaw(array, audioFormat), audioFormat))
-                            //log.debug("Added packet to audio buffer, buffer size: {}", audioBuffer.size)
+                            val chunkStartNanos = startTimeNanos +
+                                    ((totalBytesRecorded.toDouble() * 1_000_000_000.0) /
+                                            (audioFormat.frameRate * audioFormat.frameSize)).toLong()
+                            val chunkStartMillis = chunkStartNanos / 1_000_000
+                            audioBuffer.add(
+                                AudioPacket(
+                                    AudioPacket.convertRaw(array, audioFormat),
+                                    audioFormat,
+                                    chunkStartMillis
+                                )
+                            )
                         }
                     }
                 } catch (e: Exception) {

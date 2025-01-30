@@ -25,6 +25,28 @@ data class AudioPacket(
     val spectralCentroid: Double by lazy { spectralCentroid(fft, audioFormat.sampleRate.toDouble()) }
     val spectralFlatness: Double by lazy { spectralFlatness(fft) }
 
+    fun frequencyBandPower(minFreq: Double, maxFreq: Double): Double {
+        val minIndex = (minFreq * fft.size / audioFormat.sampleRate).toInt().coerceIn(0, fft.size - 1)
+        val maxIndex = (maxFreq * fft.size / audioFormat.sampleRate).toInt().coerceIn(0, fft.size - 1)
+        return if (minIndex >= maxIndex) {
+            0.0
+        } else {
+            val bandPower = (minIndex until maxIndex).sumOf { i ->
+                when {
+                    i == 0 -> fft[0].pow(2).toDouble()
+                    i == fft.size / 2 -> fft[1].pow(2).toDouble()
+                    else -> {
+                        val real = fft[i]
+                        val imag = fft[fft.size - i]
+                        (real.pow(2) + imag.pow(2)).toDouble()
+                    }
+                }
+            }
+            bandPower / (maxIndex - minIndex) // Normalize by band width
+        }
+    }
+
+
     @Suppress("unused")
     val zeroCrossings: Int by lazy {
         logger.trace("Calculating zero crossings")
@@ -229,4 +251,3 @@ data class AudioPacket(
     }
 
 }
-

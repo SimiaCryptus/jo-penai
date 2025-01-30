@@ -1,5 +1,6 @@
 package com.simiacryptus.jopenai.audio
 
+import com.simiacryptus.jopenai.util.EventDispatcher
 import java.util.*
 
 enum class AudioState {
@@ -13,17 +14,17 @@ abstract class SilenceDiscriminator(
     val onPacket: (AudioPacket) -> Unit,
     val continueFn: () -> Boolean,
 ) {
-    private var requiredQuietWindowsForTransition = 5
-    private var requiredTalkWindowsForTransition = 3
-    private var consecutiveQuietWindows = 0
-    private var consecutiveTalkWindows = 0
+    var requiredQuietWindowsForTransition = 5
+    var requiredTalkWindowsForTransition = 3
     var currentState = AudioState.QUIET
     var minTalkTime = 2.0
-
+    val onModeChanged = EventDispatcher()
     val talkTime: Double
         @Synchronized
         get() = outputPacketBuffer.sumOf { it.duration }
 
+    private var consecutiveQuietWindows = 0
+    private var consecutiveTalkWindows = 0
     private var outputPacketBuffer = ArrayList<AudioPacket>()
     private var lastOutputBuffer: ArrayList<AudioPacket>? = null
 
@@ -58,6 +59,7 @@ abstract class SilenceDiscriminator(
                     if (consecutiveTalkWindows++ >= requiredTalkWindowsForTransition) {
                         log.debug("State transition: QUIET -> TALKING")
                         currentState = AudioState.TALKING
+                        onModeChanged.notifyListeners()
                     }
                 } else {
                     consecutiveTalkWindows = 0
@@ -75,8 +77,9 @@ abstract class SilenceDiscriminator(
                 if (isQuiet(packet)) {
                     consecutiveTalkWindows = 0
                     if (consecutiveQuietWindows++ >= requiredQuietWindowsForTransition) {
-                        currentState = AudioState.QUIET
                         log.debug("State transition: TALKING -> QUIET")
+                        currentState = AudioState.QUIET
+                        onModeChanged.notifyListeners()
                         val reduced = flushOutput()
                         if (reduced.duration > minTalkTime) {
                             log.debug("Outputting packet size: ${reduced.duration}.")
