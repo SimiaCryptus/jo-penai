@@ -39,13 +39,18 @@ open class ChatClient(
     logLevel: Level = Level.INFO,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
-    workPool: ThreadPoolExecutor = HttpClientManager.workPool
+    workPool: ThreadPoolExecutor = HttpClientManager.workPool,
+    var reasoningEffort: ReasoningEffort = ReasoningEffort.Low,
 ) : HttpClientManager(
     logLevel = logLevel,
     logStreams = logStreams,
     scheduledPool = scheduledPool,
     workPool = workPool
 ) {
+
+    enum class ReasoningEffort {
+        Low, Medium, High
+    }
 
     open var session: Any? = null
     open var user: Any? = null
@@ -183,6 +188,9 @@ open class ChatClient(
                 stop = null
             )
             log.debug("Adjusted chat request for model: ${model.modelName}")
+        }
+        if (model.hasReasoningEffort && chatRequest.reasoning_effort == null) {
+            chatRequest = chatRequest.copy(reasoning_effort = this@ChatClient.reasoningEffort.name.lowercase())
         }
         val requestID = UUID.randomUUID().toString()
         log.info("Chat request ID: $requestID with ${chatRequest.messages.size} messages")

@@ -38,4 +38,10 @@ object GoogleModels {
         inputTokenPricePerK = 0.00005, // Pricing not provided, using a placeholder
         outputTokenPricePerK = 0.0001  // Pricing not provided, using a placeholder
     )
+    val values = mapOf(
+        "GeminiPro_15" to GeminiPro_15,
+        "GeminiFlash_15" to GeminiFlash_15,
+        "GeminiFlash_15_8B" to GeminiFlash_15_8B,
+        "GeminiPro" to GeminiPro_10,
+    )
 }

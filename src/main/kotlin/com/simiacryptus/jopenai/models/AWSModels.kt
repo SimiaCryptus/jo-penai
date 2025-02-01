@@ -207,4 +207,30 @@ object AWSModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    val values = mapOf(
+        "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
+        "AWSLLaMA31_70bChat" to AWSLLaMA31_70bChat,
+        "AWSLLaMA31_8bChat" to AWSLLaMA31_8bChat,
+        "AWSLLaMA270bChat" to AWSLLaMA270bChat,
+        "AWSLLaMA213bChat" to AWSLLaMA213bChat,
+        "Mistral7bInstructV02" to Mistral7bInstructV02,
+        "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
+        "MistralLarge2402" to MistralLarge2402,
+        "MistralLarge2407" to MistralLarge2407,
+        "AmazonTitanTextLiteV1" to AmazonTitanTextLiteV1,
+        "AmazonTitanTextExpressV1" to AmazonTitanTextExpressV1,
+        "Claude3OpusAWS" to Claude3OpusAWS,
+        "CohereCommandTextV14" to CohereCommandTextV14,
+        "AI21J2UltraV1" to AI21J2UltraV1,
+        "AI21J2MidV1" to AI21J2MidV1,
+        "Claude35Sonnet" to Claude35Sonnet,
+        "Claude3Sonnet" to Claude3Sonnet,
+        "Claude3Haiku" to Claude3Haiku,
+        "ClaudeV2_1" to ClaudeV2_1,
+        "ClaudeV2" to ClaudeV2,
+        "ClaudeV2Instant" to ClaudeV2Instant,
+        "LLaMA38bInstructAWS" to LLaMA38bInstructAWS,
+        "LLaMA370bInstructAWS" to LLaMA370bInstructAWS,
+    )
+
 }

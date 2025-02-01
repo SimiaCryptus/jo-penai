@@ -18,6 +18,7 @@ open class TextModel(
     val maxOutTokens: Int = maxTotalTokens,
     val provider: APIProvider = APIProvider.OpenAI,
     val hasTemperature: Boolean = true,
+    val hasReasoningEffort: Boolean = false,
 ) : OpenAIModel {
 
     open fun pricing(usage: Usage): Double = 0.0

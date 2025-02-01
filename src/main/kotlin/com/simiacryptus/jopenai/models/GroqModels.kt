@@ -122,5 +122,18 @@ object GroqModels {
         logger.info("Initialized model: ${model.name} with max tokens: ${model.maxTotalTokens}")
         return model
     }
+    val values = mapOf(
+        "Llama33_70bVersatile" to Llama33_70bVersatile,
+        "Gemma2_9b" to Gemma2_9b,
+        "Mixtral8x7bInstructV01" to Mixtral8x7bInstructV01,
+        "Llama31_8bInstant" to Llama31_8bInstant,
+        "Llama32_1bPreview" to Llama32_1bPreview,
+        "Llama32_3bPreview" to Llama32_3bPreview,
+        "Llama33_70bSpecDec" to Llama33_70bSpecDec,
+        "LlamaGuard38b" to LlamaGuard38b,
+        "Llama370b8192" to Llama370b8192,
+        "Llama38b8192" to Llama38b8192,
+        "Mixtral8x7b32768" to Mixtral8x7b32768,
+    )
 
 }

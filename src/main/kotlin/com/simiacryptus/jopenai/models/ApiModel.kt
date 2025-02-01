@@ -188,7 +188,8 @@ interface ApiModel {
         val store: Boolean? = null,
         val metadata: Map<String, Any?>? = null,
         val modalities: List<String>? = null,
-        val audio: Map<String, String>? = null
+        val audio: Map<String, String>? = null,
+        var reasoning_effort: String? = null,
     )
 
     data class GroqChatRequest(

@@ -28,4 +28,10 @@ object DeepSeekModels {
         inputTokenPricePerK = 0.55 / 1000.0,
         outputTokenPricePerK = 2.19 / 1000.0
     )
+    val values = mapOf(
+        "DeepSeekChat" to DeepSeekModels.DeepSeekChat,
+        "DeepSeekCoder" to DeepSeekModels.DeepSeekCoder,
+        "DeepSeekReasoner" to DeepSeekModels.DeepSeekReasoner,
+    )
+
 }

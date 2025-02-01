@@ -111,5 +111,16 @@ object MistralModels {
     init {
         logModelInitialization(CodestralMamba)
     }
+    val values = mapOf(
+        "Mistral7B" to Mistral7B,
+        "Mixtral8x7B" to Mixtral8x7B,
+        "Mixtral8x22B" to Mixtral8x22B,
+        "MistralSmall" to MistralSmall,
+        "MistralMedium" to MistralMedium,
+        "MistralLarge" to MistralLarge,
+        "MistralNemo" to MistralNemo,
+        "Codestral" to Codestral,
+        "CodestralMamba" to CodestralMamba,
+    )
 
 }

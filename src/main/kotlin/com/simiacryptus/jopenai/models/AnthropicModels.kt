@@ -47,5 +47,12 @@ object AnthropicModels {
         inputTokenPricePerK = 0.25 / 1000.0,
         outputTokenPricePerK = 1.25 / 1000.0
     )
+    val values = mapOf(
+        "AnthropicClaude3Opus" to Claude3Opus,
+        "AnthropicClaude35Sonnet" to Claude35Sonnet,
+        "AnthropicClaude35Haiku" to Claude35Haiku,
+        "AnthropicClaude3Sonnet" to Claude3Sonnet,
+        "AnthropicClaude3Haiku" to Claude3Haiku,
+    )
 
 }

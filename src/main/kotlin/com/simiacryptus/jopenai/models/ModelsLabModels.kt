@@ -121,5 +121,21 @@ object ModelsLabModels {
         inputTokenPricePerK = 0.0005,
         outputTokenPricePerK = 0.0015
     )
+    val values = mapOf(
+        "Zephyr7bBeta" to Zephyr7bBeta,
+        "DialoGPTLarge" to DialoGPTLarge,
+        "YarnMistral7b128k" to YarnMistral7b128k,
+        "Pygmalion13b" to Pygmalion13b,
+        "Opt67b" to Opt67b,
+        "MistralLite" to MistralLite,
+        "Openchat35" to Openchat35,
+        "NeuralChat7bV3" to NeuralChat7bV3,
+        "OpenHermes25Mistral7B" to OpenHermes25Mistral7B,
+        "Dolphin221Mistral7b" to Dolphin221Mistral7b,
+        "Mistral7BOpenOrca" to Mistral7BOpenOrca,
+        "DeepseekCoder67bInstruct" to DeepseekCoder67bInstruct,
+        "Phi15" to Phi15,
+        "Zephyr7bAlpha" to Zephyr7bAlpha,
+    )
 
 }

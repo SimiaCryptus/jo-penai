@@ -52,5 +52,11 @@ object PerplexityModels {
         logger.info("Initialized model: $name with max tokens: $maxTotalTokens")
         return model
     }
+    val values = mapOf(
+        "SonarSmallChat128k" to PerplexityModels.SonarSmallChat128k,
+        "SonarSmallOnline128k" to PerplexityModels.SonarSmallOnline128k,
+        "SonarLargeChat128k" to PerplexityModels.SonarLargeChat128k,
+        "SonarLargeOnline128k" to PerplexityModels.SonarLargeOnline128k,
+    )
 
 }

@@ -44,7 +44,8 @@ object OpenAIModels {
         provider = APIProvider.OpenAI,
         inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
         outputTokenPricePerK = 0.0015,
-        hasTemperature = false
+        hasTemperature = false,
+        hasReasoningEffort = true,
     )
 
     val O1 = ChatModel(
@@ -54,7 +55,8 @@ object OpenAIModels {
         provider = APIProvider.OpenAI,
         inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
         outputTokenPricePerK = 0.0015,
-        hasTemperature = false
+        hasTemperature = false,
+        hasReasoningEffort = true,
     )
 
     val O1Mini = ChatModel(
@@ -64,6 +66,29 @@ object OpenAIModels {
         provider = APIProvider.OpenAI,
         inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
         outputTokenPricePerK = 0.0015,
-        hasTemperature = false
+        hasTemperature = false,
+        hasReasoningEffort = true,
     )
+
+    val O3Mini = ChatModel(
+        name = "O3Mini",
+        modelName = "o3-mini",
+        maxTotalTokens = 128 * 1024,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
+        outputTokenPricePerK = 0.0015,
+        hasTemperature = false,
+        hasReasoningEffort = true,
+    )
+    val values = mapOf(
+        "GPT35Turbo" to GPT35Turbo,
+        "GPT4Turbo" to GPT4Turbo,
+        "GPT4o" to GPT4o,
+        "GPT4oMini" to GPT4oMini,
+        "O1Preview" to O1Preview,
+        "O1Mini" to O1Mini,
+        "O3Mini" to O3Mini,
+        "O1" to O1,
+    )
+
 }
