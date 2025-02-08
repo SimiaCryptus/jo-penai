@@ -5,7 +5,7 @@ object GroqModels {
     private val logger = LoggerFactory.getLogger(GroqModels::class.java)
 
 
-    val Llama33_70bVersatile = createChatModel(
+    val Llama33_70bVersatile = ChatModel(
         name = "Llama33_70bVersatile",
         modelName = "llama-3.3-70b-versatile",
         maxTotalTokens = 128000,
@@ -14,7 +14,7 @@ object GroqModels {
         inputTokenPricePerK = 0.59,
         outputTokenPricePerK = 0.79
     )
-    val Mixtral8x7bInstructV01 = createChatModel(
+    val Mixtral8x7bInstructV01 = ChatModel(
         name = "Mixtral8x7bInstructV01",
         modelName = "mixtral-8x7b-32768",
         maxTotalTokens = 32768,
@@ -24,19 +24,18 @@ object GroqModels {
         outputTokenPricePerK = 0.24
     )
 
-    val Gemma2_9b = createChatModel(
+    val Gemma2_9b = ChatModel(
         name = "Gemma2_9b",
         modelName = "gemma-2-9b",
         maxTotalTokens = 8192,
         maxOutTokens = 8192,
         provider = APIProvider.Groq,
-
         inputTokenPricePerK = 0.20,
         outputTokenPricePerK = 0.20
     )
 
 
-    val Llama33_70bSpecDec = createChatModel(
+    val Llama33_70bSpecDec = ChatModel(
         name = "Llama33_70bSpecDec",
         modelName = "llama-3.3-70b-specdec",
         maxTotalTokens = 8192,
@@ -109,19 +108,6 @@ object GroqModels {
         outputTokenPricePerK = 0.24
     )
 
-    private fun createChatModel(
-        name: String,
-        modelName: String,
-        maxTotalTokens: Int,
-        maxOutTokens: Int = maxTotalTokens,
-        provider: APIProvider,
-        inputTokenPricePerK: Double,
-        outputTokenPricePerK: Double
-    ): ChatModel {
-        val model = ChatModel(name, modelName, maxTotalTokens, maxOutTokens, provider, inputTokenPricePerK, outputTokenPricePerK)
-        logger.info("Initialized model: ${model.name} with max tokens: ${model.maxTotalTokens}")
-        return model
-    }
     val values = mapOf(
         "Llama33_70bVersatile" to Llama33_70bVersatile,
         "Gemma2_9b" to Gemma2_9b,

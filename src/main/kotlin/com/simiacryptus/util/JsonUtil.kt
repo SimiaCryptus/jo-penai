@@ -1,5 +1,4 @@
 package com.simiacryptus.util
-import org.slf4j.LoggerFactory
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonParser
@@ -11,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Type
 
 object JsonUtil {
@@ -20,7 +20,7 @@ object JsonUtil {
     open fun objectMapper(): ObjectMapper {
         return object : ObjectMapper() {
             override fun _initForReading(p: JsonParser?, targetType: JavaType?): JsonToken {
-                log.info("Initializing for reading with targetType: {}", targetType)
+                //log.info("Initializing for reading with targetType: {}", targetType)
                 _initForReading.set(targetType)
                 return super._initForReading(p, targetType)
             }
@@ -72,4 +72,8 @@ object JsonUtil {
         return value
     }
 //    companion object : JsonUtil()
+}
+
+fun <T : Any> T.copy(fn: T.()->Unit): T {
+    return JsonUtil.toJson(this).let { JsonUtil.fromJson<T>(it, this.javaClass).apply { fn(this) } }
 }

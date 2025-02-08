@@ -134,7 +134,6 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
         }
 
         this.zip(this.bpeRanks, bpeMerges, range(0, bpeMerges.size))
-        logger.debug("Tokenizer initialization complete")
     }
 
     fun <X, Y> zip(map: HashMap<X, Y>, first: List<X>, second: List<Y>): HashMap<X, Y> {
