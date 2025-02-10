@@ -104,27 +104,45 @@ open class HttpClientManager(
         }
 
     }
-
+    protected fun captureCallerStack(): String {
+        // Skip the frames in withPool and this utility
+        var stack = Throwable().stackTrace
+            .dropWhile { it.methodName == "withPool" || it.className.contains("HttpClientManager") }
+            .joinToString("\n") { "\tat $it" }
+        if (stackCalls.containsKey(Thread.currentThread())) {
+            stack += "\n\tPrevious stack:\n${stackCalls[Thread.currentThread()]}"
+        }
+        return stack
+    }
+    val stackCalls: MutableMap<Thread, String> = ConcurrentHashMap()
+    // withPool has been updated to also include caller stack trace info.
     private fun <T> withPool(fn: () -> T): T {
+        val callerStack = captureCallerStack()  // capture caller stack before switching threads
         val future = workPool.submit(Callable {
+            stackCalls[Thread.currentThread()] = callerStack
             return@Callable fn()
         })
         try {
             return future.get()
         } catch (e: InterruptedException) {
             future.cancel(true)
+            log(Level.ERROR, "InterruptedException in withPool. Caller stack:\n$callerStack")
             throw e
         } catch (e: ExecutionException) {
             future.cancel(true)
+            log(Level.ERROR, "ExecutionException in withPool. Caller stack:\n$callerStack")
             throw e
         } catch (e: CancellationException) {
             future.cancel(true)
+            log(Level.ERROR, "CancellationException in withPool. Caller stack:\n$callerStack")
             throw e
         } catch (e: TimeoutException) {
             future.cancel(true)
+            log(Level.ERROR, "TimeoutException in withPool. Caller stack:\n$callerStack")
             throw e
         } catch (e: Exception) {
             future.cancel(true)
+            log(Level.ERROR, "Exception in withPool. Caller stack:\n$callerStack")
             throw e
         }
     }

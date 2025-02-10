@@ -56,25 +56,25 @@ open class ChatClient(
     open var user: Any? = null
     var budget: Number? = null
 
-    protected open class ChildClient(
-        val inner: ChatClient,
-        key: Map<APIProvider, String> = inner.key,
-        apiBase: Map<APIProvider, String> = inner.apiBase
+    private inner class ChildClient(
+        key: Map<APIProvider, String> = this@ChatClient.key,
+        apiBase: Map<APIProvider, String> = this@ChatClient.apiBase
     ) : ChatClient(
         key = key,
         apiBase = apiBase,
         logLevel = Level.INFO
     ) {
+        init {
+            session = this@ChatClient.session
+            user = this@ChatClient.user
+        }
         override fun log(level: Level, msg: String) {
             super.log(level, msg)
-            inner.log(level, msg)
+            this@ChatClient.log(level, msg)
         }
     }
 
-    open fun getChildClient(): ChatClient = ChildClient(inner = this, key = key, apiBase = apiBase).apply {
-        session = inner.session
-        user = inner.user
-    }
+    open fun getChildClient(): ChatClient = ChildClient()
 
     protected open fun onUsage(model: OpenAIModel?, tokens: Usage) {
         log.debug(
@@ -88,9 +88,9 @@ open class ChatClient(
     }
 
     fun moderate(text: String) = withReliability {
-        when {
-            defaultApiProvider == APIProvider.Groq -> return@withReliability
-            defaultApiProvider == APIProvider.ModelsLab -> return@withReliability
+        when (defaultApiProvider) {
+            APIProvider.Groq -> return@withReliability
+            APIProvider.ModelsLab -> return@withReliability
         }
         withPerformanceLogging {
             val body: String = try {
@@ -131,22 +131,24 @@ open class ChatClient(
     }
 
     @Throws(IOException::class, InterruptedException::class)
-    private fun post(url: String, json: String, apiProvider: APIProvider): String {
+    private fun post(url: String, json: String, apiProvider: APIProvider, requestID: String = UUID.randomUUID().toString()): String {
         val request = HttpPost(url)
         request.addHeader("Content-Type", "application/json")
         request.addHeader("Accept", "application/json")
         authorize(request, apiProvider)
         request.entity = StringEntity(json, Charsets.UTF_8, false)
-        return post(request)
+        return post(request, requestID = requestID)
     }
 
-    private fun post(request: HttpPost): String = withClient {
+    private fun post(request: HttpPost, requestID: String = UUID.randomUUID().toString()): String = withClient {
         log(
             level = Level.DEBUG,
             msg = String.format(
-                "POST %s\nPrefix:\n\t%s\n",
+                "POST %s\nID:%s\nPrefix:\n\t%s\n%s\n",
                 request.uri,
-                EntityUtils.toString(request.entity).replace("\n", "\n\t")
+                requestID,
+                EntityUtils.toString(request.entity).replace("\n", "\n\t"),
+                captureCallerStack().replace("\n", "\n\t")
             )
         )
         EntityUtils.toString(it.execute(request).entity)
@@ -204,7 +206,7 @@ open class ChatClient(
                     apiProvider == APIProvider.DeepSeek -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toDeepSeek(chatRequest))
-                        post("${apiBase[apiProvider]}/v1/chat/completions", json, apiProvider)
+                        post("${apiBase[apiProvider]}/v1/chat/completions", json, apiProvider, requestID=requestID)
                     }
 
                     apiProvider == APIProvider.Google -> {
@@ -223,7 +225,8 @@ open class ChatClient(
                             post(
                                 "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}",
                                 json,
-                                apiProvider
+                                apiProvider,
+                                requestID
                             )
                         )
                     }
@@ -246,19 +249,19 @@ open class ChatClient(
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                 .writeValueAsString(chatRequest.copy(stop = null))
-                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider, requestID)
                     }
 
                     apiProvider == APIProvider.Mistral -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
-                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider, requestID)
                     }
 
                     apiProvider == APIProvider.Groq -> {
                         val json = JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                             .writeValueAsString(toGroq(chatRequest))
-                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider, requestID)
                     }
 
                     apiProvider == APIProvider.ModelsLab -> {
@@ -266,7 +269,7 @@ open class ChatClient(
                             val json =
                                 JsonUtil.objectMapper().writerWithDefaultPrettyPrinter()
                                     .writeValueAsString(toModelsLab(chatRequest))
-                            fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider))
+                            fromModelsLab(post("${apiBase[apiProvider]}/llm/chat", json, apiProvider, requestID))
                         }
                     }
 
@@ -286,7 +289,7 @@ open class ChatClient(
                     else -> {
                         val json =
                             JsonUtil.objectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(chatRequest)
-                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider)
+                        post("${apiBase[apiProvider]}/chat/completions", json, apiProvider, requestID)
                     }
                 }
                 checkError(result)
@@ -988,7 +991,7 @@ open class ChatClient(
                     post(
                         "${apiBase[defaultApiProvider]}/llm/get_queued_response",
                         postCheck,
-                        defaultApiProvider
+                        defaultApiProvider,
                     )
                 )
             }
