@@ -223,7 +223,7 @@ open class ChatClient(
                             .writeValueAsString(geminiChatRequest)
                         fromGemini(
                             post(
-                                "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]}",
+                                "${apiBase[apiProvider]}/v1beta/${model.modelName}:generateContent?key=${key[apiProvider]?.trim()}",
                                 json,
                                 apiProvider,
                                 requestID
@@ -334,14 +334,14 @@ open class ChatClient(
         val fromJson = JsonUtil.fromJson<GenerateContentResponse>(responseBody, GenerateContentResponse::class.java)
         return JsonUtil.toJson(
             ChatResponse(
-                choices = fromJson.candidates.mapIndexed { index, candidate ->
+                choices = fromJson.candidates?.mapIndexed { index, candidate ->
                     ChatChoice(
                         message = ChatMessageResponse(
-                            content = candidate.content.parts?.joinToString("\n") { it.text ?: "" }
+                            content = candidate.content?.parts?.joinToString("\n") { it.text ?: "" }
                         ),
                         index = index
                     )
-                }
+                } ?: emptyList(),
             )
         )
     }
@@ -457,19 +457,19 @@ open class ChatClient(
     )
 
     private data class GenerateContentResponse(
-        val candidates: List<Candidate>
+        val candidates: List<Candidate>? = null
     )
 
     private data class Candidate(
-        val content: Content, // Reuse or adjust your existing Content class
-        val finishReason: String,
-        val index: Int,
-        val safetyRatings: List<SafetyRating>
+        val content: Content? = null, // Reuse or adjust your existing Content class
+        val finishReason: String? = null,
+        val index: Int? = null,
+        val safetyRatings: List<SafetyRating>? = null
     )
 
     private data class SafetyRating(
-        val category: String,
-        val probability: String
+        val category: String? = null,
+        val probability: String? = null
     )
 
     private fun mapToAnthropicChatRequest(chatRequest: ChatRequest, model: TextModel): AnthropicChatRequest {
@@ -517,24 +517,24 @@ open class ChatClient(
     )
 
     private data class AnthropicResponse(
-        val id: String,
-        val type: String,
-        val role: String,
-        val content: List<AnthropicContentBlock>,
-        val model: String,
-        val stop_reason: String,
-        val stop_sequence: String?,
-        val usage: AnthropicUsage
+        val id: String? = null,
+        val type: String? = null,
+        val role: String? = null,
+        val content: List<AnthropicContentBlock>? = null,
+        val model: String? = null,
+        val stop_reason: String? = null,
+        val stop_sequence: String? = null,
+        val usage: AnthropicUsage? = null
     )
 
     private data class AnthropicContentBlock(
-        val type: String,
-        val text: String?
+        val type: String? = null,
+        val text: String? = null
     )
 
     private data class AnthropicUsage(
-        val input_tokens: Int,
-        val output_tokens: Int
+        val input_tokens: Int? = null,
+        val output_tokens: Int? = null
     )
 
     private data class AWSAuth(
@@ -938,15 +938,15 @@ open class ChatClient(
                     choices = listOf(
                         ChatChoice(
                             message = ChatMessageResponse(
-                                content = response.content.joinToString("\n") { it.text ?: "" }
+                                content = response.content?.joinToString("\n") { it.text ?: "" }
                             ),
                             index = 0
                         )
                     ),
                     usage = Usage(
-                        prompt_tokens = response.usage.input_tokens.toLong(),
-                        completion_tokens = response.usage.output_tokens.toLong(),
-                        total_tokens = response.usage.input_tokens.toLong() + response.usage.output_tokens
+                        prompt_tokens = response.usage?.input_tokens?.toLong() ?: 0,
+                        completion_tokens = response.usage?.output_tokens?.toLong() ?: 0,
+                        total_tokens = (response.usage?.input_tokens?.toLong() ?: 0) + (response.usage?.output_tokens ?: 0)
                     )
                 )
             )
