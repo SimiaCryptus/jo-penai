@@ -144,6 +144,15 @@ object AWSModels {
         inputTokenPricePerK = 0.003,
         outputTokenPricePerK = 0.015
     )
+    val Claude35SonnetV2 = ChatModel(
+        name = "Claude35SonnetV2",
+        modelName = "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        maxTotalTokens = 200000,
+        maxOutTokens = 4096,
+        provider = APIProvider.AWS,
+        inputTokenPricePerK = 0.003,
+        outputTokenPricePerK = 0.015
+    )
     val Claude3Sonnet = ChatModel(
         name = "Claude3Sonnet",
         modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
@@ -207,9 +216,45 @@ object AWSModels {
         inputTokenPricePerK = 0.0005, // Assuming pricing, adjust as necessary
         outputTokenPricePerK = 0.0015  // Assuming pricing, adjust as necessary
     )
+    val AmazonNovaProV1 = ChatModel(
+        name = "AmazonNovaProV1",
+        modelName = "amazon.nova-pro-v1:0",
+        maxTotalTokens = 4096,
+        provider = APIProvider.AWS,
+        inputTokenPricePerK = 0.001, // Assumed pricing, adjust as needed
+        outputTokenPricePerK = 0.002  // Assumed pricing, adjust as needed
+    )
+    val AmazonNovaLiteV1 = ChatModel(
+        name = "AmazonNovaLiteV1",
+        modelName = "amazon.nova-lite-v1:0",
+        maxTotalTokens = 4096,
+        provider = APIProvider.AWS,
+        inputTokenPricePerK = 0.0005, // Assumed pricing, adjust as needed
+        outputTokenPricePerK = 0.001   // Assumed pricing, adjust as needed
+    )
+    val AmazonNovaMicroV1 = ChatModel(
+        name = "AmazonNovaMicroV1",
+        modelName = "amazon.nova-micro-v1:0",
+        maxTotalTokens = 4096,
+        provider = APIProvider.AWS,
+        inputTokenPricePerK = 0.00025, // Assumed pricing, adjust as needed
+        outputTokenPricePerK = 0.0005   // Assumed pricing, adjust as needed
+    )
+    val DeepseekLLMR1DistillQwen32b = ChatModel(
+        name = "DeepseekLLMR1DistillQwen32b",
+        modelName = "deepseek-llm-r1-distill-qwen-32b",
+        maxTotalTokens = 8192,
+        provider = APIProvider.AWS,
+        inputTokenPricePerK = 0.0010, // Assumed pricing, adjust as necessary
+        outputTokenPricePerK = 0.0020  // Assumed pricing, adjust as necessary
+    )
     val values = mapOf(
+        "LLaMA370bInstructAWS" to LLaMA370bInstructAWS,
+        "AmazonNovaProV1" to AmazonNovaProV1,
+        "AmazonNovaLiteV1" to AmazonNovaLiteV1,
+        "AmazonNovaMicroV1" to AmazonNovaMicroV1,
         "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
-        "AWSLLaMA31_70bChat" to AWSLLaMA31_70bChat,
+        "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
         "AWSLLaMA31_8bChat" to AWSLLaMA31_8bChat,
         "AWSLLaMA270bChat" to AWSLLaMA270bChat,
         "AWSLLaMA213bChat" to AWSLLaMA213bChat,
@@ -226,11 +271,11 @@ object AWSModels {
         "Claude35Sonnet" to Claude35Sonnet,
         "Claude3Sonnet" to Claude3Sonnet,
         "Claude3Haiku" to Claude3Haiku,
+        "Claude35SonnetV2" to Claude35SonnetV2,
         "ClaudeV2_1" to ClaudeV2_1,
-        "ClaudeV2" to ClaudeV2,
+        "ClaudeV2_1" to ClaudeV2_1,
         "ClaudeV2Instant" to ClaudeV2Instant,
         "LLaMA38bInstructAWS" to LLaMA38bInstructAWS,
-        "LLaMA370bInstructAWS" to LLaMA370bInstructAWS,
+        "DeepseekLLMR1DistillQwen32b" to DeepseekLLMR1DistillQwen32b,
     )
-
 }

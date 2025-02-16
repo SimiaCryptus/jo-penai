@@ -9,7 +9,7 @@ object GroqModels {
         name = "Llama33_70bVersatile",
         modelName = "llama-3.3-70b-versatile",
         maxTotalTokens = 128000,
-        maxOutTokens = 8192,
+        maxOutTokens = 32768,
         provider = APIProvider.Groq,
         inputTokenPricePerK = 0.59,
         outputTokenPricePerK = 0.79
@@ -26,7 +26,7 @@ object GroqModels {
 
     val Gemma2_9b = ChatModel(
         name = "Gemma2_9b",
-        modelName = "gemma-2-9b",
+        modelName = "gemma2-9b-it",
         maxTotalTokens = 8192,
         maxOutTokens = 8192,
         provider = APIProvider.Groq,
@@ -56,7 +56,7 @@ object GroqModels {
     val Llama32_1bPreview = ChatModel(
         name = "Llama32_1bPreview",
         modelName = "llama-3.2-1b-preview",
-        maxTotalTokens = 8192,
+        maxTotalTokens = 128000,
         maxOutTokens = 8192,
         provider = APIProvider.Groq,
         inputTokenPricePerK = 0.04,
@@ -65,7 +65,7 @@ object GroqModels {
     val Llama32_3bPreview = ChatModel(
         name = "Llama32_3bPreview",
         modelName = "llama-3.2-3b-preview",
-        maxTotalTokens = 8192,
+        maxTotalTokens = 128000,
         maxOutTokens = 8192,
         provider = APIProvider.Groq,
         inputTokenPricePerK = 0.06,
@@ -107,6 +107,61 @@ object GroqModels {
         inputTokenPricePerK = 0.24,
         outputTokenPricePerK = 0.24
     )
+    val Qwen25_32b = ChatModel(
+        name = "Qwen25_32b",
+        modelName = "qwen-2.5-32b",
+        maxTotalTokens = 32768,
+        maxOutTokens = 32768,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.30,
+        outputTokenPricePerK = 0.30
+    )
+    val DeepseekQwen32b = ChatModel(
+        name = "DeepseekQwen32b",
+        modelName = "deepseek-r1-distill-qwen-32b",
+        maxTotalTokens = 32768,
+        maxOutTokens = 32768,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.30,
+        outputTokenPricePerK = 0.30
+    )
+    val DeepseekLlama70bSpecDec = ChatModel(
+        name = "DeepseekLlama70bSpecDec",
+        modelName = "deepseek-r1-distill-llama-70b-specdec",
+        maxTotalTokens = 8192,
+        maxOutTokens = 8192,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.59,
+        outputTokenPricePerK = 0.99
+    )
+    val DeepseekLlama70b = ChatModel(
+        name = "DeepseekLlama70b",
+        modelName = "deepseek-r1-distill-llama-70b",
+        maxTotalTokens = 32768,
+        maxOutTokens = 32768,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.59,
+        outputTokenPricePerK = 0.79
+    )
+    val Llama32_11bVision = ChatModel(
+        name = "Llama32_11bVision",
+        modelName = "llama-3.2-11b-vision-preview",
+        maxTotalTokens = 8192,
+        maxOutTokens = 8192,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.10,
+        outputTokenPricePerK = 0.10
+    )
+    val Llama32_90bVision = ChatModel(
+        name = "Llama32_90bVision",
+        modelName = "llama-3.2-90b-vision-preview",
+        maxTotalTokens = 8192,
+        maxOutTokens = 8192,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.70,
+        outputTokenPricePerK = 0.70
+    )
+
 
     val values = mapOf(
         "Llama33_70bVersatile" to Llama33_70bVersatile,
@@ -120,6 +175,12 @@ object GroqModels {
         "Llama370b8192" to Llama370b8192,
         "Llama38b8192" to Llama38b8192,
         "Mixtral8x7b32768" to Mixtral8x7b32768,
+        "Qwen25_32b" to Qwen25_32b,
+        "DeepseekQwen32b" to DeepseekQwen32b,
+        "DeepseekLlama70bSpecDec" to DeepseekLlama70bSpecDec,
+        "DeepseekLlama70b" to DeepseekLlama70b,
+        "Llama32_11bVision" to Llama32_11bVision,
+        "Llama32_90bVision" to Llama32_90bVision
     )
 
 }
