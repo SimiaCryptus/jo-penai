@@ -147,8 +147,34 @@ open class ChatClient(
                 "POST %s\nID:%s\nPrefix:\n\t%s\n%s\n",
                 request.uri,
                 requestID,
-                EntityUtils.toString(request.entity).replace("\n", "\n\t"),
-                captureCallerStack().replace("\n", "\n\t")
+                EntityUtils.toString(request.entity).lineSequence()
+                    .map {
+                        when {
+                            it.isBlank() -> {
+                                when {
+                                    it.length < "\t".length -> "\t"
+                                    else -> it
+                                }
+                            }
+
+                            else -> "\t" + it
+                        }
+                    }
+                    .joinToString("\n"),
+                captureCallerStack().lineSequence()
+                    .map {
+                        when {
+                            it.isBlank() -> {
+                                when {
+                                    it.length < "\t".length -> "\t"
+                                    else -> it
+                                }
+                            }
+
+                            else -> "\t" + it
+                        }
+                    }
+                    .joinToString("\n")
             )
         )
         EntityUtils.toString(it.execute(request).entity)
@@ -301,8 +327,22 @@ open class ChatClient(
                     level = Level.DEBUG,
                     msg = String.format(
                         "Chat Completion %s:\n\t%s", requestID,
-                        response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.replace("\n", "\n\t")
-                            ?: JsonUtil.toJson(response)
+                        response.choices.firstOrNull()?.message?.content?.trim { it <= ' ' }?.let { trim ->
+                            trim.lineSequence()
+                                .map {
+                                    when {
+                                        it.isBlank() -> {
+                                            when {
+                                                it.length < "\t".length -> "\t"
+                                                else -> it
+                                            }
+                                        }
+
+                                        else -> "\t" + it
+                                    }
+                                }
+                                .joinToString("\n")
+                        } ?: JsonUtil.toJson(response)
                     )
                 )
                 response
@@ -368,17 +408,7 @@ open class ChatClient(
                     }
                 )
             }).map { collectTextParts(it) },
-            generationConfig = GenerationConfig(
-                temperature = 0.3f,
-                /*chatRequest.temperature.toFloat(),*/
-//        candidateCount = 1,
-//        maxOutputTokens = model.maxOutTokens-1,
-//        topK = 0,
-//        topP = 0.9f,
-//        stopSequences = chatRequest.stop?.map { it.toString() }
-            )
-            /*
-            */
+            generationConfig = GenerationConfig(temperature = 0.3f)
         )
     }
 
@@ -481,8 +511,6 @@ open class ChatClient(
             messages = alternateAnthropicRoles(chatRequest.messages.filter { it.role != Role.system }),
             max_tokens = chatRequest.max_tokens ?: model.maxOutTokens,
             temperature = chatRequest.temperature,
-//     top_p = chatRequest.top_p,
-//     top_k = chatRequest.top_k
         )
     }
 

@@ -200,9 +200,25 @@ open class PromptOptimization(
                     break
                 } else {
                     chatRequest = chatRequest.copy(temperature = startTemp.coerceAtLeast(0.1).pow(1.0 / (retry + 1)))
-                    log.info("Retry {} (T={}): {} / {}\n\t{}", retry, "%.3f".format(chatRequest.temperature),
+                    log.info(
+                        "Retry {} (T={}): {} / {}\n\t{}", retry, "%.3f".format(chatRequest.temperature),
                         systemPrompt.replace("\n", "\\n"), turn.userMessage,
-                        response.choices.first().message?.content?.replace("\n", "\n\t"))
+                        response.choices.first().message?.content?.let { content ->
+                            content.lineSequence()
+                                .map {
+                                    when {
+                                        it.isBlank() -> {
+                                            when {
+                                                it.length < "  ".length -> "  "
+                                                else -> it
+                                            }
+                                        }
+
+                                        else -> "  " + it
+                                    }
+                                }
+                                .joinToString("\n")
+                        })
                 }
             }
             chatRequest = chatRequest.copy(

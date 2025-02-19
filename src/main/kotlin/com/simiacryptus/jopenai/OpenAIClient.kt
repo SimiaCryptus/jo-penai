@@ -103,7 +103,20 @@ open class OpenAIClient(
             if (request.suffix == null) {
                 log(
                     msg = String.format(
-                        "Text Completion Request\nPrefix:\n\t%s\n", request.prompt.replace("\n", "\n\t")
+                        "Text Completion Request\nPrefix:\n\t%s\n", request.prompt.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n")
                     )
                 )
                 logger.debug("Text Completion Request with Prefix: ${request.prompt}")
@@ -111,8 +124,34 @@ open class OpenAIClient(
                 log(
                     msg = String.format(
                         "Text Completion Request\nPrefix:\n\t%s\nSuffix:\n\t%s\n",
-                        request.prompt.replace("\n", "\n\t"),
-                        request.suffix.replace("\n", "\n\t")
+                        request.prompt.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n"),
+                        request.suffix.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n")
                     )
                 )
                 logger.debug("Text Completion Request with Prefix: ${request.prompt} and Suffix: ${request.suffix}")
@@ -137,7 +176,20 @@ open class OpenAIClient(
                     request.prompt.trim { it <= ' ' })
             log(
                 msg = String.format(
-                    "Text Completion:\n\t%s", completionResult.toString().replace("\n", "\n\t")
+                    "Text Completion:\n\t%s", completionResult.toString().lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "  ".length -> "  "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "  " + it
+                            }
+                        }
+                        .joinToString("\n")
                 )
             )
             logger.debug("Text Completion Result: $completionResult")
@@ -297,15 +349,54 @@ open class OpenAIClient(
             if (editRequest.input == null) {
                 log(
                     msg = String.format(
-                        "Text Edit Request\nInstruction:\n\t%s\n", editRequest.instruction.replace("\n", "\n\t")
+                        "Text Edit Request\nInstruction:\n\t%s\n", editRequest.instruction.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n")
                     )
                 )
             } else {
                 log(
                     msg = String.format(
                         "Text Edit Request\nInstruction:\n\t%s\nInput:\n\t%s\n",
-                        editRequest.instruction.replace("\n", "\n\t"),
-                        editRequest.input.replace("\n", "\n\t")
+                        editRequest.instruction.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n"),
+                        editRequest.input.lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n")
                     )
                 )
             }
@@ -327,7 +418,20 @@ open class OpenAIClient(
             log(
                 msg = String.format(
                     "Edit Completion:\n\t%s",
-                    response.firstChoice.orElse("").toString().trim { it <= ' ' }.toString().replace("\n", "\n\t")
+                    response.firstChoice.orElse("").toString().trim { it <= ' ' }.toString().lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "  ".length -> "  "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "  " + it
+                            }
+                        }
+                        .joinToString("\n")
                 )
             )
             response
@@ -350,7 +454,20 @@ open class OpenAIClient(
                         msg = String.format(
                             "Embedding Creation Request\nModel:\n\t%s\nInput:\n\t%s\n",
                             request.model,
-                            request.input.replace("\n", "\n\t")
+                            request.input.lineSequence()
+                                .map {
+                                    when {
+                                        it.isBlank() -> {
+                                            when {
+                                                it.length < "  ".length -> "  "
+                                                else -> it
+                                            }
+                                        }
+
+                                        else -> "  " + it
+                                    }
+                                }
+                                .joinToString("\n")
                         )
                     )
                 }

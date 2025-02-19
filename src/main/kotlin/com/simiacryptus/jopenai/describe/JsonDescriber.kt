@@ -75,11 +75,41 @@ open class JsonDescriber(
                 val propertyDescription = if (description != null) """
                     "${it.name}": {
                       "description": "${description.value.trim()}",
-                      ${toJson(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n      ")}
+                      ${
+                    toJson(it.returnType.javaType, stackMax - 1, describedTypes).lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "      ".length -> "      "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "      " + it
+                            }
+                        }
+                        .joinToString("\n")
+                }
                     }
                     """.trimIndent().trim() else """
                     "${it.name}": {
-                      ${toJson(it.returnType.javaType, stackMax - 1, describedTypes).replace("\n", "\n      ")}
+                      ${
+                    toJson(it.returnType.javaType, stackMax - 1, describedTypes).lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "      ".length -> "      "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "      " + it
+                            }
+                        }
+                        .joinToString("\n")
+                }
                     }
                     """.trimIndent().trim()
                 propertyDescription
@@ -91,11 +121,41 @@ open class JsonDescriber(
                 val fieldDescription = if (description != null) """
                 "${it.name}": {
                   "description": "${description.value.trim()}",
-                  ${toJson(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+                  ${
+                    toJson(it.genericType, stackMax - 1, describedTypes).lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "  ".length -> "  "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "  " + it
+                            }
+                        }
+                        .joinToString("\n")
+                }
                 }
                 """.trimIndent() else """
                 "${it.name}": {
-                  ${toJson(it.genericType, stackMax - 1, describedTypes).replace("\n", "\n  ")}
+                  ${
+                    toJson(it.genericType, stackMax - 1, describedTypes).lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "  ".length -> "  "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "  " + it
+                            }
+                        }
+                        .joinToString("\n")
+                }
                 }
                 """.trimIndent()
                 fieldDescription
@@ -109,7 +169,22 @@ open class JsonDescriber(
             }.joinToString(",\n") {
                 """
             "${it.name}": {
-              ${describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).replace("\n", "\n  ")}
+              ${
+                    describe(it, rawType.kotlin, stackMax - 1, false, describedTypes).lineSequence()
+                        .map {
+                            when {
+                                it.isBlank() -> {
+                                    when {
+                                        it.length < "  ".length -> "  "
+                                        else -> it
+                                    }
+                                }
+
+                                else -> "  " + it
+                            }
+                        }
+                        .joinToString("\n")
+                }
             }
             """.trimIndent().trim()
             }
@@ -124,7 +199,22 @@ open class JsonDescriber(
                     .joinToString(",\n") {
                         """
                 "${it.name}": {
-                  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}
+                  ${
+                            describe(it, rawType, stackMax - 1).lineSequence()
+                                .map {
+                                    when {
+                                        it.isBlank() -> {
+                                            when {
+                                                it.length < "  ".length -> "  "
+                                                else -> it
+                                            }
+                                        }
+
+                                        else -> "  " + it
+                                    }
+                                }
+                                .joinToString("\n")
+                        }
                 }
                 """.trimIndent().trim()
                     }
@@ -171,9 +261,39 @@ open class JsonDescriber(
         val parameterJson = self.parameters.map { toJson(it, stackMax - 1) }.toTypedArray().joinToString(",\n").trim()
         val methodDescription = if (description != null) """
             "description": "${description.value.trim()}",
-            ${describe(returnType, stackMax, mutableSetOf()).replace("\n", "\n  ")}
+            ${
+            describe(returnType, stackMax, mutableSetOf()).lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        }
             """.trimIndent().trim() else """
-            ${describe(returnType, stackMax, mutableSetOf()).replace("\n", "\n  ")}
+            ${
+            describe(returnType, stackMax, mutableSetOf()).lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        }
             """.trimIndent()
         return """
             {
@@ -200,7 +320,22 @@ open class JsonDescriber(
         {
           "name": "${self.name}",
           $description
-          ${toJson(self.parameterizedType, stackMax - 1, mutableSetOf()).replace("\n", "\n  ")}
+          ${
+            toJson(self.parameterizedType, stackMax - 1, mutableSetOf()).lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        }
         }
         """.trimIndent()
     }
@@ -253,7 +388,22 @@ open class JsonDescriber(
         {
           "name": "${self.name}",
           $description
-          ${toJson(kType, stackMax - 1, describedTypes).replace("\n", "\n  ")},
+          ${
+            toJson(kType, stackMax - 1, describedTypes).lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        },
           $defaultValueInfo
         }
         """.trimIndent()

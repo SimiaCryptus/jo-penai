@@ -30,7 +30,22 @@ open class ApiFunctionDescriber : TypeDescriber() {
         logger.info("Describing method: ${self.name}, stackMax: $stackMax")
         if (stackMax <= 0) return truncation
         val parameters = self.parameters.joinToString("\n") {
-            "  ${describe(it, stackMax - 1).replace("\n", "\n  ")}"
+            "  ${
+                describe(it, stackMax - 1).lineSequence()
+                    .map {
+                        when {
+                            it.isBlank() -> {
+                                when {
+                                    it.length < "  ".length -> "  "
+                                    else -> it
+                                }
+                            }
+
+                            else -> "  " + it
+                        }
+                    }
+                    .joinToString("\n")
+            }"
         }
         if (parameters.isBlank()) return "${self.name}()"
         return "${self.name}(\n$parameters\n)"
@@ -94,10 +109,23 @@ open class ApiFunctionDescriber : TypeDescriber() {
                     kParameters.joinToString("\n") {
                         "    ${it.name}: ${
                             toApiFunctionFormat(
-                                it.type.javaType,
-                                stackMax - 1,
-                                mutableSetOf()
-                            ).replace("\n", "\n    ")
+                                                        it.type.javaType,
+                                                        stackMax - 1,
+                                                        mutableSetOf()
+                                                    ).lineSequence()
+                                .map {
+                                    when {
+                                        it.isBlank() -> {
+                                            when {
+                                                it.length < "  ".length -> "  "
+                                                else -> it
+                                            }
+                                        }
+
+                                        else -> "  " + it
+                                    }
+                                }
+                                .joinToString("\n")
                         }"
                     }
                 })"
@@ -128,7 +156,23 @@ open class ApiFunctionDescriber : TypeDescriber() {
                     )
                 }
                 .sortedBy { it.toString() }
-                .joinToString("\n") { "  ${describe(it, rawType, stackMax - 1).replace("\n", "\n  ")}" }
+                .joinToString("\n") {
+                    "  ${
+                        describe(it, rawType, stackMax - 1).lineSequence()
+                            .map {
+                                when {
+                                    it.isBlank() -> {
+                                        when {
+                                            it.length < "  ".length -> "  "
+                                            else -> it
+                                        }
+                                    }
+
+                                    else -> "  " + it
+                                }
+                            }
+                            .joinToString("\n")
+                    }" }
         if (methods.isBlank()) return rawType.simpleName
         return "class ${rawType.simpleName} {\n$methods\n}"
     }

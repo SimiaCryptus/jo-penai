@@ -225,7 +225,20 @@ open class HttpClientManager(
     fun <T> withClient(fn: Function<CloseableHttpClient, T>): T = fn.apply(client)
 
     protected open fun log(level: Level = logLevel, msg: String) {
-        val message = msg.trim().replace("\n", "\n\t")
+        val message = msg.trim().lineSequence()
+            .map {
+                when {
+                    it.isBlank() -> {
+                        when {
+                            it.length < "\t".length -> "\t"
+                            else -> it
+                        }
+                    }
+
+                    else -> "\t" + it
+                }
+            }
+            .joinToString("\n")
         logStreams.forEach { stream ->
             stream.write(
                 "[$level] [${"%.3f".format((System.currentTimeMillis() - startTime) / 1000.0)}] ${

@@ -85,8 +85,38 @@ open class TypeScriptDescriber : TypeDescriber() {
 
         return """
             interface ${rawType.simpleName} {
-            ${propertiesTs.prependIndent("  ")}
-            ${methodsTs.prependIndent("  ")}
+            ${
+            propertiesTs.lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        }
+            ${
+            methodsTs.lineSequence()
+                .map {
+                    when {
+                        it.isBlank() -> {
+                            when {
+                                it.length < "  ".length -> "  "
+                                else -> it
+                            }
+                        }
+
+                        else -> "  " + it
+                    }
+                }
+                .joinToString("\n")
+        }
             }
         """.trimIndent().filterEmptyLines()
     }
