@@ -6,8 +6,8 @@ object OpenAIModels {
         modelName = "gpt-3.5-turbo",
         maxTotalTokens = 16384,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.0005,
-        outputTokenPricePerK = 0.0015
+        inputTokenPricePerK = 0.00050,
+        outputTokenPricePerK = 0.00150
     )
 
     val GPT4Turbo = ChatModel(
@@ -15,8 +15,8 @@ object OpenAIModels {
         modelName = "gpt-4-turbo",
         maxTotalTokens = 128000,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.01,
-        outputTokenPricePerK = 0.03
+        inputTokenPricePerK = 0.010,
+        outputTokenPricePerK = 0.030
     )
 
     val GPT4o = ChatModel(
@@ -24,8 +24,8 @@ object OpenAIModels {
         modelName = "gpt-4o",
         maxTotalTokens = 128000,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.005,
-        outputTokenPricePerK = 0.015
+        inputTokenPricePerK = 0.0025,
+        outputTokenPricePerK = 0.010
     )
 
     val GPT4oMini = ChatModel(
@@ -33,8 +33,8 @@ object OpenAIModels {
         modelName = "gpt-4o-mini",
         maxTotalTokens = 128000,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.005,
-        outputTokenPricePerK = 0.015
+        inputTokenPricePerK = 0.00015,
+        outputTokenPricePerK = 0.00060
     )
 
     val O1Preview = ChatModel(
@@ -51,10 +51,10 @@ object OpenAIModels {
     val O1 = ChatModel(
         name = "O1",
         modelName = "o1",
-        maxTotalTokens = 200 * 1024,
+        maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
-        outputTokenPricePerK = 0.0015,
+        inputTokenPricePerK = 0.015, // TODO: Fix when they release pricing
+        outputTokenPricePerK = 0.060,
         hasTemperature = false,
         hasReasoningEffort = true,
     )
@@ -64,10 +64,10 @@ object OpenAIModels {
         modelName = "o1-mini",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
-        outputTokenPricePerK = 0.0015,
+        inputTokenPricePerK = 0.00110, // TODO: Fix when they release pricing
+        outputTokenPricePerK = 0.00440,
         hasTemperature = false,
-        hasReasoningEffort = true,
+        hasReasoningEffort = false,
     )
 
     val O3Mini = ChatModel(
@@ -75,8 +75,8 @@ object OpenAIModels {
         modelName = "o3-mini",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
-        outputTokenPricePerK = 0.0015,
+        inputTokenPricePerK = 0.00110, // TODO: Fix when they release pricing
+        outputTokenPricePerK = 0.00440,
         hasTemperature = false,
         hasReasoningEffort = true,
     )

@@ -8,8 +8,8 @@ object AnthropicModels {
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
-        inputTokenPricePerK = 3.0 / 1000.0,
-        outputTokenPricePerK = 15.0 / 1000.0
+        inputTokenPricePerK = 3.75 / 1000.0,
+        outputTokenPricePerK = 15.0 / 1000.0,
     )
     val Claude35Haiku = ChatModel(
         name = "Claude3Haiku",
@@ -17,8 +17,8 @@ object AnthropicModels {
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
-        inputTokenPricePerK = 15.0 / 1000.0,
-        outputTokenPricePerK = 75.0 / 1000.0
+        inputTokenPricePerK = 1.0 / 1000.0,
+        outputTokenPricePerK = 4.0 / 1000.0,
     )
     val Claude3Opus = ChatModel(
         name = "Claude3Opus",
@@ -26,8 +26,8 @@ object AnthropicModels {
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.Anthropic,
-        inputTokenPricePerK = 15.0 / 1000.0,
-        outputTokenPricePerK = 75.0 / 1000.0
+        inputTokenPricePerK = 18.75 / 1000.0,
+        outputTokenPricePerK = 75.0 / 1000.0,
     )
     val Claude3Sonnet = ChatModel(
         name = "Claude3Sonnet",
