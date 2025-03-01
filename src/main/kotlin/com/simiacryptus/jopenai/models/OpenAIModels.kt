@@ -9,7 +9,7 @@ object OpenAIModels {
         inputTokenPricePerK = 0.010,
         outputTokenPricePerK = 0.030
     )
-
+    
     val GPT4o = ChatModel(
         name = "GPT4o",
         modelName = "gpt-4o",
@@ -17,6 +17,15 @@ object OpenAIModels {
         provider = APIProvider.OpenAI,
         inputTokenPricePerK = 0.0025,
         outputTokenPricePerK = 0.010
+    )
+    
+    val GPT45 = ChatModel(
+        name = "GPT45",
+        modelName = "gpt-4.5-preview-2025-02-27",
+        maxTotalTokens = 128000,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 0.075,
+        outputTokenPricePerK = 0.150
     )
 
     val GPT4oMini = ChatModel(
@@ -79,6 +88,7 @@ object OpenAIModels {
         "O1Mini" to O1Mini,
         "O3Mini" to O3Mini,
         "O1" to O1,
+        "GPT45" to GPT45,
     )
 
 }
