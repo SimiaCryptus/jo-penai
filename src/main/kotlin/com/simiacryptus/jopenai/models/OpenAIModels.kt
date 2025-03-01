@@ -1,15 +1,6 @@
 package com.simiacryptus.jopenai.models
 
 object OpenAIModels {
-    val GPT35Turbo = ChatModel(
-        name = "GPT35Turbo",
-        modelName = "gpt-3.5-turbo",
-        maxTotalTokens = 16384,
-        provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.00050,
-        outputTokenPricePerK = 0.00150
-    )
-
     val GPT4Turbo = ChatModel(
         name = "GPT4Turbo",
         modelName = "gpt-4-turbo",
@@ -81,7 +72,6 @@ object OpenAIModels {
         hasReasoningEffort = true,
     )
     val values = mapOf(
-        "GPT35Turbo" to GPT35Turbo,
         "GPT4Turbo" to GPT4Turbo,
         "GPT4o" to GPT4o,
         "GPT4oMini" to GPT4oMini,
