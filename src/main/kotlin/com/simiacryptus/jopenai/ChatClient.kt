@@ -974,7 +974,7 @@ open class ChatClient(
                     usage = Usage(
                         prompt_tokens = response.usage?.input_tokens?.toLong() ?: 0,
                         completion_tokens = response.usage?.output_tokens?.toLong() ?: 0,
-                        total_tokens = (response.usage?.input_tokens?.toLong() ?: 0) + (response.usage?.output_tokens ?: 0)
+                        total_tokens = (response.usage?.input_tokens?.toLong() ?: 0) + (response.usage?.output_tokens ?: 0),
                     )
                 )
             )
