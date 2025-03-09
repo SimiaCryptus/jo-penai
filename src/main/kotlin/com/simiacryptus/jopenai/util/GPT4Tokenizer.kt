@@ -309,6 +309,9 @@ class GPT4Tokenizer(isCodex: Boolean = false) {
 
     fun estimateTokenCount(input: String): Int {
 //        logger.debug("Estimating token count for input")
+        if(input.length >10000){
+            return input.length / 3
+        }
         var count: Int = 0
         val matches = bpeRegex.toRegex().findAll(input).flatMap { it.groupValues }.toList().toTypedArray()
         for (token in matches) {

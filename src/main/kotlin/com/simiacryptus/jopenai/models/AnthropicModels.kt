@@ -15,7 +15,7 @@ object AnthropicModels {
         name = "AnthropicClaude37Sonnet",
         modelName = "claude-3-7-sonnet-latest",
         maxTotalTokens = 200000,
-        maxOutTokens = 4096,
+        maxOutTokens = 64000,
         provider = APIProvider.Anthropic,
         inputTokenPricePerK = 3.75 / 1000.0,
         outputTokenPricePerK = 15.0 / 1000.0,
