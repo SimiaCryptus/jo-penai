@@ -1,8 +1,6 @@
 package com.simiacryptus.jopenai.exceptions
 import org.slf4j.LoggerFactory
-
-class InvalidModelException(model: String?) : AIServiceException("Invalid model: $model", isFatal = true)
-{
+class InvalidModelException(model: String?) : AIServiceException("Invalid model: $model", isFatal = true) {
     companion object {
         private val logger = LoggerFactory.getLogger("InvalidModelLogger")
     }
