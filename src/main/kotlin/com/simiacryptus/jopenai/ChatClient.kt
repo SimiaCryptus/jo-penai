@@ -31,7 +31,7 @@ import java.io.BufferedOutputStream
 import java.io.IOException
 import java.util.*
 import java.util.concurrent.Semaphore
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.ExecutorService
 
 open class ChatClient(
     protected var key: Map<APIProvider, String> = keyMap.mapKeys { APIProvider.valueOf(it.key) },
@@ -39,7 +39,7 @@ open class ChatClient(
     logLevel: Level = Level.INFO,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
-    workPool: ThreadPoolExecutor = HttpClientManager.workPool,
+    workPool: ExecutorService = HttpClientManager.workPool,
     var reasoningEffort: ReasoningEffort = ReasoningEffort.Low,
 ) : HttpClientManager(
     logLevel = logLevel,

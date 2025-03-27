@@ -30,7 +30,7 @@ import java.io.BufferedOutputStream
 import java.io.IOException
 import java.net.URL
 import java.util.*
-import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.ExecutorService
 import javax.imageio.ImageIO
 
 open class OpenAIClient(
@@ -39,7 +39,7 @@ open class OpenAIClient(
     logLevel: Level = Level.TRACE,
     logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
-    workPool: ThreadPoolExecutor = Companion.workPool
+    workPool: ExecutorService = Companion.workPool
 ) : HttpClientManager(
     logLevel = logLevel,
     logStreams = logStreams,

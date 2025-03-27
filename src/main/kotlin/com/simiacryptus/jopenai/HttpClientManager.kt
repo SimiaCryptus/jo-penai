@@ -29,7 +29,7 @@ open class HttpClientManager(
     private val logLevel: Level = Level.INFO,
     val logStreams: MutableList<BufferedOutputStream> = mutableListOf(),
     private val scheduledPool: ListeningScheduledExecutorService = Companion.scheduledPool,
-    private val workPool: ThreadPoolExecutor = Companion.workPool,
+    private val workPool: ExecutorService = Companion.workPool,
 ) : API() {
 
     companion object {
@@ -43,7 +43,7 @@ open class HttpClientManager(
                 )
             )
 
-        val workPool: ThreadPoolExecutor =
+        val workPool: ExecutorService =
             ThreadPoolExecutor(
                 16,
                 128,
