@@ -47,6 +47,15 @@ object GoogleModels {
         inputTokenPricePerK = 0.0001, // Pricing not provided, using a placeholder
         outputTokenPricePerK = 0.0004 // Updated based on latest Gemini 2.0 Flash pricing
     )
+    val GeminiFlash_20_Lite = ChatModel(
+        name = "GeminiFlash_20_Lite",
+        modelName = "models/gemini-2.0-flash-lite",
+        maxTotalTokens = 1048576,
+        maxOutTokens = 8192,
+        provider = APIProvider.Google,
+        inputTokenPricePerK = 0.00005, // Pricing not provided, using a placeholder (likely cheaper than Flash)
+        outputTokenPricePerK = 0.0002  // Pricing not provided, using a placeholder (likely cheaper than Flash)
+    )
     val GeminiPro_20 = ChatModel(
         name = "GeminiPro_20",
         modelName = "models/gemini-2.0-pro",
@@ -65,13 +74,24 @@ object GoogleModels {
         inputTokenPricePerK = 0.0001, // Pricing not provided, using a placeholder
         outputTokenPricePerK = 0.0004 // Matches Gemini 2.0 Flash paid tier output pricing
     )
+    val GeminiPro_25_Experimental_03_25 = ChatModel(
+        name = "GeminiPro_25_Experimental_03_25",
+        modelName = "models/gemini-2.5-pro-exp-03-25",
+        maxTotalTokens = 1000000,
+        maxOutTokens = 64000,
+        provider = APIProvider.Google,
+        inputTokenPricePerK = 0.0015, // Pricing not provided, using a placeholder based on similar models
+        outputTokenPricePerK = 0.006  // Pricing not provided, using a placeholder based on similar models
+    )
     val values = mapOf(
         "GeminiPro_15" to GeminiPro_15,
         "GeminiFlash_15" to GeminiFlash_15,
         "GeminiFlash_15_8B" to GeminiFlash_15_8B,
         "GeminiPro" to GeminiPro_10,
         "GeminiFlash_20" to GeminiFlash_20,
+        "GeminiFlash_20_Lite" to GeminiFlash_20_Lite,
         "GeminiPro_20" to GeminiPro_20,
         "GeminiFlash_20_Thinking_Experimental_01_21" to GeminiFlash_20_Thinking_Experimental_01_21,
+        "GeminiPro_25_Experimental_03_25" to GeminiPro_25_Experimental_03_25,
     )
 }
