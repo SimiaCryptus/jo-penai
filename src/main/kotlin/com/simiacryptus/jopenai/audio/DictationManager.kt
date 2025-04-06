@@ -1,6 +1,7 @@
 package com.simiacryptus.jopenai.audio
 
 import com.simiacryptus.jopenai.OpenAIClient
+import com.simiacryptus.jopenai.models.AudioModels
 import org.slf4j.LoggerFactory
 import java.util.*
 import javax.sound.sampled.AudioFormat
@@ -22,6 +23,7 @@ open class DictationManager {
 
     var selectedMicLine: String? = null
     var transcriptionProcessor: TranscriptionProcessor? = null
+    var transcriptionModel: AudioModels = AudioModels.Whisper
 
     var audioFormat: AudioFormat = AudioFormat(16000f, 16, 1, true, false)
         set(value) {
@@ -82,6 +84,7 @@ open class DictationManager {
                 transcriptionProcessor = TranscriptionProcessor(
                     client = OpenAIClient(),
                     audioBuffer = processedBuffer,
+                    model = transcriptionModel,
                     continueFn = { isRecording },
                     prompt = "",
                     onTranscriptionUpdate = onTranscriptionUpdate

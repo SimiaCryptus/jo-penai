@@ -1,12 +1,14 @@
 package com.simiacryptus.jopenai.audio
 
 import com.simiacryptus.jopenai.OpenAIClient
+import com.simiacryptus.jopenai.models.AudioModels
 import org.slf4j.LoggerFactory
 import java.util.*
 
 open class TranscriptionProcessor(
     var client: OpenAIClient,
     private var audioBuffer: Queue<AudioPacket>,
+    var model: AudioModels = AudioModels.Whisper,
     var continueFn: () -> Boolean,
     var prompt: String = "",
     var onTranscriptionUpdate: (TranscriptionResult) -> Unit,
@@ -31,7 +33,11 @@ open class TranscriptionProcessor(
                 Thread.sleep(1)
             } else {
                 val startTime = System.currentTimeMillis()
-                val text = client.transcription(AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(recordAudio.samples), recordAudio.audioFormat)!!, prompt)
+                val text = client.transcription(
+                    AudioPacket.convertRawToWav(AudioPacket.convertFloatsToRaw(recordAudio.samples), recordAudio.audioFormat)!!,
+                    prompt,
+                    model
+                )
                 val processingTime = System.currentTimeMillis() - startTime
                 val transcriptionResult = TranscriptionResult(text, prompt, recordAudio, processingTime)
                 prompt = updatePrompt(text)

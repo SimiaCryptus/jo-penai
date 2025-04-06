@@ -197,7 +197,7 @@ open class OpenAIClient(
         }
     }
 
-    open fun transcription(wavAudio: ByteArray, prompt: String = ""): String = withReliability {
+    open fun transcription(wavAudio: ByteArray, prompt: String = "", audioModel: AudioModels): String = withReliability {
         withPerformanceLogging {
             val url = "${apiBase[defaultApiProvider]}/audio/transcriptions"
             val request = HttpPost(url)
@@ -206,8 +206,8 @@ open class OpenAIClient(
             val entity = MultipartEntityBuilder.create()
             entity.setMode(HttpMultipartMode.EXTENDED)
             entity.addBinaryBody("file", wavAudio, ContentType.create("audio/x-wav"), "audio.wav")
-            entity.addTextBody("model", "whisper-1")
-            entity.addTextBody("response_format", "verbose_json")
+            entity.addTextBody("model", audioModel.modelName)
+            entity.addTextBody("response_format", "json")
             if (prompt.isNotEmpty()) entity.addTextBody("prompt", prompt)
             request.entity = entity.build()
             val response = post(request)
