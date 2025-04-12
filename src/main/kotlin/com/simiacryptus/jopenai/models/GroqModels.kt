@@ -170,6 +170,33 @@ object GroqModels {
         inputTokenPricePerK = 0.70,
         outputTokenPricePerK = 0.70
     )
+    val Llama4Scout17b = ChatModel(
+        name = "Llama4Scout17b",
+        modelName = "meta-llama/llama-4-scout-17b-16e-instruct",
+        maxTotalTokens = 131072,
+        maxOutTokens = 8192,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.20,
+        outputTokenPricePerK = 0.20
+    )
+    val Llama4Maverick17b = ChatModel(
+        name = "Llama4Maverick17b",
+        modelName = "meta-llama/llama-4-maverick-17b-128e-instruct",
+        maxTotalTokens = 131072,
+        maxOutTokens = 8192,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.20,
+        outputTokenPricePerK = 0.20
+    )
+    val Allam2_7b = ChatModel(
+        name = "Allam2_7b",
+        modelName = "allam-2-7b",
+        maxTotalTokens = 4096,
+        maxOutTokens = 4096,
+        provider = APIProvider.Groq,
+        inputTokenPricePerK = 0.10,
+        outputTokenPricePerK = 0.10
+    )
 
     val values = mapOf(
         "Llama33_70bVersatile" to Llama33_70bVersatile,
@@ -188,6 +215,9 @@ object GroqModels {
         "DeepseekQwen32b" to DeepseekQwen32b,
         "DeepseekLlama70b" to DeepseekLlama70b,
         "Llama32_11bVision" to Llama32_11bVision,
-        "Llama32_90bVision" to Llama32_90bVision
+        "Llama32_90bVision" to Llama32_90bVision,
+        "Llama4Scout17b" to Llama4Scout17b,
+        "Llama4Maverick17b" to Llama4Maverick17b,
+        "Allam2_7b" to Allam2_7b
     )
 }
