@@ -140,7 +140,7 @@ open class ChatClient(
         return post(request, requestID = requestID)
     }
 
-    private fun post(request: HttpPost, requestID: String = UUID.randomUUID().toString()): String = withClient {
+    private fun post(request: HttpPost, requestID: String = UUID.randomUUID().toString()): String = withClient<String> {
         log(
             level = Level.DEBUG,
             msg = String.format(
@@ -156,7 +156,7 @@ open class ChatClient(
                                     else -> it
                                 }
                             }
-
+                            
                             else -> "\t" + it
                         }
                     }
@@ -170,7 +170,7 @@ open class ChatClient(
                                     else -> it
                                 }
                             }
-
+                            
                             else -> "\t" + it
                         }
                     }
@@ -1062,7 +1062,7 @@ open class ChatClient(
     )
 
     companion object {
-        private val log = LoggerFactory.getLogger(OpenAIClient::class.java)
+        private val log = LoggerFactory.getLogger(ChatClient::class.java)
         var modelsLabThrottle = Semaphore(1)
         var modelslab_chatRequest_prototype = ModelsLabDataModel.ChatRequest(
             max_new_tokens = 1000,

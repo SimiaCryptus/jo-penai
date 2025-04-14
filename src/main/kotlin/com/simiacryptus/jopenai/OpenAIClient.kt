@@ -46,7 +46,7 @@ open class OpenAIClient(
     scheduledPool = scheduledPool,
     workPool = workPool
 ) {
-    private val logger: Logger = LoggerFactory.getLogger(OpenAIClient::class.java).apply {
+    private val log: Logger = LoggerFactory.getLogger(OpenAIClient::class.java).apply {
         info("OpenAIClient initialized with log level: $logLevel")
     }
 
@@ -61,11 +61,11 @@ open class OpenAIClient(
         val request = HttpPost(url)
         request.addHeader("Content-Type", "application/json")
         request.addHeader("Accept", "application/json")
-        logger.info("Sending POST request to URL: $url with payload: $json")
+        log.info("Sending POST request to URL: $url with payload: $json")
         authorize(request, apiProvider)
         request.entity = StringEntity(json, Charsets.UTF_8, false)
         return post(request)
-        logger.info("Executed POST request: ${request.uri}")
+        log.info("Executed POST request: ${request.uri}")
     }
 
     protected fun post(request: HttpPost): String = withClient { EntityUtils.toString(it.execute(request).entity) }
@@ -91,7 +91,7 @@ open class OpenAIClient(
         val request = HttpGet(url)
         request.addHeader("Content-Type", "application/json")
         request.addHeader("Accept", "application/json")
-        logger.debug("Sending GET request to URL: $url")
+        log.debug("Sending GET request to URL: $url")
         authorize(request, apiProvider)
         EntityUtils.toString(it.execute(request).entity)
     }
@@ -119,7 +119,7 @@ open class OpenAIClient(
                             .joinToString("\n")
                     )
                 )
-                logger.debug("Text Completion Request with Prefix: ${request.prompt}")
+                log.debug("Text Completion Request with Prefix: ${request.prompt}")
             } else {
                 log(
                     msg = String.format(
@@ -154,7 +154,7 @@ open class OpenAIClient(
                             .joinToString("\n")
                     )
                 )
-                logger.debug("Text Completion Request with Prefix: ${request.prompt} and Suffix: ${request.suffix}")
+                log.debug("Text Completion Request with Prefix: ${request.prompt} and Suffix: ${request.suffix}")
             }
             val result = post(
                 "${apiBase[defaultApiProvider]}/engines/${model.modelName}/completions",
@@ -192,7 +192,7 @@ open class OpenAIClient(
                         .joinToString("\n")
                 )
             )
-            logger.debug("Text Completion Result: $completionResult")
+            log.debug("Text Completion Result: $completionResult")
             response
         }
     }
@@ -211,7 +211,7 @@ open class OpenAIClient(
             if (prompt.isNotEmpty()) entity.addTextBody("prompt", prompt)
             request.entity = entity.build()
             val response = post(request)
-            logger.info("Transcription response received")
+            log.info("Transcription response received")
             val jsonObject = Gson().fromJson(response, JsonObject::class.java)
             if (jsonObject.has("error")) {
                 val errorObject = jsonObject.getAsJsonObject("error")
@@ -237,7 +237,7 @@ open class OpenAIClient(
             val response = withClient { it.execute(httpRequest).entity }
             val contentType = response.contentType
             val bytes = response.content.readAllBytes()
-            logger.info("Speech creation response received with content type: $contentType")
+            log.info("Speech creation response received with content type: $contentType")
             if (contentType != null && contentType.startsWith("text") || contentType.startsWith("application/json")) {
                 checkError(bytes.toString(Charsets.UTF_8))
                 null
@@ -268,7 +268,7 @@ open class OpenAIClient(
                 jsonObject.addProperty("size", "${resolution}x$resolution")
                 request.entity = StringEntity(jsonObject.toString(), Charsets.UTF_8, false)
                 val response = post(request)
-                logger.info("Image generation response received")
+                log.info("Image generation response received")
                 val jsonObject2 = Gson().fromJson(response, JsonObject::class.java)
                 if (jsonObject2.has("error")) {
                     val errorObject = jsonObject2.getAsJsonObject("error")
@@ -316,7 +316,7 @@ open class OpenAIClient(
             val result: String = try {
                 this.post("${apiBase[defaultApiProvider]}/moderations", body, defaultApiProvider)
             } catch (e: IOException) {
-                logger.warn("IOException during moderation request", e)
+                log.warn("IOException during moderation request", e)
                 throw RuntimeException(e)
             } catch (e: InterruptedException) {
                 throw RuntimeException(e)
@@ -404,7 +404,7 @@ open class OpenAIClient(
                 JsonUtil.objectMapper().writeValueAsString(editRequest), allowedCharset
             )
             val result = post("${apiBase[defaultApiProvider]}/edits", request, defaultApiProvider)
-            logger.info("Edit response received")
+            log.info("Edit response received")
             checkError(result)
             val response = JsonUtil.objectMapper().readValue(
                 result, CompletionResponse::class.java
@@ -476,7 +476,7 @@ open class OpenAIClient(
                         JsonUtil.objectMapper().writeValueAsString(request), allowedCharset
                     ), defaultApiProvider
                 )
-                logger.info("Embedding creation response received")
+                log.info("Embedding creation response received")
                 checkError(result)
                 val response = JsonUtil.objectMapper().readValue(
                     result, EmbeddingResponse::class.java
@@ -506,7 +506,7 @@ open class OpenAIClient(
 
             val response = post(httpRequest)
             checkError(response)
-            logger.info("Image creation response received")
+            log.info("Image creation response received")
             val model = ImageModels.values().find { it.modelName.equals(request.model, true) }
             val dims = request.size?.split("x")
             onUsage(
@@ -542,7 +542,7 @@ open class OpenAIClient(
             httpRequest.entity = entityBuilder.build()
             val response = post(httpRequest)
             checkError(response)
-            logger.info("Image edit response received")
+            log.info("Image edit response received")
 
             JsonUtil.objectMapper().readValue(response, ImageEditResponse::class.java)
         }
@@ -566,7 +566,7 @@ open class OpenAIClient(
             httpRequest.entity = entityBuilder.build()
             val response = post(httpRequest)
             checkError(response)
-            logger.info("Image variation response received")
+            log.info("Image variation response received")
 
             JsonUtil.objectMapper().readValue(response, ImageVariationResponse::class.java)
         }

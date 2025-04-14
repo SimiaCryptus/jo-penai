@@ -115,38 +115,46 @@ open class HttpClientManager(
         return stack
     }
     val stackCalls: MutableMap<Thread, String> = ConcurrentHashMap()
-    // withPool has been updated to also include caller stack trace info.
+    
     private fun <T> withPool(fn: () -> T): T {
         val callerStack = captureCallerStack()  // capture caller stack before switching threads
         val future = workPool.submit(Callable {
             stackCalls[Thread.currentThread()] = callerStack
             return@Callable fn()
         })
-        try {
-            return future.get()
-        } catch (e: InterruptedException) {
+        fun handleException(future: Future<*>, e: Throwable, callerStack: String): Nothing {
             future.cancel(true)
-            log(Level.ERROR, "InterruptedException in withPool. Caller stack:\n$callerStack")
-            throw e
-        } catch (e: ExecutionException) {
-            future.cancel(true)
-            log(Level.ERROR, "ExecutionException in withPool. Caller stack:\n$callerStack")
-            throw e
-        } catch (e: CancellationException) {
-            future.cancel(true)
-            log(Level.ERROR, "CancellationException in withPool. Caller stack:\n$callerStack")
-            throw e
-        } catch (e: TimeoutException) {
-            future.cancel(true)
-            log(Level.ERROR, "TimeoutException in withPool. Caller stack:\n$callerStack")
-            throw e
+            when (e) {
+                is InterruptedException -> {
+                    log(Level.INFO, "InterruptedException in withPool. Caller stack:\n$callerStack")
+                    throw e
+                }
+                is ExecutionException -> {
+                    log(Level.WARN, "ExecutionException in withPool. Caller stack:\n$callerStack")
+                    handleException(future, e.cause ?: throw e, callerStack)
+                }
+                is CancellationException -> {
+                    log(Level.INFO, "CancellationException in withPool. Caller stack:\n$callerStack")
+                    throw e
+                }
+                is TimeoutException -> {
+                    log(Level.WARN, "TimeoutException in withPool. Caller stack:\n$callerStack")
+                    throw e
+                }
+                else -> {
+                    log(Level.WARN, "Exception in withPool. Caller stack:\n$callerStack\n${e.message}")
+                    throw e
+                }
+            }
+        }
+        return try {
+            future.get()
         } catch (e: Exception) {
-            future.cancel(true)
-            log(Level.ERROR, "Exception in withPool. Caller stack:\n$callerStack")
-            throw e
+            handleException(future, e, callerStack)
         }
     }
-
+    
+    
     private fun <T> withExpBackoffRetry(
         retryCount: Int,
         sleepScale: Long = TimeUnit.SECONDS.toMillis(5),
