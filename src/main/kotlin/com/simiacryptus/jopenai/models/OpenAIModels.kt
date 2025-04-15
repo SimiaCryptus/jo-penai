@@ -80,6 +80,18 @@ object OpenAIModels {
         hasTemperature = false,
         hasReasoningEffort = true,
     )
+    
+    val GPT41 = ChatModel(
+        name = "GPT 4.1",
+        modelName = "gpt-4.1",
+        maxTotalTokens = 1048576,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 2.00,
+        outputTokenPricePerK = 8.00,
+        hasTemperature = true,
+        hasReasoningEffort = false,
+    )
+    
     val values = mapOf(
         "GPT4Turbo" to GPT4Turbo,
         "GPT4o" to GPT4o,
@@ -89,6 +101,7 @@ object OpenAIModels {
         "O3Mini" to O3Mini,
         "O1" to O1,
         "GPT45" to GPT45,
+        "GPT41" to GPT41,
     )
 
 }
