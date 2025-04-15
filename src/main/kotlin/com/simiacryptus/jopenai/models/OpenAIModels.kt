@@ -83,11 +83,33 @@ object OpenAIModels {
     
     val GPT41 = ChatModel(
         name = "GPT 4.1",
-        modelName = "gpt-4.1",
+        modelName = "gpt-4.1-2025-04-14",
         maxTotalTokens = 1048576,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.002,
-        outputTokenPricePerK = 0.008,
+        inputTokenPricePerK = 2.00 / 1000,
+        outputTokenPricePerK = 8.00 / 1000,
+        hasTemperature = true,
+        hasReasoningEffort = false,
+    )
+
+    val GPT41Mini = ChatModel(
+        name = "GPT 4.1 Mini",
+        modelName = "gpt-4.1-mini-2025-04-14",
+        maxTotalTokens = 1048576,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 0.40 / 1000,
+        outputTokenPricePerK = 1.60 / 1000,
+        hasTemperature = true,
+        hasReasoningEffort = false,
+    )
+
+    val GPT41Nano = ChatModel(
+        name = "GPT 4.1 Nano",
+        modelName = "gpt-4.1-nano-2025-04-14",
+        maxTotalTokens = 1048576,
+        provider = APIProvider.OpenAI,
+        inputTokenPricePerK = 0.10 / 1000,
+        outputTokenPricePerK = 0.40 / 1000,
         hasTemperature = true,
         hasReasoningEffort = false,
     )
@@ -102,6 +124,8 @@ object OpenAIModels {
         "O1" to O1,
         "GPT45" to GPT45,
         "GPT41" to GPT41,
+        "GPT41Mini" to GPT41Mini,
+        "GPT41Nano" to GPT41Nano,
     )
 
 }
