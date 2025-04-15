@@ -42,7 +42,7 @@ object OpenAIModels {
         modelName = "o1-preview",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.0005, // TODO: Fix when they release pricing
+        inputTokenPricePerK = 0.0005, 
         outputTokenPricePerK = 0.0015,
         hasTemperature = false,
         hasReasoningEffort = true,
@@ -53,7 +53,7 @@ object OpenAIModels {
         modelName = "o1",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.015, // TODO: Fix when they release pricing
+        inputTokenPricePerK = 0.015, 
         outputTokenPricePerK = 0.060,
         hasTemperature = false,
         hasReasoningEffort = true,
@@ -64,7 +64,7 @@ object OpenAIModels {
         modelName = "o1-mini",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.00110, // TODO: Fix when they release pricing
+        inputTokenPricePerK = 0.00110, 
         outputTokenPricePerK = 0.00440,
         hasTemperature = false,
         hasReasoningEffort = false,
@@ -75,7 +75,7 @@ object OpenAIModels {
         modelName = "o3-mini",
         maxTotalTokens = 128 * 1024,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 0.00110, // TODO: Fix when they release pricing
+        inputTokenPricePerK = 0.00110, 
         outputTokenPricePerK = 0.00440,
         hasTemperature = false,
         hasReasoningEffort = true,
@@ -86,8 +86,8 @@ object OpenAIModels {
         modelName = "gpt-4.1",
         maxTotalTokens = 1048576,
         provider = APIProvider.OpenAI,
-        inputTokenPricePerK = 2.00,
-        outputTokenPricePerK = 8.00,
+        inputTokenPricePerK = 0.002,
+        outputTokenPricePerK = 0.008,
         hasTemperature = true,
         hasReasoningEffort = false,
     )
