@@ -2,9 +2,9 @@ package com.simiacryptus.jopenai.models
 import org.slf4j.LoggerFactory
 
 object AWSModels {
-    private val logger = LoggerFactory.getLogger(AWSModels::class.java)
+    private val log = LoggerFactory.getLogger(AWSModels::class.java)
     init {
-        logger.info("Initializing AWSModels with predefined chat models.")
+        log.info("Initializing AWSModels with predefined chat models.")
     }
 
     val AWSLLaMA31_405bChat = ChatModel(
@@ -31,24 +31,7 @@ object AWSModels {
         inputTokenPricePerK = 0.00195,
         outputTokenPricePerK = 0.00256
     )
-
-
-    val AWSLLaMA270bChat = ChatModel(
-        name = "AWSLLaMA270bChat",
-        modelName = "meta.llama2-70b-chat-v1",
-        maxTotalTokens = 2048,
-        provider = APIProvider.AWS,
-        inputTokenPricePerK = 0.00195,
-        outputTokenPricePerK = 0.00256
-    )
-    val AWSLLaMA213bChat = ChatModel(
-        name = "AWSLLaMA213bChat",
-        modelName = "meta.llama2-13b-chat-v1",
-        maxTotalTokens = 2048,
-        provider = APIProvider.AWS,
-        inputTokenPricePerK = 0.00075,
-        outputTokenPricePerK = 0.001
-    )
+    
     val Mistral7bInstructV02 = ChatModel(
         name = "Mistral7bInstructV02",
         modelName = "mistral.mistral-7b-instruct-v0:2",
@@ -144,9 +127,9 @@ object AWSModels {
         inputTokenPricePerK = 0.003,
         outputTokenPricePerK = 0.015
     )
-    val Claude35SonnetV2 = ChatModel(
-        name = "Claude35SonnetV2",
-        modelName = "anthropic.claude-3-5-sonnet-20241022-v2:0",
+    val Claude37Sonnet = ChatModel(
+        name = "Claude37Sonnet",
+        modelName = "anthropic.claude-3-7-sonnet-20250219-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.AWS,
@@ -171,32 +154,14 @@ object AWSModels {
         inputTokenPricePerK = 0.00025,
         outputTokenPricePerK = 0.000125
     )
-    val ClaudeV2_1 = ChatModel(
-        name = "ClaudeV2",
-        modelName = "anthropic.claude-v2:1",
-        maxTotalTokens = 100000,
+    val Claude35Haiku = ChatModel(
+        name = "Claude35Haiku",
+        modelName = "anthropic.claude-3-5-haiku-20241022-v1:0",
+        maxTotalTokens = 200000,
         maxOutTokens = 4096,
         provider = APIProvider.AWS,
-        inputTokenPricePerK = 0.008,
-        outputTokenPricePerK = 0.024
-    )
-    val ClaudeV2 = ChatModel(
-        name = "ClaudeV2",
-        modelName = "anthropic.claude-v2",
-        maxTotalTokens = 100000,
-        maxOutTokens = 4096,
-        provider = APIProvider.AWS,
-        inputTokenPricePerK = 0.008,
-        outputTokenPricePerK = 0.024
-    )
-    val ClaudeV2Instant = ChatModel(
-        name = "ClaudeV2",
-        modelName = "anthropic.claude-instant-v1",
-        maxTotalTokens = 100000,
-        maxOutTokens = 4096,
-        provider = APIProvider.AWS,
-        inputTokenPricePerK = 0.0008,
-        outputTokenPricePerK = 0.0024
+        inputTokenPricePerK = 0.00025,
+        outputTokenPricePerK = 0.000125
     )
     val LLaMA38bInstructAWS = ChatModel(
         name = "LLaMA38bInstructAWS",
@@ -254,10 +219,8 @@ object AWSModels {
         "AmazonNovaLiteV1" to AmazonNovaLiteV1,
         "AmazonNovaMicroV1" to AmazonNovaMicroV1,
         "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
-        "AWSLLaMA31_405bChat" to AWSLLaMA31_405bChat,
+        "AWSLLaMA31_70bChat" to AWSLLaMA31_70bChat,
         "AWSLLaMA31_8bChat" to AWSLLaMA31_8bChat,
-        "AWSLLaMA270bChat" to AWSLLaMA270bChat,
-        "AWSLLaMA213bChat" to AWSLLaMA213bChat,
         "Mistral7bInstructV02" to Mistral7bInstructV02,
         "Mixtral8x7bInstructV01AWS" to Mixtral8x7bInstructV01AWS,
         "MistralLarge2402" to MistralLarge2402,
@@ -271,10 +234,8 @@ object AWSModels {
         "Claude35Sonnet" to Claude35Sonnet,
         "Claude3Sonnet" to Claude3Sonnet,
         "Claude3Haiku" to Claude3Haiku,
-        "Claude35SonnetV2" to Claude35SonnetV2,
-        "ClaudeV2_1" to ClaudeV2_1,
-        "ClaudeV2_1" to ClaudeV2_1,
-        "ClaudeV2Instant" to ClaudeV2Instant,
+        "Claude35Haiku" to Claude35Haiku,
+        "Claude37Sonnet" to Claude37Sonnet,
         "LLaMA38bInstructAWS" to LLaMA38bInstructAWS,
         "DeepseekLLMR1DistillQwen32b" to DeepseekLLMR1DistillQwen32b,
     )

@@ -8,7 +8,7 @@ import kotlin.math.sqrt
 enum class DistanceType {
     Euclidean {
         override fun distance(contentEmbedding: DoubleArray, promptEmbedding: DoubleArray): Double {
-            logger.debug("Calculating Euclidean distance")
+            log.debug("Calculating Euclidean distance")
             return sqrt(
                 contentEmbedding.zip(promptEmbedding).map { (a, b) ->
                     (a - b).pow(2)
@@ -18,13 +18,13 @@ enum class DistanceType {
     },
     Manhattan {
         override fun distance(contentEmbedding: DoubleArray, promptEmbedding: DoubleArray): Double {
-            logger.debug("Calculating Manhattan distance")
+            log.debug("Calculating Manhattan distance")
             return contentEmbedding.zip(promptEmbedding).map { (a, b) -> abs(a - b) }.sum()
         }
     },
     Cosine {
         override fun distance(contentEmbedding: DoubleArray, promptEmbedding: DoubleArray): Double {
-            logger.debug("Calculating Cosine distance")
+            log.debug("Calculating Cosine distance")
             val dotProduct = contentEmbedding.zip(promptEmbedding).map { (a, b) -> a * b }.sum()
             val contentMagnitude = sqrt(contentEmbedding.map { it.pow(2) }.sum())
             val promptMagnitude = sqrt(promptEmbedding.map { it.pow(2) }.sum())
@@ -32,7 +32,7 @@ enum class DistanceType {
         }
     };
     companion object {
-        private val logger = LoggerFactory.getLogger(DistanceType::class.java)
+        private val log = LoggerFactory.getLogger(DistanceType::class.java)
     }
 
 

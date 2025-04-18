@@ -33,7 +33,7 @@ open class HttpClientManager(
 ) : API() {
 
     companion object {
-        private val logger: Logger = LoggerFactory.getLogger(HttpClientManager::class.java)
+        private val log: Logger = LoggerFactory.getLogger(HttpClientManager::class.java)
 
         val scheduledPool: ListeningScheduledExecutorService =
             MoreExecutors.listeningDecorator(
@@ -259,12 +259,12 @@ open class HttpClientManager(
             stream.flush()
         }
         when (level) {
-            Level.ERROR -> logger.error(message)
-            Level.WARN -> logger.warn(message)
-            Level.INFO -> logger.info(message)
-            Level.DEBUG -> logger.debug(message)
-            Level.TRACE -> logger.trace(message)
-            else -> logger.debug(message)
+            Level.ERROR -> log.error(message)
+            Level.WARN -> log.warn(message)
+            Level.INFO -> log.info(message)
+            Level.DEBUG -> log.debug(message)
+            Level.TRACE -> log.trace(message)
+            else -> log.debug(message)
         }
     }
 

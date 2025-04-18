@@ -1160,7 +1160,7 @@ these packets in a provided buffer for further processing or analysis.
 
 ##### Properties
 
-- `log`: A logger instance for logging information and errors.
+- `log`: A log instance for logging information and errors.
 - `audioFormat`: The audio format used for recording. It is set to a sample rate of 16000 Hz, 16 bits per sample, mono,
   with PCM encoding.
 
@@ -1402,7 +1402,7 @@ properties of the class.
 
 #### Companion Object
 
-- `log`: A logger instance for logging messages. It is associated with the `LoudnessWindowBuffer` class.
+- `log`: A log instance for logging messages. It is associated with the `LoudnessWindowBuffer` class.
 
 ### Usage
 
@@ -1512,7 +1512,7 @@ Calculates statistical metrics (mean and standard deviation) for a given array o
 
 ### Companion Object
 
-Contains a private logger instance for logging information and debug messages.
+Contains a private log instance for logging information and debug messages.
 
 ### Usage Example
 

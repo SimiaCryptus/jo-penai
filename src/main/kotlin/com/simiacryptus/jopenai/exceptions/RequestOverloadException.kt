@@ -5,9 +5,9 @@ class RequestOverloadException(
     message: String = "That model is currently overloaded with other requests."
 ) : IOException(message) {
     companion object {
-        private val logger = LoggerFactory.getLogger(RequestOverloadException::class.java)
+        private val log = LoggerFactory.getLogger(RequestOverloadException::class.java)
     }
     init {
-        logger.debug("RequestOverloadException initialized with message: $message")
+        log.debug("RequestOverloadException initialized with message: $message")
     }
 }

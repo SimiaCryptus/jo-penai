@@ -16,7 +16,7 @@ enum class AudioModels(
     ;
 
     private val _api = AtomicReference<OpenAIModel?>(null)
-    private val logger = LoggerFactory.getLogger(AudioModels::class.java)
+    private val log = LoggerFactory.getLogger(AudioModels::class.java)
 
     enum class AudioModelType {
         Transcription,
@@ -31,7 +31,7 @@ enum class AudioModels(
         GPT4oMiniTranscribe -> 0.003 * length // minutes ($0.003 per minute)
         GPT4oMiniTTS -> (0.60 / 1000000) * length // characters
     }
-    .also { logger.info("Calculated price: {}", it) }
+    .also { log.info("Calculated price: {}", it) }
     companion object {
         @OptIn(ExperimentalStdlibApi::class)
         fun find(modelName: String?): AudioModels? {

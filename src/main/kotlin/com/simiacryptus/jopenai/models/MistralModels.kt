@@ -2,7 +2,7 @@ package com.simiacryptus.jopenai.models
 import org.slf4j.LoggerFactory
 
 object MistralModels {
-    private val logger = LoggerFactory.getLogger(MistralModels::class.java)
+    private val log = LoggerFactory.getLogger(MistralModels::class.java)
 
     val Mistral7B = ChatModel(
         name = "Mistral7B",

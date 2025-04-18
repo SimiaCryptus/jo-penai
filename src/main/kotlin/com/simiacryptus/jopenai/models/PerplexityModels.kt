@@ -2,7 +2,7 @@ package com.simiacryptus.jopenai.models
 import org.slf4j.LoggerFactory
 
 object PerplexityModels {
-    private val logger = LoggerFactory.getLogger(PerplexityModels::class.java)
+    private val log = LoggerFactory.getLogger(PerplexityModels::class.java)
 
 
     val SonarSmallChat128k = run {

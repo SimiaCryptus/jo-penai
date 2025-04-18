@@ -511,7 +511,7 @@ The `AudioRecorder` class is responsible for capturing audio data from the syste
 #### Companion Object
 
 - **log**: Logger  
-  A logger instance for logging informational messages about the recording process.
+  A log instance for logging informational messages about the recording process.
 
 - **audioFormat**: `AudioFormat`  
   Defines the audio format used for recording. The current configuration is set to a sample rate of 16000 Hz, 16-bit sample size, mono channel, signed, and little-endian byte order.
@@ -625,7 +625,7 @@ Calculates the mean and standard deviation of an array of values.
 
 #### Companion Object
 
-- `log`: A logger instance for logging information and debugging messages.
+- `log`: A log instance for logging information and debugging messages.
 
 
 ### Logging
@@ -697,7 +697,7 @@ The `LoudnessWindowBuffer` is an abstract class designed to process audio data i
 
 #### Companion Object
 
-- **log**: A logger instance for the `LoudnessWindowBuffer` class, used for logging messages and debugging information.
+- **log**: A log instance for the `LoudnessWindowBuffer` class, used for logging messages and debugging information.
 
 
 ### Usage

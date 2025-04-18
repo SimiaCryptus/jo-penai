@@ -9,9 +9,9 @@ open class EditModels(
     maxTokens: Int,
     private val tokenPricePerK: Double,
 ) : TextModel(modelName, maxTokens) {
-    private val logger: Logger = LoggerFactory.getLogger(EditModels::class.java)
+    private val log: Logger = LoggerFactory.getLogger(EditModels::class.java)
     init {
-        logger.info("Initialized EditModels with modelName: $modelName, maxTokens: $maxTokens, tokenPricePerK: $tokenPricePerK")
+        log.info("Initialized EditModels with modelName: $modelName, maxTokens: $maxTokens, tokenPricePerK: $tokenPricePerK")
     }
 
     override fun pricing(usage: Usage) = usage.prompt_tokens * tokenPricePerK / 1000.0

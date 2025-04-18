@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.simiacryptus.util.DynamicEnum
 import com.simiacryptus.util.DynamicEnumDeserializer
 import com.simiacryptus.util.DynamicEnumSerializer
-private val logger: Logger = LoggerFactory.getLogger(APIProvider::class.java)
+private val log: Logger = LoggerFactory.getLogger(APIProvider::class.java)
 
 
 @JsonDeserialize(using = APIProviderDeserializer::class)
@@ -25,7 +25,7 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
         val DeepSeek = APIProvider("DeepSeek", "https://api.deepseek.com")
 
         init {
-            logger.info("Registering API providers")
+            log.info("Registering API providers")
             register(APIProvider::class.java, Google)
             register(APIProvider::class.java, OpenAI)
             register(APIProvider::class.java, Anthropic)
@@ -42,7 +42,7 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
 
         @JvmStatic
         fun values(): Collection<APIProvider> {
-            logger.debug("Retrieving all APIProvider values")
+            log.debug("Retrieving all APIProvider values")
             return values(APIProvider::class.java)
         }
     }

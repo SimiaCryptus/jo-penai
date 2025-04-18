@@ -9,9 +9,9 @@ open class CompletionModels(
     maxTokens: Int,
     private val tokenPricePerK: Double,
 ) : TextModel(modelName, maxTokens) {
-    private val logger: Logger = LoggerFactory.getLogger(CompletionModels::class.java)
+    private val log: Logger = LoggerFactory.getLogger(CompletionModels::class.java)
     init {
-        logger.info("Initialized CompletionModels with modelName: $modelName, maxTokens: $maxTokens, tokenPricePerK: $tokenPricePerK")
+        log.info("Initialized CompletionModels with modelName: $modelName, maxTokens: $maxTokens, tokenPricePerK: $tokenPricePerK")
     }
 
     override fun pricing(usage: Usage) = usage.prompt_tokens * tokenPricePerK / 1000.0

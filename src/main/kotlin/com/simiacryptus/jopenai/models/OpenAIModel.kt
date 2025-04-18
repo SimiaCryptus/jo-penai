@@ -5,7 +5,7 @@ interface OpenAIModel {
 
     val modelName: String
     fun logModelName() {
-        val logger = LoggerFactory.getLogger(OpenAIModel::class.java)
-        logger.debug("Model name is: $modelName")
+        val log = LoggerFactory.getLogger(OpenAIModel::class.java)
+        log.debug("Model name is: $modelName")
     }
 }

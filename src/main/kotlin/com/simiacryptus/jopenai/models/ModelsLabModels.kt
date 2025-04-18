@@ -2,7 +2,7 @@ package com.simiacryptus.jopenai.models
 import org.slf4j.LoggerFactory
 
 object ModelsLabModels {
-    private val logger = LoggerFactory.getLogger(ModelsLabModels::class.java)
+    private val log = LoggerFactory.getLogger(ModelsLabModels::class.java)
 
     val Zephyr7bBeta = ChatModel(
         name = "Zephyr7bBeta",
