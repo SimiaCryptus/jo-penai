@@ -6,7 +6,10 @@ import org.slf4j.LoggerFactory
 /**
  * Identifies and abbreviates repeated subsequences in text while preserving uniqueness.
  */
-class TextCompressor(private val minLength: Int = 20) {
+class TextCompressor(
+  val minLength: Int = 20,
+  val minOccurrences: Int = 2,
+) {
   private val log: Logger = LoggerFactory.getLogger(TextCompressor::class.java)
   
   /**
@@ -16,7 +19,7 @@ class TextCompressor(private val minLength: Int = 20) {
    * @param minOccurrences Minimum number of occurrences required to abbreviate (default: 2)
    * @return Compressed text with abbreviated repeated subsequences
    */
-  fun compress(text: String, minOccurrences: Int = 2): String {
+  fun compress(text: String): String {
     log.debug(
       "Starting compression of text with length {}, minLength={}, minOccurrences={}",
       text.length, minLength, minOccurrences
