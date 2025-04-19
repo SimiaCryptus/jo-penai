@@ -42,7 +42,7 @@ open class ChatClient(
     scheduledPool: ListeningScheduledExecutorService = HttpClientManager.scheduledPool,
     workPool: ExecutorService = HttpClientManager.workPool,
     var reasoningEffort: ReasoningEffort = ReasoningEffort.Low,
-    val textCompressor: TextCompressor? = TextCompressor(
+    var textCompressor: TextCompressor? = TextCompressor(
         minLength = 32, minOccurrences = 2
     ),
 ) : HttpClientManager(
