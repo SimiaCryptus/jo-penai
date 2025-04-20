@@ -158,7 +158,20 @@ class TextCompressor(
         }
         
         if (!overlaps) {
-          val abbr = createUniqueAbbreviation(pattern, origPos)
+          // Keep first and last few characters to maintain context
+          val prefixLength = minOf(5, pattern.length / 4)
+          val suffixLength = minOf(5, pattern.length / 4)
+          val abbr = if (pattern.length <= prefixLength + suffixLength + 5) {
+            log.trace("Pattern too short to abbreviate (length={})", pattern.length)
+            // If pattern is too short, don't abbreviate
+            pattern
+          } else {
+            // Create abbreviation with prefix, position marker, and suffix
+            val prefix = pattern.substring(0, prefixLength)
+            val suffix = pattern.substring(pattern.length - suffixLength)
+            log.trace("Created abbreviation: '{}'", "$prefix...$suffix")
+            "$prefix...$suffix"
+          }
           val diff = abbr.length - pattern.length
           if (diff < 0) { // Only apply if it actually shortens the text
             // Select this replacement
@@ -216,24 +229,4 @@ class TextCompressor(
   }
   
   
-  /**
-   * Creates a unique abbreviation for a pattern.
-   */
-  private fun createUniqueAbbreviation(pattern: String, position: Int): String {
-    // Keep first and last few characters to maintain context
-    val prefixLength = minOf(5, pattern.length / 4)
-    val suffixLength = minOf(5, pattern.length / 4)
-    
-    return if (pattern.length <= prefixLength + suffixLength + 5) {
-      log.trace("Pattern too short to abbreviate (length={})", pattern.length)
-      // If pattern is too short, don't abbreviate
-      pattern
-    } else {
-      // Create abbreviation with prefix, position marker, and suffix
-      val prefix = pattern.substring(0, prefixLength)
-      val suffix = pattern.substring(pattern.length - suffixLength)
-      log.trace("Created abbreviation: '{}'", "$prefix...$suffix")
-      "$prefix...$suffix"
-    }
-  }
 }

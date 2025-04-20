@@ -43,7 +43,7 @@ open class ChatClient(
     workPool: ExecutorService = HttpClientManager.workPool,
     var reasoningEffort: ReasoningEffort = ReasoningEffort.Low,
     var textCompressor: TextCompressor? = TextCompressor(
-        minLength = 32, minOccurrences = 2
+        minLength = 128, minOccurrences = 3
     ),
 ) : HttpClientManager(
     logLevel = logLevel, logStreams = logStreams, scheduledPool = scheduledPool, workPool = workPool
@@ -217,7 +217,7 @@ open class ChatClient(
                 messages = chatRequest.messages.map {
                     it.let {
                         it.copy(
-                            content = it.content?.map { it.copy(text = textCompressor.compress(it.text ?: "")) } ?: emptyList()
+                            content = it.content?.map { it.copy(text = textCompressor!!.compress(it.text ?: "")) } ?: emptyList()
                         )
                     }
                 }
