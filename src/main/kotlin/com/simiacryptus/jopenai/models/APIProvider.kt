@@ -23,6 +23,8 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
         val ModelsLab = APIProvider("ModelsLab", "https://modelslab.com/api/v6")
         val Mistral = APIProvider("Mistral", "https://api.mistral.ai/v1")
         val DeepSeek = APIProvider("DeepSeek", "https://api.deepseek.com")
+        val GoogleSearch = APIProvider("GoogleSearch", "c581d1409962d72e1")
+        val Github = APIProvider("Github", "https://generativelanguage.googleapis.com")
 
         init {
             log.info("Registering API providers")
@@ -35,6 +37,8 @@ class APIProvider private constructor(name: String, val base: String? = null) : 
             register(APIProvider::class.java, ModelsLab)
             register(APIProvider::class.java, Mistral)
             register(APIProvider::class.java, DeepSeek)
+            register(APIProvider::class.java, GoogleSearch)
+            register(APIProvider::class.java, Github)
         }
 
         @JvmStatic
