@@ -119,7 +119,7 @@ object AWSModels {
         outputTokenPricePerK = 0.0188
     )
     val Claude35Sonnet = ChatModel(
-        name = "Claude3Sonnet",
+        name = "Claude3SonnetAWS",
         modelName = "anthropic.claude-3-5-sonnet-20240620-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
@@ -128,7 +128,7 @@ object AWSModels {
         outputTokenPricePerK = 0.015
     )
     val Claude37Sonnet = ChatModel(
-        name = "Claude37Sonnet",
+        name = "Claude37SonnetAWS",
         modelName = "anthropic.claude-3-7-sonnet-20250219-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
@@ -137,7 +137,7 @@ object AWSModels {
         outputTokenPricePerK = 0.015
     )
     val Claude3Sonnet = ChatModel(
-        name = "Claude3Sonnet",
+        name = "Claude3SonnetAWS",
         modelName = "anthropic.claude-3-sonnet-20240229-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
@@ -146,7 +146,7 @@ object AWSModels {
         outputTokenPricePerK = 0.015
     )
     val Claude3Haiku = ChatModel(
-        name = "Claude3Haiku",
+        name = "Claude3HaikuAWS",
         modelName = "anthropic.claude-3-haiku-20240307-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
@@ -155,7 +155,7 @@ object AWSModels {
         outputTokenPricePerK = 0.000125
     )
     val Claude35Haiku = ChatModel(
-        name = "Claude35Haiku",
+        name = "Claude35HaikuAWS",
         modelName = "anthropic.claude-3-5-haiku-20241022-v1:0",
         maxTotalTokens = 200000,
         maxOutTokens = 4096,
@@ -231,11 +231,11 @@ object AWSModels {
         "CohereCommandTextV14" to CohereCommandTextV14,
         "AI21J2UltraV1" to AI21J2UltraV1,
         "AI21J2MidV1" to AI21J2MidV1,
-        "Claude35Sonnet" to Claude35Sonnet,
-        "Claude3Sonnet" to Claude3Sonnet,
-        "Claude3Haiku" to Claude3Haiku,
-        "Claude35Haiku" to Claude35Haiku,
-        "Claude37Sonnet" to Claude37Sonnet,
+        "Claude35SonnetAWS" to Claude35Sonnet,
+        "Claude3SonnetAWS" to Claude3Sonnet,
+        "Claude3HaikuAWS" to Claude3Haiku,
+        "Claude35HaikuAWS" to Claude35Haiku,
+        "Claude37SonnetAWS" to Claude37Sonnet,
         "LLaMA38bInstructAWS" to LLaMA38bInstructAWS,
         "DeepseekLLMR1DistillQwen32b" to DeepseekLLMR1DistillQwen32b,
     )
