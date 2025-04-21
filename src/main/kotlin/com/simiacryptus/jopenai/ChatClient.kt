@@ -217,7 +217,11 @@ open class ChatClient(
                 messages = chatRequest.messages.map {
                     it.let {
                         it.copy(
-                            content = it.content?.map { it.copy(text = textCompressor!!.compress(it.text ?: "")) } ?: emptyList()
+                            content = it.content?.map { val compress = textCompressor!!.compress(it.text ?: "")
+                                if (compress != it.text) {
+                                    log.debug("Compressed message from ${it.text} to $compress")
+                                }
+                                it.copy(text = compress) } ?: emptyList()
                         )
                     }
                 }
